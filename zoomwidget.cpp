@@ -87,6 +87,10 @@ bool ZoomWidget::isToolBarVisible()
 
 void ZoomWidget::toggleAction(ZoomWidgetAction action)
 {
+  if(isActionDisabled(action))
+    return;
+
+  // The guardian clauses for each action should be in isActionDisabled()
   switch(action) {
     case ACTION_LINE:          _drawMode = DRAWMODE_LINE;          break;
     case ACTION_RECTANGLE:     _drawMode = DRAWMODE_RECT;          break;
@@ -100,17 +104,13 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
     case ACTION_BLACKBOARD:    _boardMode = !_boardMode;           break;
 
     case ACTION_DELETE:
-       if(_screenOpts == SCREENOPTS_HIDE_ALL)
-         break;
-
-       if(_state == STATE_MOVING)        _state = STATE_DELETING;
-       else if(_state == STATE_DELETING) _state = STATE_MOVING;
+       if(_state == STATE_MOVING)
+         _state = STATE_DELETING;
+       else if(_state == STATE_DELETING)
+         _state = STATE_MOVING;
        break;
 
     case ACTION_CLEAR:
-       if(_screenOpts == SCREENOPTS_HIDE_ALL)
-         break;
-
        _userRects.clear();
        _userLines.clear();
        _userArrows.clear();
@@ -121,9 +121,6 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        break;
 
     case ACTION_UNDO:
-       if(_screenOpts == SCREENOPTS_HIDE_ALL)
-         break;
-
        switch(_drawMode) {
          case DRAWMODE_LINE:      if(!_userLines.isEmpty())      _deletedLines.append(_userLines.takeLast());           break;
          case DRAWMODE_RECT:      if(!_userRects.isEmpty())      _deletedRects.append(_userRects.takeLast());           break;
@@ -135,9 +132,6 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        break;
 
     case ACTION_REDO:
-       if(_screenOpts == SCREENOPTS_HIDE_ALL)
-         break;
-
        switch(_drawMode) {
          case DRAWMODE_LINE:      if(!_deletedLines.isEmpty())      _userLines.append(_deletedLines.takeLast());           break;
          case DRAWMODE_RECT:      if(!_deletedRects.isEmpty())      _userRects.append(_deletedRects.takeLast());           break;
@@ -149,11 +143,6 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        break;
 
     case ACTION_RECORDING: {
-       // In theory, ffmpeg blocks the thread, so it shouldn't be possible to toggle
-       // the recording while ffmpeg is running. But, just in case, we check it
-       if(IS_FFMPEG_RUNNING)
-         break;
-
        if(IS_RECORDING){
          recordTimer->stop();
          createVideoFFmpeg();
@@ -185,13 +174,8 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
          break;
        }
 
-       if(_screenOpts == SCREENOPTS_HIDE_ALL || _state != STATE_MOVING)
-         break;
-
        _colorBeforePickColorMode = _activePen.color();
-
        _state = STATE_COLOR_PICKER;
-
        _activePen.setColor(GET_COLOR_UNDER_CURSOR());
        break;
 
@@ -214,9 +198,6 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
         _trimDestination = TRIM_SAVE_TO_IMAGE;
       }
 
-      if(_state != STATE_MOVING || _screenOpts == SCREENOPTS_HIDE_ALL)
-        break;
-
       _state = STATE_TRIMMING;
       _trimDestination = TRIM_SAVE_TO_IMAGE;
       break;
@@ -232,9 +213,6 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
         _trimDestination = TRIM_SAVE_TO_CLIPBOARD;
       }
 
-      if(_state != STATE_MOVING || _screenOpts == SCREENOPTS_HIDE_ALL)
-        break;
-
       _state = STATE_TRIMMING;
       _trimDestination = TRIM_SAVE_TO_CLIPBOARD;
       break;
@@ -244,8 +222,6 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        break;
 
     case ACTION_SCREEN_OPTS:
-       if(_state != STATE_MOVING) break;
-
        switch(_screenOpts) {
          case SCREENOPTS_HIDE_ALL:    _screenOpts = SCREENOPTS_SHOW_ALL;    break;
          case SCREENOPTS_HIDE_STATUS: _screenOpts = SCREENOPTS_HIDE_ALL;    break;
@@ -390,9 +366,9 @@ void ZoomWidget::loadButtons()
   _toolBar.append(Button{ACTION_RECORDING,         "Record",              3, nullRect});
 }
 
-bool ZoomWidget::isButtonDisabled(Button button)
+bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
 {
-  switch(button.action) {
+  switch(action) {
     case ACTION_WIDTH_1:
     case ACTION_WIDTH_2:
     case ACTION_WIDTH_3:
@@ -481,7 +457,7 @@ bool ZoomWidget::isButtonDisabled(Button button)
 
 ButtonStatus ZoomWidget::isButtonActive(Button button)
 {
-  if(isButtonDisabled(button))
+  if(isActionDisabled(button.action))
     return BUTTON_DISABLED;
 
   bool actionStatus = false;
@@ -1753,8 +1729,6 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
     int buttonPos = buttonBehindCursor(cursorPos);
     if(buttonPos==-1)
       return;
-    if(isButtonDisabled(_toolBar.at(buttonPos)))
-      return;
 
     toggleAction(_toolBar.at(buttonPos).action);
     update();
@@ -2013,7 +1987,7 @@ void ZoomWidget::updateCursorShape()
 
   else if(isCursorOverButton(cursorPos)) {
     const Button button = _toolBar.at(buttonBehindCursor(cursorPos));
-    if(isButtonDisabled(button))
+    if(isActionDisabled(button.action))
       setCursor(denied);
     else
       setCursor(pointHand);

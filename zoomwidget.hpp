@@ -422,7 +422,7 @@ class ZoomWidget : public QWidget
     // state is in delete mode. Use: _state == STATE_DELETING, NOT
     // isToolActive(ACTION_DELETE)), for example.
     ButtonStatus isButtonActive(Button button);
-    bool isButtonDisabled(Button button);
+    bool isActionDisabled(ZoomWidgetAction action);
 
     void updateAtMousePos(QPoint mousePos);
     void shiftPixmap(const QPoint delta);
