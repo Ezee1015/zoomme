@@ -10,7 +10,8 @@
 #include <stdlib.h>
 #include <QFileInfo>
 
-void printHelp(const char *errorMsg){
+void printHelp(const char *errorMsg)
+{
   FILE *output;
   int exitStatus;
 
