@@ -4,6 +4,7 @@
 #include <QScreen>
 #include <QImage>
 #include <string.h>
+#include <QSystemTrayIcon>
 
 void printHelp(int exitStatus, const char* errorMsg){
   if(strlen(errorMsg) != 0)
@@ -23,8 +24,11 @@ void printHelp(int exitStatus, const char* errorMsg){
 int main(int argc, char *argv[])
 {
 	QApplication a(argc, argv);
-  QString img;
+  QSystemTrayIcon tray = QSystemTrayIcon(QIcon("./resources/Icon.png"));
+  tray.setVisible(true);
+  tray.show();
 
+  QString img;
   // Parsing arguments
   for(int i=0; i<argc ; ++i){
     if(strcmp(argv[i], "-h") == 0)
