@@ -1574,14 +1574,11 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
     return;
   }
 
-  const int lineHeight        = 25;
-  const int margin            = 20;
-  const int penWidth          = 5;
-  const int fontSize          = 4 * FONT_SIZE_FACTOR;
-  const int w                 = 180;
-  const int initialLineHeight = lineHeight + 5; // lineHeight + margin
+  const int margin      = 20;
+  const int padding     = 5;
+  const int borderWidth = 5;
+  const int fontSize    = 4 * FONT_SIZE_FACTOR;
 
-  int h = initialLineHeight;
   QString text;
 
   // Line 1 -ALWAYS DISPLAYING-
@@ -1593,13 +1590,12 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   text.append(" ");
 
   switch (_drawMode) {
-    case DRAWMODE_LINE:      text.append("Line");        break;
-    case DRAWMODE_RECT:      text.append("Rectangle");   break;
-    case DRAWMODE_ELLIPSE:   text.append("Ellipse");     break;
-    case DRAWMODE_TEXT:      text.append("Text");        break;
-    case DRAWMODE_FREEFORM:  text.append("Free Form");   break;
+    case DRAWMODE_LINE:      text.append("Line ");        break;
+    case DRAWMODE_RECT:      text.append("Rectangle ");   break;
+    case DRAWMODE_ELLIPSE:   text.append("Ellipse ");     break;
+    case DRAWMODE_TEXT:      text.append("Text ");        break;
+    case DRAWMODE_FREEFORM:  text.append("Free Form ");   break;
   }
-  text.append(" ");
 
   if (_highlight) {
     text.append(HIGHLIGHT_ICON);
@@ -1621,15 +1617,14 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   switch (_state) {
     case STATE_MOVING:       break;
     case STATE_DRAWING:      break;
-    case STATE_TYPING:       text.append("\n-- TYPING --");     h += lineHeight; break;
-    case STATE_DELETING:     text.append("\n-- DELETING --");   h += lineHeight; break;
-    case STATE_COLOR_PICKER: text.append("\n-- PICK COLOR --"); h += lineHeight; break;
+    case STATE_TYPING:       text.append("\n-- TYPING --");     break;
+    case STATE_DELETING:     text.append("\n-- DELETING --");   break;
+    case STATE_COLOR_PICKER: text.append("\n-- PICK COLOR --"); break;
     case STATE_TO_TRIM:
-    case STATE_TRIMMING:     text.append("\n-- TRIMMING --");   h += lineHeight; break;
+    case STATE_TRIMMING:     text.append("\n-- TRIMMING --");   break;
   };
   if (isTextEditable(GET_CURSOR_POS())) {
     text += "\n-- SELECT --";
-    h += lineHeight;
   }
 
   // Last Line
@@ -1637,19 +1632,24 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
     text.append("\n");
     text.append(RECORD_STATUS_ICON);
     text.append(" Recording...");
-
-    h += lineHeight;
   }
   if (_exitTimer->isActive()) {
     text.append("\n");
     text.append(EXIT_STATUS_ICON);
     text.append(" EXIT? ");
     text.append(EXIT_STATUS_ICON);
-
-    h += lineHeight;
   }
 
   // Position
+  QList<QString> lines = text.split("\n");
+  int w = 0;
+  for (int i=0; i<lines.size(); i++) {
+    const int lineWidth = fontMetrics().horizontalAdvance(lines.at(i));
+    if (w < lineWidth) w = lineWidth;
+  }
+  w+=padding*2;
+
+  const int h = fontMetrics().height() * lines.size() + padding*2;
   const int x = _screenSize.width() - w - margin;
   const int y = margin;
 
@@ -1670,7 +1670,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   // Settings
   screenPainter->setPen(_activePen);
   QFont font; font.setPixelSize(fontSize); screenPainter->setFont(font);
-  changePenWidth(screenPainter, penWidth);
+  changePenWidth(screenPainter, borderWidth);
 
   // Rounded background
   QPainterPath bgPath;
