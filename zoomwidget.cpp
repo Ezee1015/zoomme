@@ -446,6 +446,8 @@ void ZoomWidget::drawActiveForm(QPainter *screenPainter)
 
 void ZoomWidget::paintEvent(QPaintEvent *event)
 {
+  (void) event;
+
   if(_boardMode)
     _drawnPixmap.fill(BLACKBOARD_COLOR);
   else if(!_liveMode)
