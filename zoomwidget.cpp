@@ -45,6 +45,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _arrow                 = false;
   _liveMode              = false;
   _flashlightMode        = false;
+  _dynamicWidth          = false;
   _flashlightRadius      = 80;
   _popupTray.margin      = 20;
   _toolBar.show          = false;
@@ -112,6 +113,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
     case ACTION_FLASHLIGHT:    _flashlightMode = !_flashlightMode; break;
     case ACTION_BLACKBOARD:    _boardMode = !_boardMode;           break;
     case ACTION_ARROW:         _arrow = !_arrow;                   break;
+    case ACTION_DYNAMIC_WIDTH: _dynamicWidth = !_dynamicWidth;     break;
 
     case ACTION_DELETE:
        if (_state == STATE_MOVING) {
@@ -332,6 +334,7 @@ void ZoomWidget::loadButtons()
   _toolBar.buttons.append(Button{ACTION_WIDTH_7,           "7",                   0, nullRect});
   _toolBar.buttons.append(Button{ACTION_WIDTH_8,           "8",                   0, nullRect});
   _toolBar.buttons.append(Button{ACTION_WIDTH_9,           "9",                   0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_DYNAMIC_WIDTH,     "Dynamic",             0, nullRect});
 
   _toolBar.buttons.append(Button{ACTION_SPACER,            "",                    0, nullRect});
 
@@ -393,6 +396,10 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
     case ACTION_WIDTH_7:
     case ACTION_WIDTH_8:
     case ACTION_WIDTH_9:
+      if (_dynamicWidth) {
+        return true;
+      }
+      return false;
 
     case ACTION_COLOR_RED:
     case ACTION_COLOR_GREEN:
@@ -416,6 +423,12 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
     case ACTION_ESCAPE:
     case ACTION_ESCAPE_CANCEL:
       return false;
+
+    case ACTION_DYNAMIC_WIDTH:
+      if (_drawMode == DRAWMODE_FREEFORM) {
+        return false;
+      }
+      return true;
 
     case ACTION_HIGHLIGHT:
       if (_arrow && _drawMode == DRAWMODE_FREEFORM) {
@@ -542,15 +555,16 @@ ButtonStatus ZoomWidget::isButtonActive(Button button)
 
   bool actionStatus = false;
   switch (button.action) {
-    case ACTION_WIDTH_1:           actionStatus = (_activePen.width() == 1);              break;
-    case ACTION_WIDTH_2:           actionStatus = (_activePen.width() == 2);              break;
-    case ACTION_WIDTH_3:           actionStatus = (_activePen.width() == 3);              break;
-    case ACTION_WIDTH_4:           actionStatus = (_activePen.width() == 4);              break;
-    case ACTION_WIDTH_5:           actionStatus = (_activePen.width() == 5);              break;
-    case ACTION_WIDTH_6:           actionStatus = (_activePen.width() == 6);              break;
-    case ACTION_WIDTH_7:           actionStatus = (_activePen.width() == 7);              break;
-    case ACTION_WIDTH_8:           actionStatus = (_activePen.width() == 8);              break;
-    case ACTION_WIDTH_9:           actionStatus = (_activePen.width() == 9);              break;
+    case ACTION_WIDTH_1:           actionStatus = (_activePen.width() == 1 && !_dynamicWidth); break;
+    case ACTION_WIDTH_2:           actionStatus = (_activePen.width() == 2 && !_dynamicWidth); break;
+    case ACTION_WIDTH_3:           actionStatus = (_activePen.width() == 3 && !_dynamicWidth); break;
+    case ACTION_WIDTH_4:           actionStatus = (_activePen.width() == 4 && !_dynamicWidth); break;
+    case ACTION_WIDTH_5:           actionStatus = (_activePen.width() == 5 && !_dynamicWidth); break;
+    case ACTION_WIDTH_6:           actionStatus = (_activePen.width() == 6 && !_dynamicWidth); break;
+    case ACTION_WIDTH_7:           actionStatus = (_activePen.width() == 7 && !_dynamicWidth); break;
+    case ACTION_WIDTH_8:           actionStatus = (_activePen.width() == 8 && !_dynamicWidth); break;
+    case ACTION_WIDTH_9:           actionStatus = (_activePen.width() == 9 && !_dynamicWidth); break;
+    case ACTION_DYNAMIC_WIDTH:     actionStatus = (_dynamicWidth);                             break;
 
     case ACTION_COLOR_RED:         actionStatus = (_activePen.color() == QCOLOR_RED);     break;
     case ACTION_COLOR_GREEN:       actionStatus = (_activePen.color() == QCOLOR_GREEN);   break;
@@ -803,6 +817,7 @@ void ZoomWidget::saveStateToFile()
   for (int i=0; i<_freeForms.size(); i++) {
     out << _freeForms.at(i).points
         << _freeForms.at(i).pen
+        << _freeForms.at(i).dynamicWidth
         << _freeForms.at(i).active
         << _freeForms.at(i).highlight
         << _freeForms.at(i).arrow;
@@ -965,6 +980,7 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
 
     in >> points
        >> freeFormData.pen
+       >> freeFormData.dynamicWidth
        >> freeFormData.active
        >> freeFormData.highlight
        >> freeFormData.arrow;
@@ -1647,6 +1663,28 @@ ArrowHead ZoomWidget::getFreeFormArrowHead(UserFreeFormData ff)
       );
 }
 
+int ZoomWidget::getFreeFormWidth(const QPoint point, const QPoint next)
+{
+  const int minPixels = 5;
+  const int maxPixels = 40;
+  const int minWidth  = 1;
+  const int maxWidth  = 9;
+
+  const int hypotenuse = hypot(next.x() - point.x(), next.y() - point.y());
+
+  int width = (hypotenuse-minPixels) * maxWidth / maxPixels;
+
+  if (width < minWidth) {
+    return minWidth;
+  }
+
+  if (width > maxWidth) {
+    return maxWidth;
+  }
+
+  return width;
+}
+
 void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
 {
   if (_screenOpts == SCREENOPTS_HIDE_ALL) {
@@ -1776,6 +1814,10 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
       for (int z = 0; z < _freeForms.at(i).points.size()-1; ++z) {
         QPoint current = _freeForms.at(i).points.at(z);
         QPoint next    = _freeForms.at(i).points.at(z+1);
+
+        if (_freeForms.at(i).dynamicWidth) {
+          changePenWidth(pixmapPainter, getFreeFormWidth(current, next));
+        }
 
         pixmapPainter->drawLine(current.x(), current.y(), next.x(), next.y());
       }
@@ -2407,6 +2449,7 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
         _freeForms.destroyLast();
         data.active = false;
         data.highlight = _highlight;
+        data.dynamicWidth = _dynamicWidth;
         data.arrow = _arrow;
         for (int i=0; i<FREEFORM_SMOOTHING; i++) {
           data = smoothFreeForm(data);
@@ -2504,6 +2547,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
       UserFreeFormData data;
       data.pen = _activePen;
       data.active = true;
+      data.dynamicWidth = _dynamicWidth;
       data.highlight = _highlight;
       data.arrow = _arrow;
       data.points.append(cursorInPixmap);

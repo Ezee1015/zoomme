@@ -133,6 +133,7 @@ struct UserTextData {
 struct UserFreeFormData {
   QList<QPoint> points;
   QPen pen;
+  bool dynamicWidth;
   bool highlight;
   bool arrow;
   bool active;
@@ -266,6 +267,7 @@ enum ZoomWidgetAction {
   ACTION_WIDTH_7,
   ACTION_WIDTH_8,
   ACTION_WIDTH_9,
+  ACTION_DYNAMIC_WIDTH,
 
   ACTION_SPACER, // Spacer for the tool bar
 
@@ -474,6 +476,7 @@ class ZoomWidget : public QWidget
     bool _highlight;
     bool _arrow;
     TrimOptions _trimDestination;
+    bool _dynamicWidth; // Dynamic pen's width for the free form
 
     // Timer that cancels the escape after some time
     QTimer *_exitTimer;
@@ -499,6 +502,7 @@ class ZoomWidget : public QWidget
     QPoint _startDrawPoint;
     QPoint _endDrawPoint;
 
+    int getFreeFormWidth(const QPoint point, const QPoint next);
     void drawDrawnPixmap(QPainter *painter);
     void drawSavedForms(QPainter *pixmapPainter);
     // Opaque the area outside the circle of the cursor
