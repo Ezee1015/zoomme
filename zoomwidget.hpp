@@ -18,8 +18,9 @@
 
 #define BLACKBOARD_COLOR QColor( 33,  37,  41)
 
+// The painter argument must be a pointer to the painter
 #define changePenWidthFromPainter(painter, width) \
-  QPen tempPen = painter.pen(); tempPen.setWidth(width); painter.setPen(tempPen);
+  QPen tempPen = painter->pen(); tempPen.setWidth(width); painter->setPen(tempPen);
 
 #define switchFlashlightMode() _flashlightMode = !_flashlightMode;
 #define switchBoardMode() _boardMode = !_boardMode;
@@ -119,6 +120,7 @@ class ZoomWidget : public QWidget
 
     // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
     // QVector<UserObjectData>    _userTests;
+    /////////////////////////
 
     // Moving properties.
     float		_scaleSensivity;
@@ -145,7 +147,11 @@ class ZoomWidget : public QWidget
     QPoint	_endDrawPoint;
     QPen	_activePen;
 
+    void drawSavedForms(QPainter *painter);
+    void drawFlashlightEffect(QPainter *painter);
+    void drawActiveForm(QPainter *painter);
     void drawStatus(QPainter *painter);
+
     void saveScreenshot();
 
     void updateAtMousePos(QPoint mousePos);
@@ -175,12 +181,9 @@ class ZoomWidget : public QWidget
     bool isDrawingHovered(int drawMode, int i);
     bool isTextEditable(QPoint cursorPos);
 
-    // If floatingWindow is FALSE, it's a drawing: the X and Y arguments must be
-    // a point in the PIXMAP, and the drawing is affected by the zoom.
-    // If floatingWindow is TRUE, it's a floating sign: the X and Y arguments
-    // must be a point in the SCREEN, and it isn't affected by the zoom (like
-    // the floating status bar).
-    bool isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos, bool positionFromPixmap);
+    // The X, Y, W and H arguments must be a point in the SCREEN, not in the pixmap
+    // If floating is enabled, the form (the width and height) is not affected by zoom/scaling
+    bool isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos, bool isFloating);
 
     // Functions for the mappings
     void escapeKeyFunction();
@@ -188,7 +191,10 @@ class ZoomWidget : public QWidget
     void clearAllDrawings();
     void undoLastDrawing();
 
-    void getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h);
+    // If posRelativeToScreen is true, it will return the positon be relative to
+    // the screen, if it's false, it will return the position relative to the
+    // pixmap
+    void getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h, bool posRelativeToScreen);
 };
 
 #endif // ZOOMWIDGET_HPP

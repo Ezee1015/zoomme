@@ -228,7 +228,7 @@ void ZoomWidget::drawStatus(QPainter *painter)
   // Settings
   painter->setPen(_activePen);
   QFont font; font.setPixelSize(fontSize); painter->setFont(font);
-  QPen tempPen = painter->pen(); tempPen.setWidth(penWidth); painter->setPen(tempPen);
+  changePenWidthFromPainter(painter, penWidth);
 
   // Background (highlight)
   QColor color = _activePen.color();
@@ -242,6 +242,208 @@ void ZoomWidget::drawStatus(QPainter *painter)
   painter->drawText(rect, Qt::AlignCenter | Qt::TextWordWrap, text);
 }
 
+void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
+{
+  // Draw user rectangles.
+  int x, y, w, h;
+  for (int i = 0; i < _userRects.size(); ++i) {
+    pixmapPainter->setPen(_userRects.at(i).pen);
+    getRealUserObjectPos(_userRects.at(i), &x, &y, &w, &h, false);
+
+    if(isDrawingHovered(DRAWMODE_RECT, i))
+      invertColorPainter(pixmapPainter);
+
+    pixmapPainter->drawRect(x, y, w, h);
+  }
+
+  // Draw user Highlights
+  for (int i = 0; i < _userHighlights.size(); ++i) {
+    pixmapPainter->setPen(_userHighlights.at(i).pen);
+    getRealUserObjectPos(_userHighlights.at(i), &x, &y, &w, &h, false);
+
+    if(isDrawingHovered(DRAWMODE_HIGHLIGHT, i))
+      invertColorPainter(pixmapPainter);
+
+    QColor color = pixmapPainter->pen().color();
+    color.setAlpha(75); // Transparency
+    pixmapPainter->fillRect(QRect(x, y, w, h), color);
+  }
+
+  // Draw user lines.
+  for (int i = 0; i < _userLines.size(); ++i) {
+    pixmapPainter->setPen(_userLines.at(i).pen);
+    getRealUserObjectPos(_userLines.at(i), &x, &y, &w, &h, false);
+
+    if(isDrawingHovered(DRAWMODE_LINE, i))
+      invertColorPainter(pixmapPainter);
+
+    pixmapPainter->drawLine(x, y, x+w, y+h);
+  }
+
+  // Draw user arrows.
+  for (int i = 0; i < _userArrows.size(); ++i) {
+    pixmapPainter->setPen(_userArrows.at(i).pen);
+    getRealUserObjectPos(_userArrows.at(i), &x, &y, &w, &h, false);
+
+    if(isDrawingHovered(DRAWMODE_ARROW, i))
+      invertColorPainter(pixmapPainter);
+
+    pixmapPainter->drawLine(x, y, x+w, y+h);
+    drawArrowHead(x, y, w, h, pixmapPainter);
+  }
+
+  // Draw user ellipses.
+  for (int i = 0; i < _userEllipses.size(); ++i) {
+    pixmapPainter->setPen(_userEllipses.at(i).pen);
+    getRealUserObjectPos(_userEllipses.at(i), &x, &y, &w, &h, false);
+
+    if(isDrawingHovered(DRAWMODE_ELLIPSE, i))
+      invertColorPainter(pixmapPainter);
+
+    pixmapPainter->drawEllipse(x, y, w, h);
+  }
+
+  // Draw user FreeForms.
+  // If the last one is currently active, draw it in the "active forms" switch
+  int freeFormCount = (!_userFreeForms.isEmpty() && _userFreeForms.last().active) ? _userFreeForms.size()-1: _userFreeForms.size();
+  for (int i = 0; i < freeFormCount; ++i) {
+    pixmapPainter->setPen(_userFreeForms.at(i).pen);
+
+    if(isDrawingHovered(DRAWMODE_FREEFORM, i))
+      invertColorPainter(pixmapPainter);
+
+    for (int z = 0; z < _userFreeForms.at(i).points.size()-1; ++z) {
+      QPoint current = _userFreeForms.at(i).points.at(z);
+      QPoint next    = _userFreeForms.at(i).points.at(z+1);
+
+      pixmapPainter->drawLine(current.x(), current.y(), next.x(), next.y());
+    }
+  }
+
+  // Draw user Texts.
+  // If the last one is currently active (user is typing), draw it in the
+  // "active text" `if` statement
+  int textsCount = _state == STATE_TYPING ? _userTexts.size()-1 : _userTexts.size();
+  for (int i = 0; i < textsCount; ++i) {
+    pixmapPainter->setPen(_userTexts.at(i).data.pen);
+    pixmapPainter->setFont(_userTexts.at(i).font);
+    getRealUserObjectPos(_userTexts.at(i).data, &x, &y, &w, &h, false);
+
+    if(isDrawingHovered(DRAWMODE_TEXT, i))
+      invertColorPainter(pixmapPainter);
+
+    QString text = _userTexts.at(i).text;
+    pixmapPainter->drawText(QRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
+  }
+}
+
+void ZoomWidget::drawFlashlightEffect(QPainter *screenPainter)
+{
+  // Opaque the area outside the circle of the cursor
+  if(_flashlightMode) {
+    QPoint c = mapFromGlobal(QCursor::pos());
+    int radius = _flashlightRadius;
+
+    QRect mouseFlashlightBorder = QRect(c.x()-radius, c.y()-radius, radius*2, radius*2);
+    QPainterPath mouseFlashlight;
+    mouseFlashlight.addEllipse( mouseFlashlightBorder );
+
+    // painter->setPen(QColor(186,186,186,200));
+    // painter->drawEllipse( mouseFlashlightBorder );
+
+    QPainterPath pixmapPath;
+    pixmapPath.addRect(_drawnPixmap.rect());
+
+    QPainterPath flashlightArea = pixmapPath.subtracted(mouseFlashlight);
+    screenPainter->fillPath(flashlightArea, QColor(  0,  0,  0, 190));
+  }
+}
+
+void ZoomWidget::drawActiveForm(QPainter *screenPainter)
+{
+  // If it's writing the text (active text)
+  if(_state == STATE_TYPING) {
+    UserTextData textObject = _userTexts.last();
+    int x, y, w, h;
+    screenPainter->setPen(textObject.data.pen);
+    screenPainter->setFont(textObject.font);
+    getRealUserObjectPos(textObject.data, &x, &y, &w, &h, true);
+
+    QString text = textObject.text;
+    if(text.isEmpty()) text="Type some text... \nThen press Enter to finish...";
+    else text.insert(textObject.caretPos, '|');
+    screenPainter->drawText(QRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
+
+    changePenWidthFromPainter(screenPainter, 1);
+    screenPainter->drawRect(x, y, w, h);
+  }
+
+  // Draw active user object.
+  if(_state == STATE_DRAWING) {
+    screenPainter->setPen(_activePen);
+
+    QPoint startPoint = pixmapPointToScreenPos(_startDrawPoint);
+    QPoint endPoint = pixmapPointToScreenPos(_endDrawPoint);
+
+    int x = startPoint.x();
+    int y = startPoint.y();
+    int width  = endPoint.x() - startPoint.x();
+    int height = endPoint.y() - startPoint.y();
+
+    switch(_drawMode) {
+      case DRAWMODE_RECT:
+        screenPainter->drawRect(x, y, width, height);
+        break;
+      case DRAWMODE_LINE:
+        screenPainter->drawLine(x, y, width + x, height + y);
+        break;
+      case DRAWMODE_ARROW:
+        screenPainter->drawLine(x, y, width + x, height + y);
+        drawArrowHead(x, y, width, height, screenPainter);
+        break;
+      case DRAWMODE_ELLIPSE:
+        screenPainter->drawEllipse(x, y, width, height);
+        break;
+      case DRAWMODE_TEXT:
+        {
+          changePenWidthFromPainter(screenPainter, 1);
+          QFont font; font.setPixelSize(_activePen.width() * 4); screenPainter->setFont(font);
+          screenPainter->drawRect(x, y, width, height);
+          QString defaultText;
+          defaultText.append("Sizing... (");
+          defaultText.append(QString::number(width));
+          defaultText.append("x");
+          defaultText.append(QString::number(height));
+          defaultText.append(")");
+          screenPainter->drawText(QRect(x, y, width, height), Qt::AlignCenter | Qt::TextWordWrap, defaultText);
+          break;
+        }
+      case DRAWMODE_FREEFORM:
+        if(_userFreeForms.isEmpty())
+          break;
+        if(!_userFreeForms.last().active)
+          break;
+
+        screenPainter->setPen(_userFreeForms.last().pen);
+        for (int z = 0; z < _userFreeForms.last().points.size()-1; ++z) {
+          QPoint current = _userFreeForms.last().points.at(z);
+          QPoint next    = _userFreeForms.last().points.at(z+1);
+
+          current = pixmapPointToScreenPos(current);
+          next = pixmapPointToScreenPos(next);
+
+          screenPainter->drawLine(current.x(), current.y(), next.x(), next.y());
+        }
+        break;
+      case DRAWMODE_HIGHLIGHT:
+        QColor color = screenPainter->pen().color();
+        color.setAlpha(75); // Transparency
+        screenPainter->fillRect(QRect(x, y, width, height), color);
+        break;
+    }
+  }
+}
+
 void ZoomWidget::paintEvent(QPaintEvent *event)
 {
   if(_boardMode)
@@ -251,216 +453,34 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   else
     _drawnPixmap.fill(Qt::transparent);
 
-  QPainter p(&_drawnPixmap);
-
-  // Draw user rectangles.
-  int x, y, w, h;
-  for (int i = 0; i < _userRects.size(); ++i) {
-    p.setPen(_userRects.at(i).pen);
-    getRealUserObjectPos(_userRects.at(i), &x, &y, &w, &h);
-
-    if(isDrawingHovered(DRAWMODE_RECT, i))
-      invertColorPainter(&p);
-
-    p.drawRect(x, y, w, h);
-  }
-
-  // Draw user Highlights
-  for (int i = 0; i < _userHighlights.size(); ++i) {
-    p.setPen(_userHighlights.at(i).pen);
-    getRealUserObjectPos(_userHighlights.at(i), &x, &y, &w, &h);
-
-    if(isDrawingHovered(DRAWMODE_HIGHLIGHT, i))
-      invertColorPainter(&p);
-
-    QColor color = p.pen().color();
-    color.setAlpha(75); // Transparency
-    p.fillRect(QRect(x, y, w, h), color);
-  }
-
-  // Draw user lines.
-  for (int i = 0; i < _userLines.size(); ++i) {
-    p.setPen(_userLines.at(i).pen);
-    getRealUserObjectPos(_userLines.at(i), &x, &y, &w, &h);
-
-    if(isDrawingHovered(DRAWMODE_LINE, i))
-      invertColorPainter(&p);
-
-    p.drawLine(x, y, x+w, y+h);
-  }
-
-  // Draw user arrows.
-  for (int i = 0; i < _userArrows.size(); ++i) {
-    p.setPen(_userArrows.at(i).pen);
-    getRealUserObjectPos(_userArrows.at(i), &x, &y, &w, &h);
-
-    if(isDrawingHovered(DRAWMODE_ARROW, i))
-      invertColorPainter(&p);
-
-    p.drawLine(x, y, x+w, y+h);
-    drawArrowHead(x, y, w, h, &p);
-  }
-
-  // Draw user ellipses.
-  for (int i = 0; i < _userEllipses.size(); ++i) {
-    p.setPen(_userEllipses.at(i).pen);
-    getRealUserObjectPos(_userEllipses.at(i), &x, &y, &w, &h);
-
-    if(isDrawingHovered(DRAWMODE_ELLIPSE, i))
-      invertColorPainter(&p);
-
-    p.drawEllipse(x, y, w, h);
-  }
-
-  // Draw user FreeForms.
-  // If the last one is currently active, draw it in the "active forms" switch
-  int freeFormCount = (!_userFreeForms.isEmpty() && _userFreeForms.last().active) ? _userFreeForms.size()-1: _userFreeForms.size();
-  for (int i = 0; i < freeFormCount; ++i) {
-    p.setPen(_userFreeForms.at(i).pen);
-
-    if(isDrawingHovered(DRAWMODE_FREEFORM, i))
-      invertColorPainter(&p);
-
-    for (int z = 0; z < _userFreeForms.at(i).points.size()-1; ++z) {
-      QPoint current = _userFreeForms.at(i).points.at(z);
-      QPoint next    = _userFreeForms.at(i).points.at(z+1);
-
-      p.drawLine(current.x(), current.y(), next.x(), next.y());
-    }
-  }
-
-  // Draw user Texts.
-  // If the last one is currently active (user is typing), draw it in the
-  // "active text" `if` statement
-  int textsCount = _state == STATE_TYPING ? _userTexts.size()-1 : _userTexts.size();
-  for (int i = 0; i < textsCount; ++i) {
-    p.setPen(_userTexts.at(i).data.pen);
-    p.setFont(_userTexts.at(i).font);
-    getRealUserObjectPos(_userTexts.at(i).data, &x, &y, &w, &h);
-
-    if(isDrawingHovered(DRAWMODE_TEXT, i))
-      invertColorPainter(&p);
-
-    QString text = _userTexts.at(i).text;
-    p.drawText(QRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
-  }
-
-  // Opaque the area outside the circle of the cursor
-  if(_flashlightMode) {
-    QPoint c = mapFromGlobal(QCursor::pos());
-    c = screenPointToPixmapPos(c);
-    int radius = _flashlightRadius;
-
-    QRect mouseFlashlightBorder = QRect(c.x()-radius, c.y()-radius, radius*2, radius*2);
-    QPainterPath mouseFlashlight;
-    mouseFlashlight.addEllipse( mouseFlashlightBorder );
-
-    // p.setPen(QColor(186,186,186,200));
-    // p.drawEllipse( mouseFlashlightBorder );
-
-    QPainterPath pixmapPath;
-    pixmapPath.addRect(_drawnPixmap.rect());
-
-    QPainterPath flashlightArea = pixmapPath.subtracted(mouseFlashlight);
-    p.fillPath(flashlightArea, QColor(  0,  0,  0, 190));
-  }
-
-  // If it's writing the text (active text)
-  if(_state == STATE_TYPING) {
-    UserTextData textObject = _userTexts.last();
-    p.setPen(textObject.data.pen);
-    p.setFont(textObject.font);
-    getRealUserObjectPos(textObject.data, &x, &y, &w, &h);
-
-    QString text = textObject.text;
-    if(text.isEmpty()) text="Type some text... \nThen press Enter to finish...";
-    else text.insert(textObject.caretPos, '|');
-    p.drawText(QRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
-
-    changePenWidthFromPainter(p, 1);
-    p.drawRect(x, y, w, h);
-  }
-
-  // Draw active user object.
-  if(_state == STATE_DRAWING) {
-    p.setPen(_activePen);
-
-    int x = _startDrawPoint.x();
-    int y = _startDrawPoint.y();
-    int width  = _endDrawPoint.x() - _startDrawPoint.x();
-    int height = _endDrawPoint.y() - _startDrawPoint.y();
-
-    switch(_drawMode) {
-      case DRAWMODE_RECT:
-        p.drawRect(x, y, width, height);
-        break;
-      case DRAWMODE_LINE:
-        p.drawLine(x, y, width + x, height + y);
-        break;
-      case DRAWMODE_ARROW:
-        p.drawLine(x, y, width + x, height + y);
-        drawArrowHead(x, y, width, height, &p);
-        break;
-      case DRAWMODE_ELLIPSE:
-        p.drawEllipse(x, y, width, height);
-        break;
-      case DRAWMODE_TEXT:
-        {
-          changePenWidthFromPainter(p, 1);
-          QFont font; font.setPixelSize(_activePen.width() * 4); p.setFont(font);
-          p.drawRect(x, y, width, height);
-          QString defaultText;
-          defaultText.append("Sizing... (");
-          defaultText.append(QString::number(width));
-          defaultText.append("x");
-          defaultText.append(QString::number(height));
-          defaultText.append(")");
-          p.drawText(QRect(x, y, width, height), Qt::AlignCenter | Qt::TextWordWrap, defaultText);
-          break;
-        }
-      case DRAWMODE_FREEFORM:
-        if(_userFreeForms.isEmpty())
-          break;
-        if(!_userFreeForms.last().active)
-          break;
-
-        p.setPen(_userFreeForms.last().pen);
-        for (int z = 0; z < _userFreeForms.last().points.size()-1; ++z) {
-          QPoint current = _userFreeForms.last().points.at(z);
-          QPoint next    = _userFreeForms.last().points.at(z+1);
-
-          p.drawLine(current.x(), current.y(), next.x(), next.y());
-        }
-        break;
-      case DRAWMODE_HIGHLIGHT:
-        QColor color = p.pen().color();
-        color.setAlpha(75); // Transparency
-        p.fillRect(QRect(x, y, width, height), color);
-        break;
-    }
-  }
-
-  // Draw the drawn pixmap onto the screen
+  QPainter pixmapPainter(&_drawnPixmap);
   QPainter screen; screen.begin(this);
 
+  drawSavedForms(&pixmapPainter);
+  // Draw the drawn pixmap onto the screen
   screen.drawPixmap(_desktopPixmapPos.x(), _desktopPixmapPos.y(),
       _desktopPixmapSize.width(), _desktopPixmapSize.height(),
       _drawnPixmap);
+
+  drawFlashlightEffect(&screen);
+
+  drawActiveForm(&screen);
 
   if(_showStatus)
     drawStatus(&screen);
 
   // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
+  // int x, y, w, h;
   // for (int i = 0; i < _userTests.size(); ++i) {
   //   screen.setPen(_userTests.at(i).pen);
-  //   getRealUserObjectPos(_userTests.at(i), &x, &y, &w, &h);
+  //   getRealUserObjectPos(_userTests.at(i), &x, &y, &w, &h, false);
   //
   //   screen.drawRect(x, y, w, h);
   // }
   ///////////////////////////////////
 
   screen.end();
-  p.end();
+  pixmapPainter.end();
 }
 
 void ZoomWidget::removeFormBehindCursor(QPoint cursorPos)
@@ -698,28 +718,12 @@ void ZoomWidget::saveScreenshot()
   QApplication::beep();
 }
 
-bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos, bool floatingWindow)
+bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos, bool isFloating)
 {
   // Minimum size of the hit box
   int minimumSize =  25;
-
-  // Converts the position in the pixmap of the drawing to the position in the
-  // screen (to match it with the cursor pos, because its position is relative
-  // to the screen, not the pixmap)
-  if(!floatingWindow){
-    QPoint startPoint = pixmapPointToScreenPos(QPoint(x,y));
-    x = startPoint.x();
-    y = startPoint.y();
-
-    // If it's zoomed in, increase the size of the width and height by the scale
-    // factor
-    QSize size = pixmapSizeToScreenSize(QSize(w,h));
-    w = size.width();
-    h = size.height();
-
-    // Adjust the minimum size to the scale factor
+  if(!isFloating)
     minimumSize *= _desktopPixmapScale;
-  }
 
   if(abs(w) < minimumSize) {
     int direction = (w >= 0) ? 1 : -1;
@@ -753,42 +757,42 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos)
   switch(_drawMode) {
     case DRAWMODE_LINE:
       for (int i = 0; i < _userLines.size(); ++i) {
-        getRealUserObjectPos(_userLines.at(i), &x, &y, &w, &h);
+        getRealUserObjectPos(_userLines.at(i), &x, &y, &w, &h, true);
         if(isCursorInsideHitBox(x, y, w, h, cursorPos, false))
           return i;
       }
       break;
     case DRAWMODE_RECT:
       for (int i = 0; i < _userRects.size(); ++i) {
-        getRealUserObjectPos(_userRects.at(i), &x, &y, &w, &h);
+        getRealUserObjectPos(_userRects.at(i), &x, &y, &w, &h, true);
         if(isCursorInsideHitBox(x, y, w, h, cursorPos, false))
           return i;
       }
       break;
     case DRAWMODE_HIGHLIGHT:
       for (int i = 0; i < _userHighlights.size(); ++i) {
-        getRealUserObjectPos(_userHighlights.at(i), &x, &y, &w, &h);
+        getRealUserObjectPos(_userHighlights.at(i), &x, &y, &w, &h, true);
         if(isCursorInsideHitBox(x, y, w, h, cursorPos, false))
           return i;
       }
       break;
     case DRAWMODE_ARROW:
       for (int i = 0; i < _userArrows.size(); ++i) {
-        getRealUserObjectPos(_userArrows.at(i), &x, &y, &w, &h);
+        getRealUserObjectPos(_userArrows.at(i), &x, &y, &w, &h, true);
         if(isCursorInsideHitBox(x, y, w, h, cursorPos, false))
           return i;
       }
       break;
     case DRAWMODE_ELLIPSE:
       for (int i = 0; i < _userEllipses.size(); ++i) {
-        getRealUserObjectPos(_userEllipses.at(i), &x, &y, &w, &h);
+        getRealUserObjectPos(_userEllipses.at(i), &x, &y, &w, &h, true);
         if(isCursorInsideHitBox(x, y, w, h, cursorPos, false))
           return i;
       }
       break;
     case DRAWMODE_TEXT:
       for (int i = 0; i < _userTexts.size(); ++i) {
-        getRealUserObjectPos(_userTexts.at(i).data, &x, &y, &w, &h);
+        getRealUserObjectPos(_userTexts.at(i).data, &x, &y, &w, &h, true);
         if(isCursorInsideHitBox(x, y, w, h, cursorPos, false))
           return i;
       }
@@ -798,6 +802,9 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos)
         for(int z = 0; z < _userFreeForms.at(i).points.size()-1; ++z) {
           QPoint current = _userFreeForms.at(i).points.at(z);
           QPoint next    = _userFreeForms.at(i).points.at(z+1);
+
+          current = pixmapPointToScreenPos(current);
+          next = pixmapPointToScreenPos(next);
 
           x = current.x();
           y = current.y();
@@ -1076,10 +1083,20 @@ QSize ZoomWidget::pixmapSizeToScreenSize(QSize size)
   return size * _desktopPixmapScale;
 }
 
-void ZoomWidget::getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h)
+void ZoomWidget::getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h, bool posRelativeToScreen)
 {
-  *x = userObj.startPoint.x();
-  *y = userObj.startPoint.y();
-  *w = (userObj.endPoint.x() - userObj.startPoint.x());
-  *h = (userObj.endPoint.y() - userObj.startPoint.y());
+  QPoint startPoint = userObj.startPoint;
+  QSize size;
+  size.setWidth(userObj.endPoint.x() - startPoint.x());
+  size.setHeight(userObj.endPoint.y() - startPoint.y());
+
+  if (posRelativeToScreen){
+    startPoint = pixmapPointToScreenPos(startPoint);
+    size = pixmapSizeToScreenSize(size);
+  }
+
+  *x = startPoint.x();
+  *y = startPoint.y();
+  *w = size.width();
+  *h = size.height();
 }
