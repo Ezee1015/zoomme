@@ -46,6 +46,40 @@ void printHelp(const char *errorMsg)
   exit(exitStatus);
 }
 
+bool isDefined(QString mode)
+{
+  return !mode.isEmpty();
+}
+
+bool isDefined(FitImage mode)
+{
+  return mode != FIT_AUTO;
+}
+
+QString nextToken(int argc, char *argv[], int *pos, QString type)
+{
+  (*pos)++;
+
+  if(*pos == argc){
+    QString error(type + " not provided");
+    printHelp(QSTRING_TO_STRING(error));
+  }
+
+  return argv[*pos];
+}
+
+void modeAlreadySelected(QString backupFile, QString img, bool liveMode)
+{
+  if(isDefined(backupFile))
+    printHelp("Mode already provided (Backup file provided)");
+
+  if(isDefined(img))
+    printHelp("Mode already provided (image provided)");
+
+  if(liveMode)
+    printHelp("Mode already provided (live mode)");
+}
+
 int main(int argc, char *argv[])
 {
   QApplication a(argc, argv);
@@ -53,66 +87,60 @@ int main(int argc, char *argv[])
   tray.setVisible(true);
   tray.show();
 
-  QString img;
+  // Configurations
   QString savePath;
   QString saveName;
   QString saveImgExt;
   QString saveVidExt;
+
+  // Modes
+  QString img;
   QString backupFile;
   bool liveMode = false;
   FitImage fitOption = FIT_AUTO;
+
   // Parsing arguments
   for(int i=1; i<argc ; ++i){
     if(strcmp(argv[i], "--help") == 0)
       printHelp("");
 
     else if(strcmp(argv[i], "-l") == 0){
-      if(liveMode == true)
-        printHelp("Live mode already specified");
+      modeAlreadySelected(backupFile, img, liveMode);
 
       liveMode=true;
     }
 
     else if(strcmp(argv[i], "-i") == 0) {
-      if((i+1) == argc)
-        printHelp("Image path not provided");
+      modeAlreadySelected(backupFile, img, liveMode);
 
-      if(img != "")
-        printHelp("Image already provided");
-
-      img = argv[++i];
+      img = nextToken(argc, argv, &i, "Image path");
     }
 
     else if(strcmp(argv[i], "-w") == 0) {
-      if(img.isEmpty() && backupFile.isEmpty())
+      if( !isDefined(img) && !isDefined(backupFile) )
         printHelp("Fit width argument was given, but either the image or the recovery file was not provided");
 
-      if(fitOption != FIT_AUTO)
-        printHelp("Fit setting already provided");
+      if(isDefined(fitOption)) printHelp("Fit setting already provided");
 
       fitOption = FIT_TO_WIDTH;
     }
 
     else if(strcmp(argv[i], "-h") == 0) {
-      if(img.isEmpty() && backupFile.isEmpty())
+      if( !isDefined(img) && !isDefined(backupFile) )
         printHelp("Fit height argument was given, but either the image or the recovery file was not provided");
 
-      if(fitOption != FIT_AUTO)
-        printHelp("Fit setting already provided");
+      if(isDefined(fitOption)) printHelp("Fit setting already provided");
 
       fitOption = FIT_TO_HEIGHT;
     }
 
     else if(strcmp(argv[i], "--replace-on-save") == 0) {
-      if(img.isEmpty())
+      if(!isDefined(img))
         printHelp("Override source image was indicated, but the source image is not provided");
 
-      if(savePath != "")
-        printHelp("Saving path already provided");
-      if(saveName != "")
-        printHelp("Saving name already provided");
-      if(saveImgExt != "")
-        printHelp("Saving extension already provided");
+      if(isDefined(savePath))   printHelp("Saving path already provided");
+      if(isDefined(saveName))   printHelp("Saving name already provided");
+      if(isDefined(saveImgExt)) printHelp("Saving extension already provided");
 
       QFileInfo imgInfo = QFileInfo(img);
 
@@ -122,47 +150,33 @@ int main(int argc, char *argv[])
     }
 
     else if(strcmp(argv[i], "-p") == 0) {
-      if((i+1) == argc)
-        printHelp("Saving path not provided");
+      if(isDefined(savePath)) printHelp("Saving path already provided");
 
-      if(savePath != "")
-        printHelp("Saving path already provided");
-
-      savePath = argv[++i];
+      savePath = nextToken(argc, argv, &i, "Save path");
     }
 
     else if(strcmp(argv[i], "-n") == 0) {
-      if((i+1) == argc)
-        printHelp("Saving name not provided");
+      if(isDefined(saveName)) printHelp("Saving name already provided");
 
-      if(saveName != "")
-        printHelp("Saving name already provided");
-
-      saveName = argv[++i];
+      saveName = nextToken(argc, argv, &i, "Save name");
     }
 
     else if(strcmp(argv[i], "-e:i") == 0) {
-      if((i+1) == argc)
-        printHelp("Saving extension for the image not provided");
+      if(isDefined(saveImgExt)) printHelp("Saving image extension already provided");
 
-      if(saveImgExt != "")
-        printHelp("Saving extension already provided");
-
-      saveImgExt = argv[++i];
+      saveImgExt = nextToken(argc, argv, &i, "Image extension");
     }
 
     else if(strcmp(argv[i], "-e:v") == 0) {
-      if((i+1) == argc)
-        printHelp("Saving extension for the video file not provided");
+      if(isDefined(saveVidExt)) printHelp("Saving video extension already provided");
 
-      if(saveVidExt != "")
-        printHelp("Saving extension fot the video file already provided");
-
-      saveVidExt = argv[++i];
+      saveVidExt = nextToken(argc, argv, &i, "Video extension");
     }
 
     else if(strcmp(argv[i], "-r") == 0) {
-      backupFile = argv[++i];
+      modeAlreadySelected(backupFile, img, liveMode);
+
+      backupFile = nextToken(argc, argv, &i, "Backup file path");
 
       if(QFileInfo(backupFile).suffix() != "zoomme")
         printHelp("It's not a '.zoomme' file");
@@ -188,7 +202,7 @@ int main(int argc, char *argv[])
   // Set the path, name and extension for saving the file
   w.initFileConfig(savePath, saveName, saveImgExt, saveVidExt);
 
-  // Configure the app source
+  // Configure the app mode
   if(!backupFile.isEmpty()) {
     // The backup file has it's own live mode
     w.restoreStateFromFile(backupFile, fitOption);
