@@ -161,90 +161,45 @@ You're ready. Now you can [run it](#running).
 > [!WARNING]
 > When using Wayland, this program is unable to take a screenshot, so it must be run with either the [-l flag](#live-mode) for a transparent background or the [-i flag](#from-image) for grabbing an image
 
-<!-- Start 1 -->
-<details>
-<summary><b>[ No Flags ] Running the application as normal</b></summary><p>
-
-```bash
-./zoomme
-```
-
-</p></details>
-<!-- End 1 -->
-
-<!-- Start 2 -->
-<details>
-<summary><b>[ <code>--help</code> ] Show the help message</b></summary><p>
-
-```bash
-./zoomme --help
-```
-
-</p></details>
-<!-- End 2 -->
-
-<!-- Start 3 -->
-<details>
-<summary><b>[ <code>-p</code> ] Set the path where the produced files will be saved</b></summary><p>
-
-> It can be an absolute or relative path
-
-```bash
-./zoomme -p path/to/folder
-```
-
-> By default, ZoomMe saves it to the `Desktop` folder
-
-</p></details>
-<!-- End 3 -->
-
-<!-- Start 4 -->
-<details>
-<summary><b>[ <code>-n</code> ] Set the name of the produced files</b></summary><p>
-
-```bash
-./zoomme -n name_of_the_file
-```
-
-> By default, the name will be: `Zoomme dd-mm-yyyy hh.mm.ss`
+> - [ `--help` ] Show the help message
 >
-> The format of the date can be customized in the `zoomwidget.hpp` file
+> ```bash
+> ./zoomme --help
+> ```
 
-</p></details>
-<!-- End 4 -->
-
-<!-- Start 5 -->
-<details>
-<summary><b>[ <code>-e:i</code> ] Set the extension of the exported image (when pressing the 's' key)</b></summary><p>
+### Synopsis
 
 ```bash
-./zoomme -e:i jpg
+./zoomme {configurations} {mode}
 ```
 
-> By default, the extension will be: `png`
-
-</p></details>
-<!-- End 5 -->
-
-<!-- Start 6 -->
-<details>
-<summary><b>[ <code>-e:v</code> ] Set the extension of the recorded video (when pressing the '-' key)</b></summary><p>
+### Configuration
 
 ```bash
-./zoomme -e:v mkv
+./zoomme {[-p path/to/folder] [-n name_of_file] [-e:i jpg] [-e:v gif]} {mode}
 ```
 
-> By default, the extension will be: `mp4`
+- [ `-p` ] Set the path where the produced files will be saved
+    - It can be an absolute or relative path
+    - By default, ZoomMe saves it to the `Desktop` folder
 
-</p></details>
-<!-- End 6 -->
+- [ `-n` ] Set the name of the produced files
+    - By default, the name will be: `Zoomme dd-mm-yyyy hh.mm.ss`. The format of the date can be customized in the `zoomwidget.hpp` file
+
+- [ `-e:i` ] Set the extension of the exported image (when pressing the 's' key)
+    - By default, the extension will be: `png`
+
+- [ `-e:v` ] Set the extension of the recorded video (when pressing the '-' key)
+    - By default, the extension will be: `mp4`
+
+### Modes
 
 <!-- Start 7 -->
 <details>
 <summary id="live-mode"><b>[ <code>-l</code> ] Use a transparent background. No zooming allowed, only drawing</b></summary><p>
 
 ```bash
-./zoomme -l
+./zoomme {configurations} {-l}
 ```
 
 </p></details>
@@ -257,7 +212,7 @@ You're ready. Now you can [run it](#running).
  You can modifying any image (including previously saved images from ZoomMe)
 
 ```bash
-./zoomme -i path/to/image
+./zoomme {configurations} {-i path/to/image [-w|h] [--replace-on-save]}
 ```
 
 #### Additional arguments:
@@ -272,13 +227,16 @@ You're ready. Now you can [run it](#running).
 <details>
 <summary id="restore-from-file"><b>[ <code>-r</code> ] Restore the state of the program from a `.zoomme` file</b></summary><p>
 
-Load/Restore the state of the program saved in that file. It should be a '.zoomme' file.
+Load/Restore the state of the program saved in that file. It should be a `.zoomme` file.
 
-Ensure that you execute the file on the same monitor where it was previously run, or ensure that both monitors have the same resolution for optimum results. Otherwise, if the resolutions differ, the image (including the drawings) will be scaled, and while it will still work, the image may lose quality
+Ensure that you execute the file on the same monitor where it was previously run, or ensure that both monitors have the same resolution for optimum results. Otherwise, if the resolutions (between the saved one and the actual monitor) differ, the image (including the drawings) will be scaled, and while it will still work, the image may lose quality
+
+This will override the [file name, video extension and image extension configuration](#configuration) for exporting files with the saved one. **You can still change the [save path](#configuration), as it's not saved in the `.zoomme` file**
 
 ```bash
-./zoomme -r path/to/file.zoomme
+./zoomme {configurations} {-r path/to/file.zoomme [-w|h]}
 ```
+
 #### Additional arguments:
 - If the resolutions differ, you can force the image to fit the screen's width or height with `-w` or `-h` after providing the image path, like this: `./zoomme -r path/to/file.zoomme -w`, if you do not providing anything, it automatically detect the best option.
 
