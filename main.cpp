@@ -53,5 +53,6 @@ int main(int argc, char *argv[])
 
   w.setCursor(QCursor(Qt::CrossCursor));
 
+  QApplication::beep();
 	return a.exec();
 }
