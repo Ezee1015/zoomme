@@ -42,6 +42,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _screenOpts            = SCREENOPTS_SHOW_ALL;
   _boardMode             = false;
   _highlight             = false;
+  _arrow                 = false;
   _liveMode              = false;
   _flashlightMode        = false;
   _flashlightRadius      = 80;
@@ -104,13 +105,13 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
     case ACTION_LINE:          _drawMode = DRAWMODE_LINE;          break;
     case ACTION_RECTANGLE:     _drawMode = DRAWMODE_RECT;          break;
     case ACTION_ELLIPSE:       _drawMode = DRAWMODE_ELLIPSE;       break;
-    case ACTION_ARROW:         _drawMode = DRAWMODE_ARROW;         break;
     case ACTION_TEXT:          _drawMode = DRAWMODE_TEXT;          break;
     case ACTION_FREEFORM:      _drawMode = DRAWMODE_FREEFORM;      break;
 
     case ACTION_HIGHLIGHT:     _highlight = !_highlight;           break;
     case ACTION_FLASHLIGHT:    _flashlightMode = !_flashlightMode; break;
     case ACTION_BLACKBOARD:    _boardMode = !_boardMode;           break;
+    case ACTION_ARROW:         _arrow = !_arrow;                   break;
 
     case ACTION_DELETE:
        if (_state == STATE_MOVING) {
@@ -123,7 +124,6 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
     case ACTION_CLEAR:
        _rects.clear();
        _lines.clear();
-       _arrows.clear();
        _ellipses.clear();
        _texts.clear();
        _freeForms.clear();
@@ -134,7 +134,6 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        switch (_drawMode) {
          case DRAWMODE_LINE:     _lines.undo();     break;
          case DRAWMODE_RECT:     _rects.undo();     break;
-         case DRAWMODE_ARROW:    _arrows.undo();    break;
          case DRAWMODE_ELLIPSE:  _ellipses.undo();  break;
          case DRAWMODE_TEXT:     _texts.undo();     break;
          case DRAWMODE_FREEFORM: _freeForms.undo(); break;
@@ -145,7 +144,6 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        switch (_drawMode) {
          case DRAWMODE_LINE:     _lines.redo();     break;
          case DRAWMODE_RECT:     _rects.redo();     break;
-         case DRAWMODE_ARROW:    _arrows.redo();    break;
          case DRAWMODE_ELLIPSE:  _ellipses.redo();  break;
          case DRAWMODE_TEXT:     _texts.redo();     break;
          case DRAWMODE_FREEFORM: _freeForms.redo(); break;
@@ -335,11 +333,11 @@ void ZoomWidget::loadButtons()
 
   _toolBar.buttons.append(Button{ACTION_LINE,              "Line",                1, nullRect});
   _toolBar.buttons.append(Button{ACTION_RECTANGLE,         "Rectangle",           1, nullRect});
-  _toolBar.buttons.append(Button{ACTION_ARROW,             "Arrow",               1, nullRect});
   _toolBar.buttons.append(Button{ACTION_ELLIPSE,           "Ellipse",             1, nullRect});
   _toolBar.buttons.append(Button{ACTION_FREEFORM,          "Free form",           1, nullRect});
   _toolBar.buttons.append(Button{ACTION_TEXT,              "Text",                1, nullRect});
   _toolBar.buttons.append(Button{ACTION_SPACER,            "",                    1, nullRect});
+  _toolBar.buttons.append(Button{ACTION_ARROW,             "Arrow",               1, nullRect});
   _toolBar.buttons.append(Button{ACTION_HIGHLIGHT,         "Highlight",           1, nullRect});
 
 
@@ -393,12 +391,6 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
     case ACTION_COLOR_BLACK:
 
     case ACTION_LINE:
-    case ACTION_RECTANGLE:
-    case ACTION_ARROW:
-    case ACTION_ELLIPSE:
-    case ACTION_FREEFORM:
-    case ACTION_TEXT:
-    case ACTION_HIGHLIGHT:
 
     case ACTION_FLASHLIGHT:
     case ACTION_BLACKBOARD:
@@ -410,6 +402,32 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
     case ACTION_ESCAPE:
     case ACTION_ESCAPE_CANCEL:
       return false;
+
+    case ACTION_HIGHLIGHT:
+      if (_arrow && _drawMode == DRAWMODE_FREEFORM) {
+        return true;
+      }
+      return false;
+
+    case ACTION_FREEFORM:
+      if (_highlight && _arrow) {
+        return true;
+      }
+      return false;
+
+    case ACTION_RECTANGLE:
+    case ACTION_ELLIPSE:
+    case ACTION_TEXT:
+      if (_arrow) {
+        return true;
+      }
+      return false;
+
+    case ACTION_ARROW:
+      if (_drawMode == DRAWMODE_LINE || (_drawMode == DRAWMODE_FREEFORM && !_highlight)) {
+        return false;
+      }
+      return true;
 
     case ACTION_SCREEN_OPTS:
        if (_state != STATE_MOVING) return true;
@@ -431,7 +449,6 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
        switch (_drawMode) {
          case DRAWMODE_LINE:      return _lines.isDeletedEmpty();
          case DRAWMODE_RECT:      return _rects.isDeletedEmpty();
-         case DRAWMODE_ARROW:     return _arrows.isDeletedEmpty();
          case DRAWMODE_ELLIPSE:   return _ellipses.isDeletedEmpty();
          case DRAWMODE_TEXT:      return _texts.isDeletedEmpty();
          case DRAWMODE_FREEFORM:  return _freeForms.isDeletedEmpty();
@@ -445,7 +462,6 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
        switch (_drawMode) {
          case DRAWMODE_LINE:     return _lines.isEmpty();
          case DRAWMODE_RECT:     return _rects.isEmpty();
-         case DRAWMODE_ARROW:    return _arrows.isEmpty();
          case DRAWMODE_ELLIPSE:  return _ellipses.isEmpty();
          case DRAWMODE_TEXT:     return _texts.isEmpty();
          case DRAWMODE_FREEFORM: return _freeForms.isEmpty();
@@ -458,7 +474,6 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
        }
        if (  _lines.isEmpty()     &&
              _rects.isEmpty()     &&
-             _arrows.isEmpty()    &&
              _ellipses.isEmpty()  &&
              _texts.isEmpty()     &&
              _freeForms.isEmpty()
@@ -474,7 +489,6 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
        switch (_drawMode) {
          case DRAWMODE_LINE:     return _lines.isEmpty();
          case DRAWMODE_RECT:     return _rects.isEmpty();
-         case DRAWMODE_ARROW:    return _arrows.isEmpty();
          case DRAWMODE_ELLIPSE:  return _ellipses.isEmpty();
          case DRAWMODE_TEXT:     return _texts.isEmpty();
          case DRAWMODE_FREEFORM: return _freeForms.isEmpty();
@@ -536,7 +550,6 @@ ButtonStatus ZoomWidget::isButtonActive(Button button)
 
     case ACTION_LINE:              actionStatus = (_drawMode == DRAWMODE_LINE);           break;
     case ACTION_RECTANGLE:         actionStatus = (_drawMode == DRAWMODE_RECT);           break;
-    case ACTION_ARROW:             actionStatus = (_drawMode == DRAWMODE_ARROW);          break;
     case ACTION_ELLIPSE:           actionStatus = (_drawMode == DRAWMODE_ELLIPSE);        break;
     case ACTION_FREEFORM:          actionStatus = (_drawMode == DRAWMODE_FREEFORM);       break;
     case ACTION_TEXT:              actionStatus = (_drawMode == DRAWMODE_TEXT);           break;
@@ -544,6 +557,7 @@ ButtonStatus ZoomWidget::isButtonActive(Button button)
 
     case ACTION_FLASHLIGHT:        actionStatus = (_flashlightMode);                      break;
     case ACTION_BLACKBOARD:        actionStatus = (_boardMode);                           break;
+    case ACTION_ARROW:             actionStatus = (_arrow);                               break;
     case ACTION_PICK_COLOR:        actionStatus = (_state == STATE_COLOR_PICKER);         break;
     case ACTION_DELETE:            actionStatus = (_state == STATE_DELETING);             break;
     case ACTION_SCREEN_OPTS:       actionStatus = (_screenOpts != SCREENOPTS_SHOW_ALL);   break;
@@ -693,6 +707,26 @@ bool ZoomWidget::isCursorOverButton(QPoint cursorPos)
   return isOverAButton && isNotASpacer;
 }
 
+void sendUserObjectData(QDataStream *out, UserObjectData data)
+{
+  *out << data.startPoint
+       << data.endPoint
+       << data.pen
+       << data.highlight
+       << data.arrow;
+}
+
+UserObjectData receiveUserObjectData(QDataStream *in)
+{
+  UserObjectData data;
+  *in >> data.startPoint
+      >> data.endPoint
+      >> data.pen
+      >> data.highlight
+      >> data.arrow;
+  return data;
+}
+
 void ZoomWidget::saveStateToFile()
 {
   QString filePath = getFilePath(FILE_ZOOMME);
@@ -727,7 +761,6 @@ void ZoomWidget::saveStateToFile()
       << _highlight
       << _rects.size()
       << _lines.size()
-      << _arrows.size()
       << _ellipses.size()
       << _texts.size()
       << _freeForms.size();
@@ -735,49 +768,30 @@ void ZoomWidget::saveStateToFile()
   // Save the drawings
   // Rectangles
   for (int i=0; i<_rects.size(); i++) {
-    out << _rects.at(i).startPoint
-        << _rects.at(i).endPoint
-        << _rects.at(i).pen
-        << _rects.at(i).highlight;
+    sendUserObjectData(&out, _rects.at(i));
   }
   // Lines
   for (int i=0; i<_lines.size(); i++) {
-    out << _lines.at(i).startPoint
-        << _lines.at(i).endPoint
-        << _lines.at(i).pen
-        << _lines.at(i).highlight;
-  }
-  // Arrows
-  for (int i=0; i<_arrows.size(); i++) {
-    out << _arrows.at(i).startPoint
-        << _arrows.at(i).endPoint
-        << _arrows.at(i).pen
-        << _arrows.at(i).highlight;
+    sendUserObjectData(&out, _lines.at(i));
   }
   // Ellipses
   for (int i=0; i<_ellipses.size(); i++) {
-    out << _ellipses.at(i).startPoint
-        << _ellipses.at(i).endPoint
-        << _ellipses.at(i).pen
-        << _ellipses.at(i).highlight;
+    sendUserObjectData(&out, _ellipses.at(i));
   }
   // Texts
   for (int i=0; i<_texts.size(); i++) {
-    out << _texts.at(i).data.startPoint
-        << _texts.at(i).data.endPoint
-        << _texts.at(i).data.pen
-        << _texts.at(i).data.highlight;
+    sendUserObjectData(&out, _texts.at(i).data);
 
     out << _texts.at(i).caretPos
         << _texts.at(i).text;
   }
   // Free Forms
   for (int i=0; i<_freeForms.size(); i++) {
-    out << _freeForms.at(i).points;
-
-    out << _freeForms.at(i).pen
+    out << _freeForms.at(i).points
+        << _freeForms.at(i).pen
         << _freeForms.at(i).active
-        << _freeForms.at(i).highlight;
+        << _freeForms.at(i).highlight
+        << _freeForms.at(i).arrow;
   }
 
   QApplication::beep();
@@ -793,7 +807,6 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
 
   long long userRectsCount      = 0,
             userLinesCount      = 0,
-            userArrowsCount     = 0,
             userEllipsesCount   = 0,
             userTextsCount      = 0,
             userFreeFormsCount  = 0;
@@ -827,7 +840,6 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
       >> _highlight
       >> userRectsCount
       >> userLinesCount
-      >> userArrowsCount
       >> userEllipsesCount
       >> userTextsCount
       >> userFreeFormsCount;
@@ -888,8 +900,7 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
   // Read the drawings
   // Rectangles
   for (int i=0; i<userRectsCount; i++) {
-    UserObjectData objectData;
-    in >> objectData.startPoint >> objectData.endPoint >> objectData.pen >> objectData.highlight;
+    UserObjectData objectData = receiveUserObjectData(&in);
 
     objectData.startPoint.setX( marginLeft + objectData.startPoint.x() * scaleFactorX );
     objectData.startPoint.setY( marginTop  + objectData.startPoint.y() * scaleFactorY );
@@ -900,8 +911,7 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
   }
   // Lines
   for (int i=0; i<userLinesCount; i++) {
-    UserObjectData objectData;
-    in >> objectData.startPoint >> objectData.endPoint >> objectData.pen >> objectData.highlight;
+    UserObjectData objectData = receiveUserObjectData(&in);
 
     objectData.startPoint.setX( marginLeft + objectData.startPoint.x() * scaleFactorX );
     objectData.startPoint.setY( marginTop  + objectData.startPoint.y() * scaleFactorY );
@@ -910,22 +920,9 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
 
     _lines.add(objectData);
   }
-  // Arrows
-  for (int i=0; i<userArrowsCount; i++) {
-    UserObjectData objectData;
-    in >> objectData.startPoint >> objectData.endPoint >> objectData.pen >> objectData.highlight;
-
-    objectData.startPoint.setX( marginLeft + objectData.startPoint.x() * scaleFactorX );
-    objectData.startPoint.setY( marginTop  + objectData.startPoint.y() * scaleFactorY );
-    objectData.endPoint.setX( marginLeft + objectData.endPoint.x() * scaleFactorX );
-    objectData.endPoint.setY( marginTop  + objectData.endPoint.y() * scaleFactorY );
-
-    _arrows.add(objectData);
-  }
   // Ellipses
   for (int i=0; i<userEllipsesCount; i++) {
-    UserObjectData objectData;
-    in >> objectData.startPoint >> objectData.endPoint >> objectData.pen >> objectData.highlight;
+    UserObjectData objectData = receiveUserObjectData(&in);
 
     objectData.startPoint.setX( marginLeft + objectData.startPoint.x() * scaleFactorX );
     objectData.startPoint.setY( marginTop  + objectData.startPoint.y() * scaleFactorY );
@@ -937,7 +934,7 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
   // Texts
   for (int i=0; i<userTextsCount; i++) {
     UserTextData textData;
-    in >> textData.data.startPoint >> textData.data.endPoint >> textData.data.pen >> textData.data.highlight;
+    textData.data = receiveUserObjectData(&in);
     in >> textData.caretPos >> textData.text;
 
     textData.data.startPoint.setX( marginLeft + textData.data.startPoint.x() * scaleFactorX );
@@ -952,8 +949,11 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
     UserFreeFormData freeFormData;
     QList<QPoint> points;
 
-    in >> points;
-    in >> freeFormData.pen >> freeFormData.active >> freeFormData.highlight;
+    in >> points
+       >> freeFormData.pen
+       >> freeFormData.active
+       >> freeFormData.highlight
+       >> freeFormData.arrow;
 
     for (int x=0; x<points.size(); x++) {
       QPoint point = points.at(x);
@@ -1081,12 +1081,12 @@ void changePenWidth(QPainter *painter, int width)
   painter->setPen(pen);
 }
 
-ArrowHead ZoomWidget::getArrowHead(int x, int y, int width, int height)
+// If the lineLength is 0, it will be calculated with the hypotenuse (the line)
+ArrowHead ZoomWidget::getArrowHead(int x, int y, int width, int height, int lineLength)
 {
   const float opposite=-1 * height;
   const float adjacent=width;
   const float hypotenuse=sqrt(pow(opposite,2) + pow(adjacent,2));
-  const int maximumLineLength = 85;
 
   float angle = (adjacent!=0) // Avoid dividing by 0
                 ? atanf(fabs(opposite) / fabs(adjacent))
@@ -1115,9 +1115,9 @@ ArrowHead ZoomWidget::getArrowHead(int x, int y, int width, int height)
   const float lengthProportion = 0.25 * sin(4*angle-(M_PI/2)) + 0.75;
 
   // The line's length of the arrow head is a 15% of the main line size
-  int lineLength = hypotenuse * 0.15;
-  if (lineLength > maximumLineLength) {
-    lineLength=maximumLineLength;
+  if (lineLength == 0) {
+    lineLength = hypotenuse * 0.15;
+    if (lineLength > MAX_ARROWHEAD_LENGTH) lineLength=MAX_ARROWHEAD_LENGTH;
   }
 
   // Tip of the line where the arrow head should be drawn
@@ -1493,7 +1493,6 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   switch (_drawMode) {
     case DRAWMODE_LINE:      text.append("Line");        break;
     case DRAWMODE_RECT:      text.append("Rectangle");   break;
-    case DRAWMODE_ARROW:     text.append("Arrow");       break;
     case DRAWMODE_ELLIPSE:   text.append("Ellipse");     break;
     case DRAWMODE_TEXT:      text.append("Text");        break;
     case DRAWMODE_FREEFORM:  text.append("Free Form");   break;
@@ -1502,6 +1501,12 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   if (_highlight) {
     text.append(" ");
     text.append(HIGHLIGHT_ICON);
+  }
+
+  if (_arrow) {
+    text.append(" ");
+    text.append(ARROW_ICON);
+    text.append(" ");
   }
 
   text.append(" (" + QString::number(_activePen.width()) + ")");
@@ -1582,6 +1587,35 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   screenPainter->drawText(rect, Qt::AlignCenter | Qt::TextWordWrap, text);
 }
 
+ArrowHead ZoomWidget::getFreeFormArrowHead(UserFreeFormData ff)
+{
+  const int points = 10; // Number of points to take the average for the arrow head start
+  const int lineSize = MAX_ARROWHEAD_LENGTH / 2;
+
+  if (ff.points.size() < points) { // Too short
+    return ArrowHead {
+      QPoint(0,0),
+      QPoint(0,0),
+      QPoint(0,0)
+    };
+  }
+
+  QPoint start(0,0);
+
+  for (int z = 1; z <= points; z++) {
+    const QPoint point = ff.points.at(ff.points.size()-z);
+    start += point / points;
+  }
+
+  return getArrowHead(
+        start.x(),
+        start.y(),
+        ff.points.last().x() - start.x(),
+        ff.points.last().y() - start.y(),
+        lineSize
+      );
+}
+
 void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
 {
   if (_screenOpts == SCREENOPTS_HIDE_ALL) {
@@ -1634,41 +1668,32 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
       pixmapPainter->setPen(oldPen);
     }
 
-    pixmapPainter->drawLine(x, y, x+w, y+h);
-  }
+    if (_lines.at(i).arrow) {
+      ArrowHead head = getArrowHead(x, y, w, h, 0);
 
-  // Draw user arrows.
-  for (int i = 0; i < _arrows.size(); ++i) {
-    pixmapPainter->setPen(_arrows.at(i).pen);
-    getRealUserObjectPos(_arrows.at(i), &x, &y, &w, &h, false);
+      // Draw a wider semi-transparent line behind the line as the highlight
+      if (_lines.at(i).highlight) {
+        QPen oldPen = pixmapPainter->pen();
 
-    if (isDrawingHovered(DRAWMODE_ARROW, i)) {
-      invertColorPainter(pixmapPainter);
-    }
+        // Change the color and width of the pen
+        QPen newPen = oldPen;
+        QColor color = oldPen.color(); color.setAlpha(HIGHLIGHT_ALPHA); newPen.setColor(color);
+        newPen.setWidth(newPen.width() * 4);
+        pixmapPainter->setPen(newPen);
 
-    ArrowHead head = getArrowHead(x, y, w, h);
+        pixmapPainter->drawLine(x, y, x+w, y+h);
+        pixmapPainter->drawLine(head.startPoint, head.rightLineEnd);
+        pixmapPainter->drawLine(head.startPoint, head.leftLineEnd);
 
-    // Draw a wider semi-transparent line behind the line as the highlight
-    if (_arrows.at(i).highlight) {
-      QPen oldPen = pixmapPainter->pen();
+        // Reset pen
+        pixmapPainter->setPen(oldPen);
+      }
 
-      // Change the color and width of the pen
-      QPen newPen = oldPen;
-      QColor color = oldPen.color(); color.setAlpha(HIGHLIGHT_ALPHA); newPen.setColor(color);
-      newPen.setWidth(newPen.width() * 4);
-      pixmapPainter->setPen(newPen);
-
-      pixmapPainter->drawLine(x, y, x+w, y+h);
       pixmapPainter->drawLine(head.startPoint, head.rightLineEnd);
       pixmapPainter->drawLine(head.startPoint, head.leftLineEnd);
-
-      // Reset pen
-      pixmapPainter->setPen(oldPen);
     }
 
     pixmapPainter->drawLine(x, y, x+w, y+h);
-    pixmapPainter->drawLine(head.startPoint, head.rightLineEnd);
-    pixmapPainter->drawLine(head.startPoint, head.leftLineEnd);
   }
 
   // Draw user ellipses.
@@ -1713,6 +1738,7 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
       QPainterPath background;
       background.addPolygon(polygon);
       pixmapPainter->fillPath(background, color);
+      // You can't draw a highlighted arrow in free form
 
       pixmapPainter->drawPolygon(polygon);
     } else {
@@ -1721,6 +1747,11 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
         QPoint next    = _freeForms.at(i).points.at(z+1);
 
         pixmapPainter->drawLine(current.x(), current.y(), next.x(), next.y());
+      }
+      if (_freeForms.at(i).arrow) {
+        ArrowHead head = getFreeFormArrowHead(_freeForms.at(i));
+        pixmapPainter->drawLine(head.startPoint, head.rightLineEnd);
+        pixmapPainter->drawLine(head.startPoint, head.leftLineEnd);
       }
     }
   }
@@ -1879,10 +1910,8 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
           painter->setPen(oldPen);
         }
 
-        painter->drawLine(x, y, width + x, height + y);
-        break;
-      case DRAWMODE_ARROW: {
-          ArrowHead head = getArrowHead(x, y, width, height);
+        if (_arrow) {
+          ArrowHead head = getArrowHead(x, y, width, height, 0);
 
           // Draw a wider semi-transparent line behind the line as the highlight
           if (_highlight) {
@@ -1902,11 +1931,12 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
             painter->setPen(oldPen);
           }
 
-          painter->drawLine(x, y, width + x, height + y);
           painter->drawLine(head.startPoint, head.rightLineEnd);
           painter->drawLine(head.startPoint, head.leftLineEnd);
-          break;
         }
+
+        painter->drawLine(x, y, width + x, height + y);
+        break;
       case DRAWMODE_ELLIPSE:
         painter->drawEllipse(x, y, width, height);
 
@@ -1951,7 +1981,7 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
         painter->setPen(_freeForms.last().pen);
 
         // Draw the free form with or without the highlight
-        if (_freeForms.last().highlight) {
+        if (_highlight) {
           QPolygon polygon;
           for (int i = 0; i < _freeForms.last().points.size(); ++i) {
             QPoint point = _freeForms.last().points.at(i);
@@ -1962,6 +1992,7 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
 
           background.addPolygon(polygon);
           painter->fillPath(background, color);
+          // You can't draw a highlighted arrow in free form
 
           painter->drawPolygon(polygon);
         } else {
@@ -1975,6 +2006,12 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
             }
 
             painter->drawLine(current.x(), current.y(), next.x(), next.y());
+          }
+
+          if (_arrow) {
+            ArrowHead head = getFreeFormArrowHead(_freeForms.last());
+            painter->drawLine(head.startPoint, head.rightLineEnd);
+            painter->drawLine(head.startPoint, head.leftLineEnd);
           }
         }
         break;
@@ -2064,7 +2101,6 @@ void ZoomWidget::removeFormBehindCursor(QPoint cursorPos)
   switch (_drawMode) {
     case DRAWMODE_LINE:      _lines.remove(formPosBehindCursor);     break;
     case DRAWMODE_RECT:      _rects.remove(formPosBehindCursor);     break;
-    case DRAWMODE_ARROW:     _arrows.remove(formPosBehindCursor);    break;
     case DRAWMODE_ELLIPSE:   _ellipses.remove(formPosBehindCursor);  break;
     case DRAWMODE_TEXT:      _texts.remove(formPosBehindCursor);     break;
     case DRAWMODE_FREEFORM:  _freeForms.remove(formPosBehindCursor); break;
@@ -2306,10 +2342,10 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
   data.startPoint = _startDrawPoint;
   data.endPoint = _endDrawPoint;
   data.highlight = _highlight;
+  data.arrow = _arrow;
   switch (_drawMode) {
     case DRAWMODE_LINE:      _lines.add(data);      break;
     case DRAWMODE_RECT:      _rects.add(data);      break;
-    case DRAWMODE_ARROW:     _arrows.add(data);     break;
     case DRAWMODE_ELLIPSE:   _ellipses.add(data);   break;
     case DRAWMODE_TEXT:
       {
@@ -2340,6 +2376,7 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
         _freeForms.destroyLast();
         data.active = false;
         data.highlight = _highlight;
+        data.arrow = _arrow;
         _freeForms.add(data);
         break;
       }
@@ -2434,6 +2471,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
       data.pen = _activePen;
       data.active = true;
       data.highlight = _highlight;
+      data.arrow = _arrow;
       data.points.append(cursorInPixmap);
       _freeForms.add(data);
 
@@ -2629,6 +2667,36 @@ bool ZoomWidget::isCursorOverLine(int x, int y, int w, int h, QPoint cursorPos)
   return false;
 }
 
+bool ZoomWidget::isCursorOverArrowHead(ArrowHead head, QPoint cursorPos)
+{
+  // Convert the pixmap points of the arrow to screen points
+  head.startPoint   = pixmapPointToScreenPos(head.startPoint);
+  head.leftLineEnd  = pixmapPointToScreenPos(head.leftLineEnd);
+  head.rightLineEnd = pixmapPointToScreenPos(head.rightLineEnd);
+    // Left Line check
+  if (isCursorOverLine(
+         head.startPoint.x(),
+         head.startPoint.y(),
+         head.leftLineEnd.x() - head.startPoint.x(),
+         head.leftLineEnd.y() - head.startPoint.y(),
+         cursorPos)
+     ) {
+      return true;
+  }
+    // Right Line check
+  if (isCursorOverLine(
+         head.startPoint.x(),
+         head.startPoint.y(),
+         head.rightLineEnd.x() - head.startPoint.x(),
+         head.rightLineEnd.y() - head.startPoint.y(),
+         cursorPos)
+     ) {
+      return true;
+  }
+
+  return false;
+}
+
 // The cursor pos shouln't be fixed to hdpi scaling, because in
 // getRealUserObjectPos() they are scaled to the screen 'scaled' (no hdpi)
 // resolution (and the cursor has to be relative to the same resolution that the
@@ -2646,6 +2714,13 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos)
         if (isCursorOverLine(x, y, w, h, cursorPos)) {
           return i;
         }
+        // Get the line's coordinates relative to the pixmap to calculate the
+        // arrow head properly
+        if (_lines.at(i).arrow) {
+          getRealUserObjectPos(_lines.at(i), &x, &y, &w, &h, false);
+          ArrowHead head = getArrowHead(x, y, w, h, 0);
+          if (isCursorOverArrowHead(head, cursorPos)) return i;
+        }
       }
       break;
     case DRAWMODE_RECT:
@@ -2653,45 +2728,6 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos)
         getRealUserObjectPos(_rects.at(i), &x, &y, &w, &h, true);
         if (isCursorInsideHitBox(x, y, w, h, cursorPos, false)) {
           return i;
-        }
-      }
-      break;
-    case DRAWMODE_ARROW:
-      for (int i = 0; i < _arrows.size(); ++i) {
-        getRealUserObjectPos(_arrows.at(i), &x, &y, &w, &h, true);
-        if (isCursorOverLine(x, y, w, h, cursorPos)) {
-          return i;
-        }
-
-        // Get the arrow's coordinates relative to the pixmap to calculate the
-        // arrow head properly
-        getRealUserObjectPos(_arrows.at(i), &x, &y, &w, &h, false);
-
-        // Arrow head
-        ArrowHead head = getArrowHead(x, y, w, h);
-        // Convert the pixmap points of the arrow to screen points
-        head.startPoint   = pixmapPointToScreenPos(head.startPoint);
-        head.leftLineEnd  = pixmapPointToScreenPos(head.leftLineEnd);
-        head.rightLineEnd = pixmapPointToScreenPos(head.rightLineEnd);
-          // Left Line check
-        if (isCursorOverLine(
-               head.startPoint.x(),
-               head.startPoint.y(),
-               head.leftLineEnd.x() - head.startPoint.x(),
-               head.leftLineEnd.y() - head.startPoint.y(),
-               cursorPos)
-           ) {
-            return i;
-        }
-          // Right Line check
-        if (isCursorOverLine(
-               head.startPoint.x(),
-               head.startPoint.y(),
-               head.rightLineEnd.x() - head.startPoint.x(),
-               head.rightLineEnd.y() - head.startPoint.y(),
-               cursorPos)
-           ) {
-            return i;
         }
       }
       break;
@@ -2728,6 +2764,11 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos)
           if (isCursorInsideHitBox(x, y, w, h, cursorPos, false)) {
             return i;
           }
+        }
+
+        if (_freeForms.at(i).arrow) {
+          ArrowHead head = getFreeFormArrowHead(_freeForms.at(i));
+          if (isCursorOverArrowHead(head, cursorPos)) return i;
         }
       }
       break;

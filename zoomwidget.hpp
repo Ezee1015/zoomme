@@ -41,6 +41,7 @@
 #define ZOOM_ICON       "🔍"
 #define RECORD_ICON     "●"
 #define HIGHLIGHT_ICON  "🖍️"
+#define ARROW_ICON      ""
 #define EXIT_ICON       "⊗" // ✖
 
 #define RECORD_FPS 16
@@ -61,6 +62,8 @@
 #define RECT_ROUNDNESS_FACTOR 5.0f
 
 #define SCALE_SENSIVITY 0.2f // For the sensibility of the mouse wheel
+
+#define MAX_ARROWHEAD_LENGTH 50
 
 #define DISABLE_MOUSE_TRACKING false
 
@@ -109,12 +112,14 @@ namespace Ui {
   class zoomwidget;
 }
 
-// User data structs.
+// User data structs. Remember to update the save/restore state from file
+// function when modifying this
 struct UserObjectData {
   QPoint startPoint; // Point in the pixmap
   QPoint endPoint;   // Point in the pixmap
   QPen pen;
   bool highlight;
+  bool arrow;
 };
 
 struct UserTextData {
@@ -127,6 +132,7 @@ struct UserFreeFormData {
   QList<QPoint> points;
   QPen pen;
   bool highlight;
+  bool arrow;
   bool active;
 };
 
@@ -204,7 +210,6 @@ enum ZoomWidgetState {
 };
 
 enum ZoomWidgetDrawMode {
-  DRAWMODE_ARROW,
   DRAWMODE_LINE,
   DRAWMODE_RECT,
   DRAWMODE_ELLIPSE,
@@ -448,7 +453,6 @@ class ZoomWidget : public QWidget
     // User objects.
     Drawing<UserObjectData>    _rects;
     Drawing<UserObjectData>    _lines;
-    Drawing<UserObjectData>    _arrows;
     Drawing<UserObjectData>    _ellipses;
     Drawing<UserTextData>      _texts;
     Drawing<UserFreeFormData>  _freeForms;
@@ -466,6 +470,7 @@ class ZoomWidget : public QWidget
     bool _flashlightMode;
     int _flashlightRadius;
     bool _highlight;
+    bool _arrow;
     TrimOptions _trimDestination;
 
     // Timer that cancels the escape after some time
@@ -503,7 +508,8 @@ class ZoomWidget : public QWidget
     void drawStatus(QPainter *screenPainter);
     void drawToolBar(QPainter *screenPainter);
     void drawButton(QPainter *screenPainter, Button button);
-    ArrowHead getArrowHead(int x, int y, int width, int height);
+    ArrowHead getArrowHead(int x, int y, int width, int height, int lineLength);
+    ArrowHead getFreeFormArrowHead(UserFreeFormData ff);
     void drawTrimmed(QPainter *pixmapPainter);
     void drawPopupTray(QPainter *screenPainter);
     void drawPopup(QPainter *screenPainter, const int listPos);
@@ -575,6 +581,7 @@ class ZoomWidget : public QWidget
     // If floating is enabled, the form (the width and height) is not affected by zoom/scaling
     bool isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos, bool isFloating);
     bool isCursorOverLine(int x, int y, int w, int h, QPoint cursorPos);
+    bool isCursorOverArrowHead(ArrowHead head, QPoint cursorPos);
 
     // Recording
     void saveFrameToFile(); // Timer function
