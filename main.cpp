@@ -47,6 +47,7 @@ int main(int argc, char *argv[])
 	w.resize(QApplication::screenAt(QCursor::pos())->geometry().size());
   w.move( QApplication::screenAt(QCursor::pos())->geometry().topLeft() );
 	w.showFullScreen();
+  w.setCursor(QCursor(Qt::CrossCursor));
 
 	w.show();
 	if(img.isEmpty()) w.grabDesktop();
@@ -54,8 +55,6 @@ int main(int argc, char *argv[])
     if (w.grabImage(img) == false)
       printHelp(1, "Couldn't open the image");
   }
-
-  w.setCursor(QCursor(Qt::CrossCursor));
 
   QApplication::beep();
 	return a.exec();
