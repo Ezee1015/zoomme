@@ -1,0 +1,9 @@
+/.qmake.stash
+/Makefile
+/main.o
+/moc_predefs.h
+/moc_zoomwidget.cpp
+/moc_zoomwidget.o
+/ui_zoomwidget.h
+/zoomme
+/zoomwidget.o
