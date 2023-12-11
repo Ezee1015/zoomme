@@ -1,6 +1,7 @@
 #include "zoomwidget.hpp"
 #include "ui_zoomwidget.h"
 
+#include <cmath>
 #include <QPainter>
 #include <QDesktopWidget>
 #include <QMouseEvent>
@@ -32,6 +33,73 @@ ZoomWidget::~ZoomWidget()
 	delete ui;
 }
 
+void ZoomWidget::drawArrowHead(int x, int y, int width, int height, QPainter *p) {
+  float opposite=-1 * height;
+  float adjacent=width;
+
+  float angle;
+  if(adjacent==0) angle=M_PI/2;
+  else angle = atanf(abs(opposite) / abs(adjacent));
+
+  if( opposite>=0 && adjacent<0 )
+    angle = M_PI-angle;
+  else if( opposite<0 && adjacent<=0 )
+    angle = M_PI+angle;
+  else if( opposite<=0 && adjacent>0 )
+    angle = 2*M_PI-angle;
+
+  float proportion= 0.25 * sin(4*angle-(M_PI/2)) + 0.75;
+  int large = sqrt(pow(opposite,2) + pow(adjacent,2)) * 0.15;
+  if (large>85) large=85;
+  int originX=width+x, originY=height+y;
+  int rightLineX, rightLineY, leftLineX, leftLineY;
+
+  if(angle<=(M_PI/4)){
+    rightLineX=-large*proportion;
+    rightLineY=-large*(1-proportion);
+    leftLineX=-large*(1-proportion);
+    leftLineY=large*proportion;
+  } else if(angle<=(2*M_PI/4)){
+    rightLineX=-large*proportion;
+    rightLineY=large*(1-proportion);
+    leftLineX=large*(1-proportion);
+    leftLineY=large*proportion;
+  } else if(angle<=(3*M_PI/4)){
+    rightLineX=-large*(1-proportion);
+    rightLineY=large*proportion;
+    leftLineX=large*proportion;
+    leftLineY=large*(1-proportion);
+  } else if(angle<=(4*M_PI/4)){
+    rightLineX=large*(1-proportion);
+    rightLineY=large*proportion;
+    leftLineX=large*proportion;
+    leftLineY=-large*(1-proportion);
+  } else if(angle<=(5*M_PI/4)){
+    rightLineX=large*proportion;
+    rightLineY=large*(1-proportion);
+    leftLineX=large*(1-proportion);
+    leftLineY=-large*proportion;
+  } else if(angle<=(6*M_PI/4)){
+    rightLineX=large*proportion;
+    rightLineY=-large*(1-proportion);
+    leftLineX=-large*(1-proportion);
+    leftLineY=-large*proportion;
+  } else if(angle<=(7*M_PI/4)){
+    rightLineX=large*(1-proportion);
+    rightLineY=-large*proportion;
+    leftLineX=-large*proportion;
+    leftLineY=-large*(1-proportion);
+  } else {
+    rightLineX=-large*(1-proportion);
+    rightLineY=-large*proportion;
+    leftLineX=-large*proportion;
+    leftLineY=large*(1-proportion);
+  }
+
+  p->drawLine(originX, originY, originX+rightLineX, originY+rightLineY);
+  p->drawLine(originX, originY, originX+leftLineX, originY+leftLineY);
+}
+
 void ZoomWidget::paintEvent(QPaintEvent *event)
 {
 	QPainter p;
@@ -58,6 +126,14 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 		p.drawLine(x, y, x+w, y+h);
 	}
 
+	// Draw user arrows.
+	for (int i = 0; i < _userArrows.size(); ++i) {
+		p.setPen(_userArrows.at(i).pen);
+		getRealUserObjectPos(_userArrows.at(i), &x, &y, &w, &h);
+		p.drawLine(x, y, x+w, y+h);
+    drawArrowHead(x, y, w, h, &p);
+	}
+
 	// Draw active user object.
 	if (_state == STATE_DRAWING) {
 		p.setPen(_activePen);
@@ -71,6 +147,9 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 			p.drawRect(x, y, width, height);
 		} else if (_drawMode == DRAWMODE_LINE) {
 			p.drawLine(x, y, width + x, height + y);
+		} else if (_drawMode == DRAWMODE_ARROW) {
+      p.drawLine(x, y, width + x, height + y);
+      drawArrowHead(x, y, width, height, &p);
 		}
 	}
 
@@ -100,7 +179,9 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
 			_userLines.append(data);
 		} else if (_drawMode == DRAWMODE_RECT) {
 			_userRects.append(data);
-		}
+		} else if (_drawMode == DRAWMODE_ARROW) {
+			_userArrows.append(data);
+    }
 
 		_state = STATE_MOVING;
 		update();
@@ -164,11 +245,14 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 	} else if (key == Qt::Key_Q) {
 		_userRects.clear();
 		_userLines.clear();
+		_userArrows.clear();
 		_state = STATE_MOVING;
 	} else if (key == Qt::Key_Z) {
 		_drawMode = DRAWMODE_LINE;
 	} else if (key == Qt::Key_X) {
 		_drawMode = DRAWMODE_RECT;
+	} else if (key == Qt::Key_A) {
+		_drawMode = DRAWMODE_ARROW;
 	}
 
 	update();
