@@ -1,6 +1,7 @@
 #include <QtWidgets/QApplication>
 #include "zoomwidget.hpp"
 #include <QDesktopWidget>
+#include <QCursor>
 
 int main(int argc, char *argv[])
 {
@@ -13,6 +14,8 @@ int main(int argc, char *argv[])
 
 	w.show();
 	w.grabDesktop();
+
+  w.setCursor(QCursor(Qt::CrossCursor));
 
 	return a.exec();
 }
