@@ -5,6 +5,8 @@
 #include <QPainter>
 #include <QDesktopWidget>
 #include <QMouseEvent>
+#include <QScreen>
+#include <QGuiApplication>
 
 ZoomWidget::ZoomWidget(QWidget *parent) :
 		QGLWidget(parent),
@@ -264,7 +266,8 @@ void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
 
 void ZoomWidget::grabDesktop()
 {
-	_desktopPixmap = QPixmap::grabWindow(QApplication::desktop()->winId());
+  QScreen *screen = QGuiApplication::primaryScreen();
+  _desktopPixmap = screen->grabWindow(0);
 }
 
 void ZoomWidget::shiftPixmap(const QPoint delta)
