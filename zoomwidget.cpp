@@ -237,7 +237,14 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 	int key = event->key();
 
 	if (key == Qt::Key_Escape) {
-		QApplication::quit();
+    if(_desktopPixmapSize != QApplication::desktop()->size()){ // If it's zoomed in, go back to normal
+			_desktopPixmapScale = 1.0f;
+
+      scalePixmapAt(QPoint(0,0));
+      checkPixmapPos();
+      update();
+    } else // Otherwise, exit
+      QApplication::quit();
 	} else if ((key >= Qt::Key_1) && (key <= Qt::Key_9)) {
 		_activePen.setWidth(key - Qt::Key_0);
 	} else if (key == Qt::Key_R) {
