@@ -23,6 +23,7 @@ enum ZoomWidgetDrawMode {
 	DRAWMODE_ARROW,
 	DRAWMODE_LINE,
 	DRAWMODE_RECT,
+	DRAWMODE_ELLIPSE,
 };
 
 class ZoomWidget : public QGLWidget
@@ -61,6 +62,7 @@ private:
 	QVector<UserObjectData> _userRects;
 	QVector<UserObjectData> _userLines;
 	QVector<UserObjectData> _userArrows;
+	QVector<UserObjectData> _userEllipses;
 
 	// Moving properties.
 	float		_scaleSensivity;

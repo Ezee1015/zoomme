@@ -135,6 +135,13 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     drawArrowHead(x, y, w, h, &p);
 	}
 
+	// Draw user ellipses.
+	for (int i = 0; i < _userEllipses.size(); ++i) {
+		p.setPen(_userEllipses.at(i).pen);
+		getRealUserObjectPos(_userEllipses.at(i), &x, &y, &w, &h);
+		p.drawEllipse(x, y, w, h);
+	}
+
 	// Draw active user object.
 	if (_state == STATE_DRAWING) {
 		p.setPen(_activePen);
@@ -151,6 +158,8 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 		} else if (_drawMode == DRAWMODE_ARROW) {
       p.drawLine(x, y, width + x, height + y);
       drawArrowHead(x, y, width, height, &p);
+		} else if (_drawMode == DRAWMODE_ELLIPSE) {
+			p.drawEllipse(x, y, width, height);
 		}
 	}
 
@@ -182,6 +191,8 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
 			_userRects.append(data);
 		} else if (_drawMode == DRAWMODE_ARROW) {
 			_userArrows.append(data);
+		} else if (_drawMode == DRAWMODE_ELLIPSE) {
+			_userEllipses.append(data);
     }
 
 		_state = STATE_MOVING;
@@ -247,6 +258,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 		_userRects.clear();
 		_userLines.clear();
 		_userArrows.clear();
+		_userEllipses.clear();
 		_state = STATE_MOVING;
 	} else if (key == Qt::Key_Z) {
 		_drawMode = DRAWMODE_LINE;
@@ -254,6 +266,8 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 		_drawMode = DRAWMODE_RECT;
 	} else if (key == Qt::Key_A) {
 		_drawMode = DRAWMODE_ARROW;
+	} else if (key == Qt::Key_E) {
+		_drawMode = DRAWMODE_ELLIPSE;
 	}
 
 	update();
