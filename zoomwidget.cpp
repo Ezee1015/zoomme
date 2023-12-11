@@ -21,7 +21,6 @@ ZoomWidget::ZoomWidget(QWidget *parent) :
 	_desktopPixmapSize = QApplication::desktop()->size();
 	_desktopPixmapScale = 1.0f;
 
-	_shiftMultiplier = 2;
 	_scaleSensivity = 0.1f;
 
 	_drawMode = DRAWMODE_LINE;
@@ -272,7 +271,7 @@ void ZoomWidget::grabDesktop()
 
 void ZoomWidget::shiftPixmap(const QPoint delta)
 {
-	_desktopPixmapPos -= delta * _shiftMultiplier;
+	_desktopPixmapPos -= delta * (_desktopPixmapSize.width() / _desktopPixmap.width());
 }
 
 void ZoomWidget::scalePixmapAt(const QPoint pos)

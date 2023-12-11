@@ -63,7 +63,6 @@ private:
 	QVector<UserObjectData> _userArrows;
 
 	// Moving properties.
-	int		_shiftMultiplier;
 	float		_scaleSensivity;
 
 
