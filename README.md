@@ -2,13 +2,14 @@
 Application for zooming and noting desktop (like ZoomIt under windows).
 
 ## Functions
-| Key                             | Function                                              |
-|---------------------------------|-------------------------------------------------------|
-| **`R` `G` `B` `C` `M` `Y` `W`** | To change color                                       |
-| **`1-9`**                       | To change width in pixels                             |
-| **`Z` `X` `A` `E`**             | To change draw mode (line\| rect \| arrow \| ellipse) |
-| **`Q`**                         | To clear all                                          |
-| **`ESC`**                       | To quit press                                         |
+| Key                             | Function                                                   |
+|---------------------------------|------------------------------------------------------------|
+| **`R` `G` `B` `C` `M` `Y` `W`** | To change color                                            |
+| **`1-9`**                       | To change width in pixels                                  |
+| **`Z` `X` `A` `E`**             | To change draw mode (line\| rect \| arrow \| ellipse)      |
+| **`Q`**                         | To clear all                                               |
+| **`U`**                         | To delete the last drawing of the current draw mode (undo) |
+| **`ESC`**                       | To quit press                                              |
 
 ## Dependencies
 - `build-essential`
