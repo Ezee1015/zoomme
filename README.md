@@ -15,7 +15,7 @@ Application for zooming and noting desktop (like ZoomIt under windows).
 
 ## Dependencies
 - `build-essential`
-- `qt6-base`
+- `qt6`
 
 ## Instalation
 
