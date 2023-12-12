@@ -1,7 +1,7 @@
 #include <QtWidgets/QApplication>
 #include "zoomwidget.hpp"
-#include <QDesktopWidget>
 #include <QCursor>
+#include <QScreen>
 
 int main(int argc, char *argv[])
 {
@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 
 	ZoomWidget w;
 	w.setWindowFlags(Qt::FramelessWindowHint | Qt::Tool | Qt::WindowStaysOnTopHint | Qt::X11BypassWindowManagerHint);
-	w.resize(QApplication::desktop()->size());
+	w.resize(QApplication::primaryScreen()->geometry().size());
 	w.showFullScreen();
 
 	w.show();

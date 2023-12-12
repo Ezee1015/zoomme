@@ -3,7 +3,6 @@
 
 #include <cmath>
 #include <QPainter>
-#include <QDesktopWidget>
 #include <QMouseEvent>
 #include <QScreen>
 #include <QRect>
@@ -13,7 +12,7 @@
 #include <QGuiApplication>
 
 ZoomWidget::ZoomWidget(QWidget *parent) :
-		QGLWidget(parent),
+		// QGLWidget(parent),
 		ui(new Ui::zoomwidget)
 {
 	ui->setupUi(this);
@@ -22,7 +21,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) :
 	_state = STATE_MOVING;
 
 	_desktopPixmapPos = QPoint(0, 0);
-	_desktopPixmapSize = QApplication::desktop()->size();
+	_desktopPixmapSize = QApplication::primaryScreen()->geometry().size();
 	_desktopPixmapScale = 1.0f;
 
 	_scaleSensivity = 0.1f;
@@ -304,7 +303,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
   }
 
 	if (key == Qt::Key_Escape) {
-    if(_desktopPixmapSize != QApplication::desktop()->size()){ // If it's zoomed in, go back to normal
+    if(_desktopPixmapSize != QApplication::primaryScreen()->geometry().size()){ // If it's zoomed in, go back to normal
 			_desktopPixmapScale = 1.0f;
 
       scalePixmapAt(QPoint(0,0));

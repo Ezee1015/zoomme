@@ -1,8 +1,9 @@
 #ifndef ZOOMWIDGET_HPP
 #define ZOOMWIDGET_HPP
 
-#include <QGLWidget>
+#include <QOpenGLWidget>
 #include <QString>
+#include <QPen>
 
 namespace Ui {
 	class zoomwidget;
@@ -35,7 +36,7 @@ enum ZoomWidgetDrawMode {
 	DRAWMODE_TEXT,
 };
 
-class ZoomWidget : public QGLWidget
+class ZoomWidget : public QOpenGLWidget
 {
 	Q_OBJECT
 
