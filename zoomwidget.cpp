@@ -286,7 +286,10 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     }
 
     UserTextData textData = _userTexts.last();
-    textData.text += event->text();
+    if (key == Qt::Key_Backspace)
+      textData.text.chop(1);
+    else
+      textData.text += event->text();
     _userTexts.removeLast();
     _userTexts.append(textData);
     update();
