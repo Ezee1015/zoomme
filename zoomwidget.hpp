@@ -38,7 +38,6 @@ public:
 
 protected:
 	virtual void paintEvent(QPaintEvent *event);
-  virtual void drawArrowHead(int x, int y, int width, int height, QPainter *p);
 
 	virtual void mousePressEvent(QMouseEvent *event);
 	virtual void mouseReleaseEvent(QMouseEvent *event);

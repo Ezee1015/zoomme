@@ -34,7 +34,7 @@ ZoomWidget::~ZoomWidget()
 	delete ui;
 }
 
-void ZoomWidget::drawArrowHead(int x, int y, int width, int height, QPainter *p) {
+void drawArrowHead(int x, int y, int width, int height, QPainter *p) {
   float opposite=-1 * height;
   float adjacent=width;
 
