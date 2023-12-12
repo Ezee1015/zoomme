@@ -6,6 +6,10 @@
 #include <QDesktopWidget>
 #include <QMouseEvent>
 #include <QScreen>
+#include <QRect>
+#include <QString>
+#include <QFont>
+#include <QPen>
 #include <QGuiApplication>
 
 ZoomWidget::ZoomWidget(QWidget *parent) :
@@ -142,6 +146,17 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 		p.drawEllipse(x, y, w, h);
 	}
 
+	// Draw user Texts.
+	for (int i = 0; i < _userTexts.size(); ++i) {
+		p.setPen(_userTexts.at(i).data.pen);
+    p.setFont(_userTexts.at(i).font);
+		getRealUserObjectPos(_userTexts.at(i).data, &x, &y, &w, &h);
+		p.drawText(QRect(x, y, w, h), _userTexts.at(i).text);
+
+    QPen tempPen = p.pen(); tempPen.setWidth(1); p.setPen(tempPen);
+    if((i == _userTexts.size()-1) && (_state == STATE_TYPING)) p.drawRect(x, y, w, h);
+	}
+
 	// Draw active user object.
 	if (_state == STATE_DRAWING) {
 		p.setPen(_activePen);
@@ -160,6 +175,9 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
       drawArrowHead(x, y, width, height, &p);
 		} else if (_drawMode == DRAWMODE_ELLIPSE) {
 			p.drawEllipse(x, y, width, height);
+		} else if (_drawMode == DRAWMODE_TEXT) {
+      QPen tempPen = p.pen(); tempPen.setWidth(1); p.setPen(tempPen);
+			p.drawRect(x, y, width, height);
 		}
 	}
 
@@ -168,6 +186,11 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 
 void ZoomWidget::mousePressEvent(QMouseEvent *event)
 {
+  // If it's writing a text and didn't saved it (by pressing Enter or
+  // Escape), it removes
+  if (_state == STATE_TYPING)
+    _userTexts.removeLast();
+
 	_lastMousePos = event->pos();
 
 	_state = STATE_DRAWING;
@@ -193,6 +216,19 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
 			_userArrows.append(data);
 		} else if (_drawMode == DRAWMODE_ELLIPSE) {
 			_userEllipses.append(data);
+		} else if (_drawMode == DRAWMODE_TEXT) {
+      QFont font;
+      font.setPixelSize(_activePen.width() * 4);
+
+      UserTextData textData;
+      textData.data = data;
+      textData.text = "";
+      textData.font = font;
+      _userTexts.append(textData);
+
+      _state = STATE_TYPING;
+      update();
+      return;
     }
 
 		_state = STATE_MOVING;
@@ -236,6 +272,23 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 {
 	int key = event->key();
 
+  if(_state == STATE_TYPING){
+		if (key == Qt::Key_Return || key == Qt::Key_Escape) {
+      if( _userTexts.last().text.isEmpty() )
+        _userTexts.removeLast();
+      _state = STATE_MOVING;
+      update();
+      return;
+    }
+
+    UserTextData textData = _userTexts.last();
+    textData.text += event->text();
+    _userTexts.removeLast();
+    _userTexts.append(textData);
+    update();
+    return;
+  }
+
 	if (key == Qt::Key_Escape) {
     if(_desktopPixmapSize != QApplication::desktop()->size()){ // If it's zoomed in, go back to normal
 			_desktopPixmapScale = 1.0f;
@@ -270,11 +323,14 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
       _userArrows.removeLast();
     if( _drawMode == DRAWMODE_ELLIPSE && (! _userEllipses.isEmpty()) )
       _userEllipses.removeLast();
+    if( _drawMode == DRAWMODE_TEXT && (! _userTexts.isEmpty()) )
+      _userTexts.removeLast();
 	} else if (key == Qt::Key_Q) {
 		_userRects.clear();
 		_userLines.clear();
 		_userArrows.clear();
 		_userEllipses.clear();
+		_userTexts.clear();
 		_state = STATE_MOVING;
 	} else if (key == Qt::Key_Z) {
 		_drawMode = DRAWMODE_LINE;
@@ -284,6 +340,8 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 		_drawMode = DRAWMODE_ARROW;
 	} else if (key == Qt::Key_E) {
 		_drawMode = DRAWMODE_ELLIPSE;
+	} else if (key == Qt::Key_T) {
+		_drawMode = DRAWMODE_TEXT;
 	}
 
 	update();

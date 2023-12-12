@@ -2,6 +2,7 @@
 #define ZOOMWIDGET_HPP
 
 #include <QGLWidget>
+#include <QString>
 
 namespace Ui {
 	class zoomwidget;
@@ -14,9 +15,16 @@ struct UserObjectData {
 	QPen pen;
 };
 
+struct UserTextData {
+  UserObjectData data;
+  QFont font;
+  QString text;
+};
+
 enum ZoomWidgetState {
 	STATE_MOVING,
 	STATE_DRAWING,
+	STATE_TYPING,
 };
 
 enum ZoomWidgetDrawMode {
@@ -24,6 +32,7 @@ enum ZoomWidgetDrawMode {
 	DRAWMODE_LINE,
 	DRAWMODE_RECT,
 	DRAWMODE_ELLIPSE,
+	DRAWMODE_TEXT,
 };
 
 class ZoomWidget : public QGLWidget
@@ -62,6 +71,7 @@ private:
 	QVector<UserObjectData> _userLines;
 	QVector<UserObjectData> _userArrows;
 	QVector<UserObjectData> _userEllipses;
+	QVector<UserTextData>   _userTexts;
 
 	// Moving properties.
 	float		_scaleSensivity;
