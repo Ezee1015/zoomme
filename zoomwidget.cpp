@@ -317,13 +317,13 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 	} else if (key == Qt::Key_U) {
     if( _drawMode == DRAWMODE_LINE && (! _userLines.isEmpty()) )
       _userLines.removeLast();
-    if( _drawMode == DRAWMODE_RECT && (! _userRects.isEmpty()) )
+    else if( _drawMode == DRAWMODE_RECT && (! _userRects.isEmpty()) )
       _userRects.removeLast();
-    if( _drawMode == DRAWMODE_ARROW && (! _userArrows.isEmpty()) )
+    else if( _drawMode == DRAWMODE_ARROW && (! _userArrows.isEmpty()) )
       _userArrows.removeLast();
-    if( _drawMode == DRAWMODE_ELLIPSE && (! _userEllipses.isEmpty()) )
+    else if( _drawMode == DRAWMODE_ELLIPSE && (! _userEllipses.isEmpty()) )
       _userEllipses.removeLast();
-    if( _drawMode == DRAWMODE_TEXT && (! _userTexts.isEmpty()) )
+    else if( _drawMode == DRAWMODE_TEXT && (! _userTexts.isEmpty()) )
       _userTexts.removeLast();
 	} else if (key == Qt::Key_Q) {
 		_userRects.clear();
