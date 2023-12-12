@@ -89,7 +89,7 @@ private:
 
 
 	void shiftPixmap(const QPoint delta);
-	void scalePixmapAt(const QPoint pos);
+	void scalePixmapAt(const QPointF pos);
 
 	void checkPixmapPos();
 

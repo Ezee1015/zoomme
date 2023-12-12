@@ -254,14 +254,18 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 void ZoomWidget::wheelEvent(QWheelEvent *event)
 {
 	if (_state == STATE_MOVING) {
-		int sign = event->delta() / abs(event->delta());
+		int sign;
+    if( event->angleDelta().y() > 0 )
+      sign=1;
+    else
+      sign=-1;
 
 		_desktopPixmapScale += sign * _scaleSensivity;
 		if (_desktopPixmapScale < 1.0f) {
 			_desktopPixmapScale = 1.0f;
 		}
 
-		scalePixmapAt(event->pos());
+		scalePixmapAt(event->position());
 		checkPixmapPos();
 
 		update();
@@ -362,7 +366,7 @@ void ZoomWidget::shiftPixmap(const QPoint delta)
 	_desktopPixmapPos -= delta * (_desktopPixmapSize.width() / _desktopPixmap.width());
 }
 
-void ZoomWidget::scalePixmapAt(const QPoint pos)
+void ZoomWidget::scalePixmapAt(const QPointF pos)
 {
 	int old_w = _desktopPixmapSize.width();
 	int old_h = _desktopPixmapSize.height();
