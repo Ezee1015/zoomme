@@ -15,14 +15,13 @@ Application for zooming and noting desktop (like ZoomIt under windows).
 
 ## Dependencies
 - `build-essential`
-- `qt5-qmake`
-- `qtbase5-dev`
+- `qt6-base`
 
 ## Instalation
 
 ### Dependencies
-- Debian-based: `sudo apt install build-essential qt5-qmake qtbase5-dev`
-- Arch-based: `sudo pacman -S base-devel qt5-base`
+- Debian-based: `sudo apt install build-essential qt6-base`
+- Arch-based: `sudo pacman -S base-devel qt6-base`
 
 ### Compilation
 ```bash
