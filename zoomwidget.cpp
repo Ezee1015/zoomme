@@ -29,6 +29,8 @@ ZoomWidget::ZoomWidget(QWidget *parent) :
 
 	_drawMode = DRAWMODE_LINE;
 
+  shiftPressed = false;
+
 	_activePen.setColor(QColor(255, 0, 0));
 	_activePen.setWidth(4);
 }
@@ -276,8 +278,11 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 {
 	int key = event->key();
 
+  if(key == Qt::Key_Shift)
+    shiftPressed = true;
+
   if(_state == STATE_TYPING){
-		if (key == Qt::Key_Return || key == Qt::Key_Escape) {
+		if ((!shiftPressed && key == Qt::Key_Return) || key == Qt::Key_Escape) {
       if( _userTexts.last().text.isEmpty() )
         _userTexts.removeLast();
       _state = STATE_MOVING;
@@ -288,6 +293,8 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     UserTextData textData = _userTexts.last();
     if (key == Qt::Key_Backspace)
       textData.text.chop(1);
+    else if(shiftPressed && (key == Qt::Key_Return))
+      textData.text += "\n";
     else
       textData.text += event->text();
     _userTexts.removeLast();
@@ -356,6 +363,8 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 
 void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
 {
+  if(event->key() == Qt::Key_Shift)
+    shiftPressed = false;
 }
 
 void ZoomWidget::grabDesktop()

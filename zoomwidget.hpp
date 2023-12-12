@@ -76,6 +76,8 @@ private:
 	// Moving properties.
 	float		_scaleSensivity;
 
+  // Boolean for pressing Shift
+  bool shiftPressed;
 
 	ZoomWidgetState	_state;
 	QPoint		_lastMousePos;

@@ -11,6 +11,7 @@ Application for zooming and noting desktop (like ZoomIt under windows).
 | **`U`**                         | To delete the last drawing of the current draw mode (undo)         |
 | **`ESC`**                       | To quit, restore zoom or finish writing text                       |
 | **`Enter`**                     | To finish writing text                                             |
+| **`Shift+Enter`**               | To make a new line when writing text                               |
 
 ## Dependencies
 - `build-essential`
