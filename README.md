@@ -1,5 +1,16 @@
-# ZoomMe
-Application for zooming and noting desktop (like ZoomIt under windows).
+<div align="center">
+  <img src="./resources/Icon.png" height="100" />
+  <h1>ZoomMe</h1>
+</div>
+
+Application for zooming and noting the desktop (like ZoomIt under windows).
+
+You can...
+- Draw lines, rectangles, arrows and ellipses.
+- Insert text.
+- Zoom in and out of the desktop.
+
+Made with Qt6 (it works with Qt5 too) and OpenGL.
 
 ## Functions
 
@@ -67,3 +78,7 @@ make
 ```bash
 ./zoomme
 ```
+
+## Credit
+- Magnifying glass icon: Research or Magnifying Glass Flat Icon Vector.svg from Wikimedia Commons by Videoplasty.com, CC-BY-SA 4.0
+- Pencil: The "Pencil" icon used by MobiText from Wikimedia Commons by Gavinstubbs09, CC-BY-SA-3.0
