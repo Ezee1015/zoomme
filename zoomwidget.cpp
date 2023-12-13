@@ -152,11 +152,15 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 		p.setPen(_userTexts.at(i).data.pen);
     p.setFont(_userTexts.at(i).font);
 		getRealUserObjectPos(_userTexts.at(i).data, &x, &y, &w, &h);
-		p.drawText(QRect(x, y, w, h), _userTexts.at(i).text);
+    QString text = _userTexts.at(i).text;
+    if( text.isEmpty() )
+      text="Type some text... \nThen press Enter to finish...";
+    p.drawText(QRect(x, y, w, h), text);
 
     QPen tempPen = p.pen(); tempPen.setWidth(1); p.setPen(tempPen);
-    if((i == _userTexts.size()-1) && (_state == STATE_TYPING)) p.drawRect(x, y, w, h);
-	}
+    if( (i == _userTexts.size()-1) && (_state == STATE_TYPING) )
+      p.drawRect(x, y, w, h);
+  }
 
 	// Draw active user object.
 	if (_state == STATE_DRAWING) {
@@ -179,6 +183,13 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 		} else if (_drawMode == DRAWMODE_TEXT) {
       QPen tempPen = p.pen(); tempPen.setWidth(1); p.setPen(tempPen);
 			p.drawRect(x, y, width, height);
+      QString defaultText;
+      defaultText.append("Sizing... (");
+      defaultText.append(QString::number(width));
+      defaultText.append("x");
+      defaultText.append(QString::number(height));
+      defaultText.append(")");
+      p.drawText(QRect(x, y, width, height), defaultText);
 		}
 	}
 
