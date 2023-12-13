@@ -155,7 +155,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     QString text = _userTexts.at(i).text;
     if( text.isEmpty() )
       text="Type some text... \nThen press Enter to finish...";
-    p.drawText(QRect(x, y, w, h), text);
+    p.drawText(QRect(x, y, w, h), Qt::AlignCenter, text);
 
     QPen tempPen = p.pen(); tempPen.setWidth(1); p.setPen(tempPen);
     if( (i == _userTexts.size()-1) && (_state == STATE_TYPING) )
@@ -189,7 +189,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
       defaultText.append("x");
       defaultText.append(QString::number(height));
       defaultText.append(")");
-      p.drawText(QRect(x, y, width, height), defaultText);
+      p.drawText(QRect(x, y, width, height), Qt::AlignCenter, defaultText);
 		}
 	}
 
