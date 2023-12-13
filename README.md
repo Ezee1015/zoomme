@@ -12,6 +12,9 @@ You can...
 
 Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https://github.com/Ezee1015/zoomme/tree/Qt5)) and OpenGL.
 
+![Demonstration of the functionality](resources/demonstration.gif)
+> The dots in the GIF are artifacts from ffpemg
+
 ## Functions
 
 ### General
