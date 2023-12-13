@@ -18,11 +18,11 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 ## Functions
 
 ### General
-|    Key    | Function                                                   |
-|:---------:|------------------------------------------------------------|
-|  **`Q`**  | To clear all the drawings                                  |
-|  **`U`**  | To delete the last drawing of the current draw mode (undo) |
-| **`ESC`** | To finish writing text, restore zoom or quit/exit          |
+|    Key    | Function                                                                                                                                  |
+|:---------:|-------------------------------------------------------------------------------------------------------------------------------------------|
+|  **`Q`**  | To clear all the drawings                                                                                                                 |
+|  **`U`**  | To delete the last drawing of the current draw mode (undo)                                                                                |
+| **`ESC`** | To finish writing text (if you're writing), restore zoom (if you are zoomed in), or quit/exit (if you are not zoomed in nor writing text) |
 
 ### Change color
 
