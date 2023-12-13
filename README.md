@@ -10,7 +10,7 @@ You can...
 - Insert text.
 - Zoom in and out of the desktop.
 
-Made with Qt6 (it works with Qt5 too) and OpenGL.
+Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https://github.com/Ezee1015/zoomme/tree/Qt5)) and OpenGL.
 
 ## Functions
 
