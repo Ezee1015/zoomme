@@ -2,16 +2,50 @@
 Application for zooming and noting desktop (like ZoomIt under windows).
 
 ## Functions
-|                 Key                 | Function                                                           |
-|:-----------------------------------:|--------------------------------------------------------------------|
-| **`R` `G` `B` `C` `M` `Y` `W` `O`** | To change color                                                    |
-|              **`1-9`**              | To change width in pixels                                          |
-|       **`Z` `X` `A` `E` `T`**       | To change draw mode (line\| rectangle \| arrow \| ellipse \| text) |
-|               **`Q`**               | To clear all                                                       |
-|               **`U`**               | To delete the last drawing of the current draw mode (undo)         |
-|              **`ESC`**              | To quit, restore zoom or finish writing text                       |
-|             **`Enter`**             | To finish writing text                                             |
-|          **`Shift+Enter`**          | To make a new line when writing text                               |
+
+### General
+|    Key    | Function                                                   |
+|:---------:|------------------------------------------------------------|
+|  **`Q`**  | To clear all the drawings                                  |
+|  **`U`**  | To delete the last drawing of the current draw mode (undo) |
+| **`ESC`** | To finish writing text, restore zoom or quit/exit          |
+
+### Change color
+
+|   Key   | Function                   |
+|:-------:|----------------------------|
+| **`R`** | To change color to Red     |
+| **`G`** | To change color to Green   |
+| **`B`** | To change color to Blue    |
+| **`C`** | To change color to Cyan    |
+| **`M`** | To change color to Magenta |
+| **`Y`** | To change color to Yellow  |
+| **`W`** | To change color to White   |
+| **`O`** | To change color to Orange  |
+
+### Change size
+|   Key   | Function                        |
+|:-------:|---------------------------------|
+| **`1`** | To change the width to 1 pixel  |
+| **`2`** | To change the width to 2 pixels |
+| **`3`** | To change the width to 3 pixels |
+| **`4`** | To change the width to 4 pixels |
+| **`5`** | To change the width to 5 pixels |
+| **`6`** | To change the width to 6 pixels |
+| **`7`** | To change the width to 7 pixels |
+| **`8`** | To change the width to 8 pixels |
+| **`9`** | To change the width to 9 pixels |
+
+### Modes
+|        Key        | Function                                              |
+|:-----------------:|-------------------------------------------------------|
+|      **`Z`**      | To change the mode to drawing Lines (mode by default) |
+|      **`X`**      | To change the mode to drawing Rectangles              |
+|      **`A`**      | To change the mode to drawing Arrows                  |
+|      **`E`**      | To change the mode to drawing Ellipses                |
+|      **`T`**      | To change the mode to insert Text                     |
+|    **`Enter`**    | To finish writing text                                |
+| **`Shift+Enter`** | To make a new line when writing text                  |
 
 ## Dependencies
 - `build-essential`
