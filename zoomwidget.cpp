@@ -12,6 +12,9 @@
 #include <QGuiApplication>
 #include <QOpenGLWidget>
 #include <QCursor>
+#include <QStandardPaths>
+#include <QDir>
+#include <QDateTime>
 
 ZoomWidget::ZoomWidget(QWidget *parent) :
 		QOpenGLWidget(parent),
@@ -375,6 +378,27 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 		_drawMode = DRAWMODE_ELLIPSE;
 	} else if (key == Qt::Key_T) {
 		_drawMode = DRAWMODE_TEXT;
+	} else if (key == Qt::Key_S) {
+    QApplication::beep();
+
+    // Screenshot
+    QScreen *screen = QGuiApplication::screenAt(QCursor::pos());
+    QPixmap screenshot = screen->grabWindow(0);
+
+    // Path
+    QString pathFile = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
+    if (pathFile.isEmpty())
+        pathFile = QDir::currentPath();
+
+    // File
+    const QString date = QDateTime::currentDateTime().toString("dd-MM-yyyy hh.mm.ss");
+    const QString format = "png";
+    pathFile.append("/ZoomMe ");
+    pathFile.append(date);
+    pathFile.append("." + format);
+
+    // Save screenshot
+    screenshot.save(pathFile);
 	}
 
 	update();
