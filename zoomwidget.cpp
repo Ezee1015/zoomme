@@ -11,6 +11,7 @@
 #include <QPen>
 #include <QGuiApplication>
 #include <QOpenGLWidget>
+#include <QCursor>
 
 ZoomWidget::ZoomWidget(QWidget *parent) :
 		QOpenGLWidget(parent),
@@ -22,7 +23,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) :
 	_state = STATE_MOVING;
 
 	_desktopPixmapPos = QPoint(0, 0);
-	_desktopPixmapSize = QApplication::primaryScreen()->geometry().size();
+	_desktopPixmapSize = QApplication::screenAt(QCursor::pos())->geometry().size();
   _desktopPixmapOriginalSize = _desktopPixmapSize;
 	_desktopPixmapScale = 1.0f;
 
@@ -316,7 +317,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
   }
 
 	if (key == Qt::Key_Escape) {
-    if(_desktopPixmapSize != QApplication::primaryScreen()->geometry().size()){ // If it's zoomed in, go back to normal
+    if(_desktopPixmapSize != _desktopPixmapOriginalSize){ // If it's zoomed in, go back to normal
 			_desktopPixmapScale = 1.0f;
 
       scalePixmapAt(QPoint(0,0));
@@ -383,7 +384,7 @@ void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
 
 void ZoomWidget::grabDesktop()
 {
-  QScreen *screen = QGuiApplication::primaryScreen();
+  QScreen *screen = QGuiApplication::screenAt(QCursor::pos());
   _desktopPixmap = screen->grabWindow(0);
 
   // If there's Scaling enabled in the PC, scale the Window to the "scaled resolution"
