@@ -37,8 +37,9 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 | **`C`** | To change color to Cyan    |
 | **`M`** | To change color to Magenta |
 | **`Y`** | To change color to Yellow  |
-| **`W`** | To change color to White   |
 | **`O`** | To change color to Orange  |
+| **`W`** | To change color to White   |
+| **`D`** | To change color to Black   |
 
 ### Change size
 |   Key   | Function                        |

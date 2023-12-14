@@ -352,6 +352,8 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 		_activePen.setColor(QColor(255, 255, 0));
 	} else if (key == Qt::Key_W) {
 		_activePen.setColor(QColor(255, 255, 255));
+	} else if (key == Qt::Key_D) {
+		_activePen.setColor(QColor(0, 0, 0));
 	} else if (key == Qt::Key_U) {
     if( _drawMode == DRAWMODE_LINE && (! _userLines.isEmpty()) )
       _userLines.removeLast();
