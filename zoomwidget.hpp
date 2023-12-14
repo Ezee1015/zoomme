@@ -3,6 +3,7 @@
 
 #include <QOpenGLWidget>
 #include <QString>
+#include <QScreen>
 #include <QPen>
 
 namespace Ui {
@@ -62,6 +63,7 @@ private:
 	Ui::zoomwidget *ui;
 
 	// Desktop pixmap properties.
+  QScreen   *_desktopScreen;
 	QPixmap		_desktopPixmap;
 	QPoint		_desktopPixmapPos;
 	QSize		_desktopPixmapSize;

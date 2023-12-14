@@ -25,6 +25,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) :
 
 	_state = STATE_MOVING;
 
+  _desktopScreen = QGuiApplication::screenAt(QCursor::pos());
 	_desktopPixmapPos = QPoint(0, 0);
 	_desktopPixmapSize = QApplication::screenAt(QCursor::pos())->geometry().size();
   _desktopPixmapOriginalSize = _desktopPixmapSize;
@@ -382,8 +383,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     QApplication::beep();
 
     // Screenshot
-    QScreen *screen = QGuiApplication::screenAt(QCursor::pos());
-    QPixmap screenshot = screen->grabWindow(0);
+    QPixmap screenshot = _desktopScreen->grabWindow(0);
 
     // Path
     QString pathFile = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
@@ -412,8 +412,7 @@ void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
 
 void ZoomWidget::grabDesktop()
 {
-  QScreen *screen = QGuiApplication::screenAt(QCursor::pos());
-  _desktopPixmap = screen->grabWindow(0);
+  _desktopPixmap = _desktopScreen->grabWindow(0);
 
   // If there's Scaling enabled in the PC, scale the Window to the "scaled resolution"
   // This cause a pixelated image of the desktop. But if I don't do this, the program
