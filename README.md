@@ -24,6 +24,7 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 |      **`U`**      | To delete the last drawing of the current draw mode (undo)                                                                                |
 | **`Mouse Wheel`** | To zoom in and zoom out                                                                                                                   |
 |      **`Q`**      | To clear all the drawings                                                                                                                 |
+|      **`P`**      | To alternate between your screen, a black-board mode and a white-board mode. By the way, your drawing will persist between the modes    |
 |     **`ESC`**     | To finish writing text (if you're writing), restore zoom (if you are zoomed in), or quit/exit (if you are not zoomed in nor writing text) |
 
 ### Change color

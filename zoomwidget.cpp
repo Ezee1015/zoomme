@@ -15,6 +15,7 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QDateTime>
+#include <QColor>
 
 ZoomWidget::ZoomWidget(QWidget *parent) :
 		QOpenGLWidget(parent),
@@ -34,6 +35,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) :
 	_scaleSensivity = 0.1f;
 
 	_drawMode = DRAWMODE_LINE;
+  _boardMode=0;
 
   shiftPressed = false;
 
@@ -122,7 +124,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 	// Draw desktop pixmap.
 	p.drawPixmap(_desktopPixmapPos.x(), _desktopPixmapPos.y(),
 		     _desktopPixmapSize.width(), _desktopPixmapSize.height(),
-		     _desktopPixmap);
+		     _drawnPixmap);
 
 	// Draw user objects.
 	int x, y, w, h;
@@ -369,6 +371,15 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 		_userEllipses.clear();
 		_userTexts.clear();
 		_state = STATE_MOVING;
+	} else if (key == Qt::Key_P) {
+    if( (++_boardMode) == 3 )
+      _boardMode=0;
+
+    switch (_boardMode) {
+      case 0: _drawnPixmap = _desktopPixmap; break;
+      case 1: _drawnPixmap.fill("#404040"); break;
+      case 2:_drawnPixmap.fill("#FFFFFF"); break;
+    }
 	} else if (key == Qt::Key_Z) {
 		_drawMode = DRAWMODE_LINE;
 	} else if (key == Qt::Key_X) {
@@ -413,6 +424,7 @@ void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
 void ZoomWidget::grabDesktop()
 {
   _desktopPixmap = _desktopScreen->grabWindow(0);
+  _drawnPixmap = _desktopPixmap;
 
   // If there's Scaling enabled in the PC, scale the Window to the "scaled resolution"
   // This cause a pixelated image of the desktop. But if I don't do this, the program

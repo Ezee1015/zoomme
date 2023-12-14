@@ -72,6 +72,10 @@ private:
   // When there is no Scaling this variable is the same that _desktopPixmap.size()
 	QSize		_desktopPixmapOriginalSize;
 
+  // Pixmap shown in the screen. This can be the _desktopPixmap, or the a "board"
+  // if it's activated the boardMode
+	QPixmap		_drawnPixmap;
+
 	// User objects.
 	QVector<UserObjectData> _userRects;
 	QVector<UserObjectData> _userLines;
@@ -82,8 +86,9 @@ private:
 	// Moving properties.
 	float		_scaleSensivity;
 
-  // Boolean for pressing Shift
+  // Boolean for states
   bool shiftPressed;
+  int _boardMode; // 0 --> False, 1 --> Dark Grey, 2 --> White
 
 	ZoomWidgetState	_state;
 	QPoint		_lastMousePos;
