@@ -383,6 +383,12 @@ void ZoomWidget::grabDesktop()
 {
   QScreen *screen = QGuiApplication::primaryScreen();
   _desktopPixmap = screen->grabWindow(0);
+
+  // If there's Scaling enabled in the PC, scale the Window to the "scaled resolution"
+  // This cause a pixelated image of the desktop. But if I don't do this, the program
+  // would be always a little zoomed in
+  if(_desktopPixmap.size() != _desktopPixmapSize)
+    _desktopPixmap = _desktopPixmap.scaled(_desktopPixmapSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 }
 
 void ZoomWidget::shiftPixmap(const QPoint delta)
