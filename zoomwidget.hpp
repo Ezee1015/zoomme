@@ -66,6 +66,9 @@ private:
 	QPoint		_desktopPixmapPos;
 	QSize		_desktopPixmapSize;
 	float		_desktopPixmapScale;
+  // When Scaling is enable, this variable saves the correct size of the window
+  // When there is no Scaling this variable is the same that _desktopPixmap.size()
+	QSize		_desktopPixmapOriginalSize;
 
 	// User objects.
 	QVector<UserObjectData> _userRects;

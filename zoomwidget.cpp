@@ -22,6 +22,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) :
 
 	_desktopPixmapPos = QPoint(0, 0);
 	_desktopPixmapSize = QApplication::primaryScreen()->geometry().size();
+  _desktopPixmapOriginalSize = _desktopPixmapSize;
 	_desktopPixmapScale = 1.0f;
 
 	_scaleSensivity = 0.1f;
@@ -387,13 +388,16 @@ void ZoomWidget::grabDesktop()
   // If there's Scaling enabled in the PC, scale the Window to the "scaled resolution"
   // This cause a pixelated image of the desktop. But if I don't do this, the program
   // would be always a little zoomed in
-  if(_desktopPixmap.size() != _desktopPixmapSize)
-    _desktopPixmap = _desktopPixmap.scaled(_desktopPixmapSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+  // if(_desktopPixmap.size() != _desktopPixmapSize)
+  //   _desktopPixmap = _desktopPixmap.scaled(_desktopPixmapSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+  // This statement was replaced with a better approach with `_desktopPixmapOriginalSize`
+  // that takes in count the correct original size of the screen instead of scaling it
+  // down, that caused a loss in quality
 }
 
 void ZoomWidget::shiftPixmap(const QPoint delta)
 {
-	_desktopPixmapPos -= delta * (_desktopPixmapSize.width() / _desktopPixmap.width());
+	_desktopPixmapPos -= delta * (_desktopPixmapSize.width() / _desktopPixmapOriginalSize.width());
 }
 
 void ZoomWidget::scalePixmapAt(const QPointF pos)
@@ -401,8 +405,8 @@ void ZoomWidget::scalePixmapAt(const QPointF pos)
 	int old_w = _desktopPixmapSize.width();
 	int old_h = _desktopPixmapSize.height();
 
-	int new_w = _desktopPixmap.width() * _desktopPixmapScale;
-	int new_h = _desktopPixmap.height() * _desktopPixmapScale;
+	int new_w = _desktopPixmapOriginalSize.width() * _desktopPixmapScale;
+	int new_h = _desktopPixmapOriginalSize.height() * _desktopPixmapScale;
 	_desktopPixmapSize = QSize(new_w, new_h);
 
 	int dw = new_w - old_w;
