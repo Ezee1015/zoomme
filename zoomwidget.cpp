@@ -253,6 +253,10 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
 
 void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 {
+  // If the app lost focus, request it again
+  if(!QWidget::isActiveWindow())
+    QWidget::activateWindow();
+
 	if (_state == STATE_MOVING) {
 		QPoint delta = event->pos() - _lastMousePos;
 
