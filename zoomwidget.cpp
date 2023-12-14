@@ -10,9 +10,10 @@
 #include <QFont>
 #include <QPen>
 #include <QGuiApplication>
+#include <QOpenGLWidget>
 
 ZoomWidget::ZoomWidget(QWidget *parent) :
-		// QGLWidget(parent),
+		QOpenGLWidget(parent),
 		ui(new Ui::zoomwidget)
 {
 	ui->setupUi(this);
