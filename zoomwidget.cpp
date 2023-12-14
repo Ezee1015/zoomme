@@ -332,7 +332,6 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 
       scalePixmapAt(QPoint(0,0));
       checkPixmapPos();
-      update();
     } else // Otherwise, exit
       QApplication::quit();
 	} else if ((key >= Qt::Key_1) && (key <= Qt::Key_9)) {
