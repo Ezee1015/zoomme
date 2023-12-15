@@ -82,8 +82,19 @@ make
 ```
 
 ### Running
+- Running the application as normal:
 ```bash
 ./zoomme
+```
+
+- Use an image as the background (instead of the desktop):
+```bash
+./zoomme -i path/to/image
+```
+
+- Show the help message:
+```bash
+./zoomme -h
 ```
 
 ## Credit
