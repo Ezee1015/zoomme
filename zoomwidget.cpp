@@ -440,6 +440,17 @@ bool ZoomWidget::grabImage(QString path){
   if(_desktopPixmap.isNull())
     return false;
 
+  // If it has transparency, fill it with some color
+  if (_desktopPixmap.hasAlpha()) {
+    QPixmap background(_desktopPixmap.size());
+    background.fill("#2C2C2C");
+
+    QPainter painter(&background);
+    painter.drawPixmap(0, 0, _desktopPixmap);
+
+    _desktopPixmap = background;
+  }
+
   _drawnPixmap = _desktopPixmap;
   return true;
 }
