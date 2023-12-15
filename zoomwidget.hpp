@@ -88,7 +88,7 @@ private:
 
   // Boolean for states
   bool shiftPressed;
-  int _boardMode; // 0 --> False, 1 --> Dark Grey, 2 --> White
+  bool _boardMode;
 
 	ZoomWidgetState	_state;
 	QPoint		_lastMousePos;

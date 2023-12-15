@@ -373,14 +373,11 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 		_userTexts.clear();
 		_state = STATE_MOVING;
 	} else if (key == Qt::Key_P) {
-    if( (++_boardMode) == 3 )
-      _boardMode=0;
-
-    switch (_boardMode) {
-      case 0: _drawnPixmap = _desktopPixmap; break;
-      case 1: _drawnPixmap.fill("#404040"); break;
-      case 2:_drawnPixmap.fill("#FFFFFF"); break;
-    }
+    if(_boardMode)
+      _drawnPixmap = _desktopPixmap;
+    else
+      _drawnPixmap.fill("#2C2C2C");
+    _boardMode = !_boardMode;
 	} else if (key == Qt::Key_Z) {
 		_drawMode = DRAWMODE_LINE;
 	} else if (key == Qt::Key_X) {
