@@ -46,6 +46,7 @@ public:
 	~ZoomWidget();
 
 	void grabDesktop();
+	bool grabImage(QString path);
 
 protected:
 	virtual void paintEvent(QPaintEvent *event);

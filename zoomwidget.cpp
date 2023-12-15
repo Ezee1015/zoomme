@@ -434,6 +434,16 @@ void ZoomWidget::grabDesktop()
   // down, that caused a loss in quality
 }
 
+bool ZoomWidget::grabImage(QString path){
+  _desktopPixmap = QPixmap(path);
+
+  if(_desktopPixmap.isNull())
+    return false;
+
+  _drawnPixmap = _desktopPixmap;
+  return true;
+}
+
 void ZoomWidget::shiftPixmap(const QPoint delta)
 {
 	_desktopPixmapPos -= delta * (_desktopPixmapSize.width() / _desktopPixmapOriginalSize.width());
