@@ -102,6 +102,7 @@ private:
 	QPen	_activePen;
 
 
+  void updateAtMousePos(QPoint mousePos);
 	void shiftPixmap(const QPoint delta);
 	void scalePixmapAt(const QPointF pos);
 

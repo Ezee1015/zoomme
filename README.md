@@ -18,14 +18,15 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 ## Functions
 
 ### General
-|     Key/Event     | Function                                                                                                                                  |
-|:-----------------:|-------------------------------------------------------------------------------------------------------------------------------------------|
-|      **`S`**      | To take a Screenshot in the current position and Save it to the standard Pictures folder (or the current path if it isn't found)          |
-|      **`U`**      | To delete the last drawing of the current draw mode (undo)                                                                                |
-| **`Mouse Wheel`** | To zoom in and zoom out                                                                                                                   |
-|      **`Q`**      | To clear all the drawings                                                                                                                 |
-|      **`P`**      | To alternate between your screen and a blackboard mode. By the way, your drawings will persist between the modes    |
-|     **`ESC`**     | To finish writing text (if you're writing), restore zoom (if you are zoomed in), or quit/exit (if you are not zoomed in nor writing text) |
+|     Key/Event     | Function                                                                                                                                                                                     |
+|:-----------------:|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|      **`S`**      | To take a Screenshot in the current position and Save it to the standard Pictures folder (or the current path if it isn't found)                                                             |
+|      **`U`**      | To delete the last drawing of the current draw mode (undo)                                                                                                                                   |
+|    **`Shift`**    | When it's zoomed in, if you press and hold the key, the screen will not follow the mouse, so you can freely move it around that part of the screen (for drawing, for example). When you release it, it will continue following the mouse |
+| **`Mouse Wheel`** | To zoom in and zoom out                                                                                                                                                                      |
+|      **`Q`**      | To clear all the drawings                                                                                                                                                                    |
+|      **`P`**      | To alternate between your screen and a blackboard mode. By the way, your drawings will persist between the modes                                                                             |
+|     **`ESC`**     | To finish writing text (if you're writing), restore zoom (if you are zoomed in), or quit/exit (if you are not zoomed in nor writing text)                                                    |
 
 ### Change color
 

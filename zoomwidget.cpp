@@ -263,17 +263,23 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
   if(!QWidget::isActiveWindow())
     QWidget::activateWindow();
 
-	if (_state == STATE_MOVING) {
-		QPoint delta = event->pos() - _lastMousePos;
+  updateAtMousePos(event->pos());
 
-		shiftPixmap(delta);
-		checkPixmapPos();
-	} else if (_state == STATE_DRAWING) {
-		_endDrawPoint = (event->pos() - _desktopPixmapPos)/_desktopPixmapScale;
-	}
-
-	_lastMousePos = event->pos();
 	update();
+}
+
+void ZoomWidget::updateAtMousePos(QPoint mousePos){
+  if (!shiftPressed){
+    QPoint delta = mousePos - _lastMousePos;
+
+    shiftPixmap(delta);
+    checkPixmapPos();
+
+    _lastMousePos = mousePos;
+  }
+
+	if (_state == STATE_DRAWING)
+		_endDrawPoint = (mousePos - _desktopPixmapPos)/_desktopPixmapScale;
 }
 
 void ZoomWidget::wheelEvent(QWheelEvent *event)
@@ -415,8 +421,11 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 
 void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
 {
-  if(event->key() == Qt::Key_Shift)
+  if(event->key() == Qt::Key_Shift) {
     shiftPressed = false;
+    updateAtMousePos(QCursor::pos());
+    update();
+  }
 }
 
 void ZoomWidget::grabDesktop()
