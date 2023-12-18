@@ -191,6 +191,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 			p.drawEllipse(x, y, width, height);
 		} else if (_drawMode == DRAWMODE_TEXT) {
       QPen tempPen = p.pen(); tempPen.setWidth(1); p.setPen(tempPen);
+      QFont font; font.setPixelSize(_activePen.width() * 4); p.setFont(font);
 			p.drawRect(x, y, width, height);
       QString defaultText;
       defaultText.append("Sizing... (");
