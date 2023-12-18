@@ -209,7 +209,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 void ZoomWidget::mousePressEvent(QMouseEvent *event)
 {
   // If it's writing a text and didn't saved it (by pressing Enter or
-  // Escape), it removes
+  // Escape), it removes. To disable this, just comment this if statement below
   if (_state == STATE_TYPING)
     _userTexts.removeLast();
 
