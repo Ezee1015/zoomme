@@ -213,7 +213,8 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
   if (_state == STATE_TYPING)
     _userTexts.removeLast();
 
-	_lastMousePos = event->pos();
+  if(!shiftPressed)
+    _lastMousePos = event->pos();
 
 	_state = STATE_DRAWING;
 
@@ -469,7 +470,10 @@ bool ZoomWidget::grabImage(QString path){
 
 void ZoomWidget::shiftPixmap(const QPoint delta)
 {
-	_desktopPixmapPos -= delta * (_desktopPixmapSize.width() / _desktopPixmapOriginalSize.width());
+  int newX = _desktopPixmapPos.x() - delta.x() * (_desktopPixmapSize.width() / _desktopPixmapOriginalSize.width());
+  int newY = _desktopPixmapPos.y() - delta.y() * (_desktopPixmapSize.height() / _desktopPixmapOriginalSize.height());
+	_desktopPixmapPos.setX(newX);
+	_desktopPixmapPos.setY(newY);
 }
 
 void ZoomWidget::scalePixmapAt(const QPointF pos)
