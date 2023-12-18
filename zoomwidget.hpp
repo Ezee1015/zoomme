@@ -37,7 +37,7 @@ enum ZoomWidgetDrawMode {
   DRAWMODE_TEXT,
 };
 
-class ZoomWidget : public QOpenGLWidget
+class ZoomWidget : public QWidget
 {
   Q_OBJECT
 
@@ -45,7 +45,7 @@ class ZoomWidget : public QOpenGLWidget
     explicit ZoomWidget(QWidget *parent = 0);
     ~ZoomWidget();
 
-    void grabDesktop();
+    void grabDesktop(bool liveMode);
     bool grabImage(QString path);
 
   protected:
@@ -90,6 +90,7 @@ class ZoomWidget : public QOpenGLWidget
     // Boolean for states
     bool shiftPressed;
     bool _boardMode;
+    bool _liveMode;
 
     ZoomWidgetState	_state;
     QPoint		_lastMousePos;

@@ -18,7 +18,7 @@
 #include <QColor>
 
 ZoomWidget::ZoomWidget(QWidget *parent) :
-  QOpenGLWidget(parent),
+  QWidget(parent),
   ui(new Ui::zoomwidget)
 {
   ui->setupUi(this);
@@ -122,9 +122,12 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   p.begin(this);
 
   // Draw desktop pixmap.
-  p.drawPixmap(_desktopPixmapPos.x(), _desktopPixmapPos.y(),
-      _desktopPixmapSize.width(), _desktopPixmapSize.height(),
-      _drawnPixmap);
+  if(!_liveMode || _boardMode){
+    setAttribute(Qt::WA_TranslucentBackground, false);
+    p.drawPixmap(_desktopPixmapPos.x(), _desktopPixmapPos.y(),
+        _desktopPixmapSize.width(), _desktopPixmapSize.height(),
+        _drawnPixmap);
+  }
 
   // Draw user objects.
   int x, y, w, h;
@@ -286,6 +289,8 @@ void ZoomWidget::updateAtMousePos(QPoint mousePos){
 
 void ZoomWidget::wheelEvent(QWheelEvent *event)
 {
+  if(_liveMode)
+    return;
   if (_state == STATE_MOVING) {
     int sign;
     if( event->angleDelta().y() > 0 )
@@ -383,11 +388,11 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     _userTexts.clear();
     _state = STATE_MOVING;
   } else if (key == Qt::Key_P) {
-    if(_boardMode)
-      _drawnPixmap = _desktopPixmap;
-    else
-      _drawnPixmap.fill("#2C2C2C");
     _boardMode = !_boardMode;
+    if(_boardMode)
+      _drawnPixmap.fill("#2C2C2C");
+    else
+      _drawnPixmap = _desktopPixmap;
   } else if (key == Qt::Key_Z) {
     _drawMode = DRAWMODE_LINE;
   } else if (key == Qt::Key_X) {
@@ -432,10 +437,15 @@ void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
   }
 }
 
-void ZoomWidget::grabDesktop()
+void ZoomWidget::grabDesktop(bool liveMode)
 {
+  _liveMode = liveMode;
+
   _desktopPixmap = _desktopScreen->grabWindow(0);
   _drawnPixmap = _desktopPixmap;
+
+  if(!liveMode)
+    showFullScreen();
 
   // If there's Scaling enabled in the PC, scale the Window to the "scaled resolution"
   // This cause a pixelated image of the desktop. But if I don't do this, the program

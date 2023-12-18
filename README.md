@@ -94,6 +94,11 @@ make
 ./zoomme -i path/to/image
 ```
 
+- ***Experimental*** -- Use a transparent background. No zooming allowed, only drawing
+```bash
+./zoomme -l
+```
+
 - Show the help message:
 ```bash
 ./zoomme -h
