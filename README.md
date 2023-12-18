@@ -79,7 +79,7 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 
 ### Compilation
 ```bash
-qmake -makefile zoomme.pro
+qmake6 -makefile zoomme.pro
 make
 ```
 
