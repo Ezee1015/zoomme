@@ -423,7 +423,7 @@ void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
 {
   if(event->key() == Qt::Key_Shift) {
     shiftPressed = false;
-    updateAtMousePos(QCursor::pos());
+    updateAtMousePos(mapFromGlobal(QCursor::pos()));
     update();
   }
 }
