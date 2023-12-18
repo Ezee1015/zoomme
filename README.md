@@ -74,7 +74,7 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 ## Instalation
 
 ### Dependencies
-- Debian-based: `sudo apt install build-essential qt6-base-dev libqt6opengl6-dev`
+- Debian-based: `sudo apt install build-essential qt6-base-dev libqt6opengl6-dev libqt5opengl5-dev`
 - Arch-based: `sudo pacman -S base-devel qt6-base`
 
 ### Compilation
