@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 	ZoomWidget w;
 	w.setWindowFlags(Qt::FramelessWindowHint | Qt::Tool | Qt::WindowStaysOnTopHint | Qt::BypassWindowManagerHint);
 	w.resize(QApplication::screenAt(QCursor::pos())->geometry().size());
-  w.move( QApplication::screenAt(QCursor::pos())->geometry().topLeft() );
+  w.move(QApplication::screenAt(QCursor::pos())->geometry().topLeft());
 	w.showFullScreen();
   w.setCursor(QCursor(Qt::CrossCursor));
 
