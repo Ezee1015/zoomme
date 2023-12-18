@@ -48,7 +48,6 @@ int main(int argc, char *argv[])
   w.move(QApplication::screenAt(QCursor::pos())->geometry().topLeft());
 	w.showFullScreen();
   w.setCursor(QCursor(Qt::CrossCursor));
-
 	w.show();
 	if(img.isEmpty()) w.grabDesktop();
   else {
