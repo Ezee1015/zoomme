@@ -13,7 +13,7 @@ void printHelp(int exitStatus, const char* errorMsg){
     printf("ZoomMe is an application for zooming/magnifying and noting the desktop.\n");
   printf("\nUsage: zoomme [options]\n");
   printf("Options:\n");
-  printf("  -h, --help        Display this help message\n");
+  printf("  -h,               Display this help message\n");
   printf("  -i <image_path>   Specify the path to an image as the background, instead of the desktop\n");
 
   printf("\n\n  For more information, visit https://github.com/Ezee1015/zoomme\n");
