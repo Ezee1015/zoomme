@@ -23,7 +23,7 @@ void printHelp(int exitStatus, const char* errorMsg){
 
 int main(int argc, char *argv[])
 {
-	QApplication a(argc, argv);
+  QApplication a(argc, argv);
   QSystemTrayIcon tray = QSystemTrayIcon(QIcon("./resources/Icon.png"));
   tray.setVisible(true);
   tray.show();
@@ -42,19 +42,19 @@ int main(int argc, char *argv[])
     }
   }
 
-	ZoomWidget w;
-	w.setWindowFlags(Qt::FramelessWindowHint | Qt::Tool | Qt::WindowStaysOnTopHint | Qt::BypassWindowManagerHint);
-	w.resize(QApplication::screenAt(QCursor::pos())->geometry().size());
+  ZoomWidget w;
+  w.setWindowFlags(Qt::FramelessWindowHint | Qt::Tool | Qt::WindowStaysOnTopHint | Qt::BypassWindowManagerHint);
+  w.resize(QApplication::screenAt(QCursor::pos())->geometry().size());
   w.move(QApplication::screenAt(QCursor::pos())->geometry().topLeft());
-	w.showFullScreen();
+  w.showFullScreen();
   w.setCursor(QCursor(Qt::CrossCursor));
-	w.show();
-	if(img.isEmpty()) w.grabDesktop();
+  w.show();
+  if(img.isEmpty()) w.grabDesktop();
   else {
     if (w.grabImage(img) == false)
       printHelp(1, "Couldn't open the image");
   }
 
   QApplication::beep();
-	return a.exec();
+  return a.exec();
 }

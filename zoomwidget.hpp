@@ -7,14 +7,14 @@
 #include <QPen>
 
 namespace Ui {
-	class zoomwidget;
+  class zoomwidget;
 }
 
 // User data structs.
 struct UserObjectData {
-	QPoint startPoint;
-	QPoint endPoint;
-	QPen pen;
+  QPoint startPoint;
+  QPoint endPoint;
+  QPen pen;
 };
 
 struct UserTextData {
@@ -24,91 +24,91 @@ struct UserTextData {
 };
 
 enum ZoomWidgetState {
-	STATE_MOVING,
-	STATE_DRAWING,
-	STATE_TYPING,
+  STATE_MOVING,
+  STATE_DRAWING,
+  STATE_TYPING,
 };
 
 enum ZoomWidgetDrawMode {
-	DRAWMODE_ARROW,
-	DRAWMODE_LINE,
-	DRAWMODE_RECT,
-	DRAWMODE_ELLIPSE,
-	DRAWMODE_TEXT,
+  DRAWMODE_ARROW,
+  DRAWMODE_LINE,
+  DRAWMODE_RECT,
+  DRAWMODE_ELLIPSE,
+  DRAWMODE_TEXT,
 };
 
 class ZoomWidget : public QOpenGLWidget
 {
-	Q_OBJECT
+  Q_OBJECT
 
-public:
-	explicit ZoomWidget(QWidget *parent = 0);
-	~ZoomWidget();
+  public:
+    explicit ZoomWidget(QWidget *parent = 0);
+    ~ZoomWidget();
 
-	void grabDesktop();
-	bool grabImage(QString path);
+    void grabDesktop();
+    bool grabImage(QString path);
 
-protected:
-	virtual void paintEvent(QPaintEvent *event);
+  protected:
+    virtual void paintEvent(QPaintEvent *event);
 
-	virtual void mousePressEvent(QMouseEvent *event);
-	virtual void mouseReleaseEvent(QMouseEvent *event);
-	virtual void mouseMoveEvent(QMouseEvent *event);
+    virtual void mousePressEvent(QMouseEvent *event);
+    virtual void mouseReleaseEvent(QMouseEvent *event);
+    virtual void mouseMoveEvent(QMouseEvent *event);
 
-	virtual void wheelEvent(QWheelEvent *event);
+    virtual void wheelEvent(QWheelEvent *event);
 
-	virtual void keyPressEvent(QKeyEvent *event);
-	virtual void keyReleaseEvent(QKeyEvent *event);
+    virtual void keyPressEvent(QKeyEvent *event);
+    virtual void keyReleaseEvent(QKeyEvent *event);
 
-private:
-	Ui::zoomwidget *ui;
+  private:
+    Ui::zoomwidget *ui;
 
-	// Desktop pixmap properties.
-  QScreen   *_desktopScreen;
-	QPixmap		_desktopPixmap;
-	QPoint		_desktopPixmapPos;
-	QSize		_desktopPixmapSize;
-	float		_desktopPixmapScale;
-  // When Scaling is enable, this variable saves the correct size of the window
-  // When there is no Scaling this variable is the same that _desktopPixmap.size()
-	QSize		_desktopPixmapOriginalSize;
+    // Desktop pixmap properties.
+    QScreen   *_desktopScreen;
+    QPixmap		_desktopPixmap;
+    QPoint		_desktopPixmapPos;
+    QSize		_desktopPixmapSize;
+    float		_desktopPixmapScale;
+    // When Scaling is enable, this variable saves the correct size of the window
+    // When there is no Scaling this variable is the same that _desktopPixmap.size()
+    QSize		_desktopPixmapOriginalSize;
 
-  // Pixmap shown in the screen. This can be the _desktopPixmap, or the a "board"
-  // if it's activated the boardMode
-	QPixmap		_drawnPixmap;
+    // Pixmap shown in the screen. This can be the _desktopPixmap, or the a "board"
+    // if it's activated the boardMode
+    QPixmap		_drawnPixmap;
 
-	// User objects.
-	QVector<UserObjectData> _userRects;
-	QVector<UserObjectData> _userLines;
-	QVector<UserObjectData> _userArrows;
-	QVector<UserObjectData> _userEllipses;
-	QVector<UserTextData>   _userTexts;
+    // User objects.
+    QVector<UserObjectData> _userRects;
+    QVector<UserObjectData> _userLines;
+    QVector<UserObjectData> _userArrows;
+    QVector<UserObjectData> _userEllipses;
+    QVector<UserTextData>   _userTexts;
 
-	// Moving properties.
-	float		_scaleSensivity;
+    // Moving properties.
+    float		_scaleSensivity;
 
-  // Boolean for states
-  bool shiftPressed;
-  bool _boardMode;
+    // Boolean for states
+    bool shiftPressed;
+    bool _boardMode;
 
-	ZoomWidgetState	_state;
-	QPoint		_lastMousePos;
-
-
-	// Drawing properties.
-	ZoomWidgetDrawMode	_drawMode;
-	QPoint	_startDrawPoint;
-	QPoint	_endDrawPoint;
-	QPen	_activePen;
+    ZoomWidgetState	_state;
+    QPoint		_lastMousePos;
 
 
-  void updateAtMousePos(QPoint mousePos);
-	void shiftPixmap(const QPoint delta);
-	void scalePixmapAt(const QPointF pos);
+    // Drawing properties.
+    ZoomWidgetDrawMode	_drawMode;
+    QPoint	_startDrawPoint;
+    QPoint	_endDrawPoint;
+    QPen	_activePen;
 
-	void checkPixmapPos();
 
-	void getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h);
+    void updateAtMousePos(QPoint mousePos);
+    void shiftPixmap(const QPoint delta);
+    void scalePixmapAt(const QPointF pos);
+
+    void checkPixmapPos();
+
+    void getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h);
 };
 
 #endif // ZOOMWIDGET_HPP
