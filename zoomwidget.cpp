@@ -16,6 +16,7 @@
 #include <QDir>
 #include <QDateTime>
 #include <QColor>
+#include <QPainterPath>
 
 ZoomWidget::ZoomWidget(QWidget *parent) :
   QWidget(parent),
@@ -38,6 +39,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) :
   _boardMode=0;
 
   shiftPressed = false;
+  _shadowMode = false;
 
   _activePen.setColor(QColor(255, 0, 0));
   _activePen.setWidth(4);
@@ -157,6 +159,25 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     p.setPen(_userEllipses.at(i).pen);
     getRealUserObjectPos(_userEllipses.at(i), &x, &y, &w, &h);
     p.drawEllipse(x, y, w, h);
+  }
+
+  // Opaque the area outside the circle of the cursor
+  if(_shadowMode){
+    QPoint c = QCursor::pos();
+    int cSize = 80;
+
+    QRect mouseShadowBorder = QRect(c.x()-cSize, c.y()-cSize, cSize*2, cSize*2);
+    QPainterPath mouseShadow;
+    mouseShadow.addEllipse( mouseShadowBorder );
+
+    // p.setPen(QColor(186,186,186,200));
+    // p.drawEllipse( mouseShadowBorder );
+
+    QPainterPath pixmapPath;
+    pixmapPath.addRect(_drawnPixmap.rect());
+
+    QPainterPath shadowArea = pixmapPath.subtracted(mouseShadow);
+    p.fillPath(shadowArea, QColor(  0,  0,  0, 190));
   }
 
   // Draw user Texts.
@@ -423,6 +444,8 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 
     // Save screenshot
     screenshot.save(pathFile);
+  } else if (key == Qt::Key_Period) {
+    _shadowMode = !_shadowMode;
   }
 
   update();
