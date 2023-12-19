@@ -164,7 +164,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 
   // Opaque the area outside the circle of the cursor
   if(_shadowMode){
-    QPoint c = QCursor::pos();
+    QPoint c = mapFromGlobal(QCursor::pos());
 
     QRect mouseShadowBorder = QRect(c.x()-_shadowSize, c.y()-_shadowSize, _shadowSize*2, _shadowSize*2);
     QPainterPath mouseShadow;
