@@ -40,6 +40,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) :
 
   shiftPressed = false;
   _shadowMode = false;
+  _shadowSize = 80;
 
   _activePen.setColor(QColor(255, 0, 0));
   _activePen.setWidth(4);
@@ -164,9 +165,8 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   // Opaque the area outside the circle of the cursor
   if(_shadowMode){
     QPoint c = QCursor::pos();
-    int cSize = 80;
 
-    QRect mouseShadowBorder = QRect(c.x()-cSize, c.y()-cSize, cSize*2, cSize*2);
+    QRect mouseShadowBorder = QRect(c.x()-_shadowSize, c.y()-_shadowSize, _shadowSize*2, _shadowSize*2);
     QPainterPath mouseShadow;
     mouseShadow.addEllipse( mouseShadowBorder );
 
@@ -312,12 +312,25 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
 {
   if(_liveMode)
     return;
+
   if (_state == STATE_MOVING) {
     int sign;
     if( event->angleDelta().y() > 0 )
       sign=1;
     else
       sign=-1;
+
+    if(_shadowMode && shiftPressed) {
+      _shadowSize += sign;
+
+      if( _shadowSize < 20)
+        _shadowSize=20;
+      if( _shadowSize > 180)
+        _shadowSize=180;
+
+      update();
+      return;
+    }
 
     _desktopPixmapScale += sign * _scaleSensivity;
     if (_desktopPixmapScale < 1.0f) {
