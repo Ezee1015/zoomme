@@ -164,17 +164,15 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 
   // Draw user Texts.
   for (int i = 0; i < _userTexts.size(); ++i) {
+    // If it's writing, not draw it
+    if( (i == _userTexts.size()-1) && (_state == STATE_TYPING) )
+      break;
+
     p.setPen(_userTexts.at(i).data.pen);
     p.setFont(_userTexts.at(i).font);
     getRealUserObjectPos(_userTexts.at(i).data, &x, &y, &w, &h);
     QString text = _userTexts.at(i).text;
-    if( text.isEmpty() )
-      text="Type some text... \nThen press Enter to finish...";
     p.drawText(QRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
-
-    QPen tempPen = p.pen(); tempPen.setWidth(1); p.setPen(tempPen);
-    if( (i == _userTexts.size()-1) && (_state == STATE_TYPING) )
-      p.drawRect(x, y, w, h);
   }
 
   // Opaque the area outside the circle of the cursor
@@ -194,6 +192,20 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 
     QPainterPath flashlightArea = pixmapPath.subtracted(mouseFlashlight);
     p.fillPath(flashlightArea, QColor(  0,  0,  0, 190));
+  }
+
+  // If it's writing the text
+  if(_state == STATE_TYPING){
+    UserTextData textObject = _userTexts.last();
+    p.setPen(textObject.data.pen);
+    p.setFont(textObject.font);
+    getRealUserObjectPos(textObject.data, &x, &y, &w, &h);
+    QString text = textObject.text;
+    if( text.isEmpty() )
+      text="Type some text... \nThen press Enter to finish...";
+    p.drawText(QRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
+    QPen tempPen = p.pen(); tempPen.setWidth(1); p.setPen(tempPen);
+    p.drawRect(x, y, w, h);
   }
 
   // Draw active user object.
