@@ -91,9 +91,9 @@ class ZoomWidget : public QWidget
     bool _shiftPressed;
     bool _boardMode;
     bool _liveMode;
-    bool _shadowMode;
+    bool _flashlightMode;
 
-    int _shadowSize;
+    int _flashlightRadius;
 
     ZoomWidgetState	_state;
     QPoint		_lastMousePos;

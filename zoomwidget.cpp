@@ -39,8 +39,8 @@ ZoomWidget::ZoomWidget(QWidget *parent) :
   _boardMode=0;
 
   _shiftPressed = false;
-  _shadowMode = false;
-  _shadowSize = 80;
+  _flashlightMode = false;
+  _flashlightRadius = 80;
 
   _activePen.setColor(QColor(255, 0, 0));
   _activePen.setWidth(4);
@@ -163,21 +163,22 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   }
 
   // Opaque the area outside the circle of the cursor
-  if(_shadowMode){
+  if(_flashlightMode){
     QPoint c = mapFromGlobal(QCursor::pos());
+    int radius = _flashlightRadius;
 
-    QRect mouseShadowBorder = QRect(c.x()-_shadowSize, c.y()-_shadowSize, _shadowSize*2, _shadowSize*2);
-    QPainterPath mouseShadow;
-    mouseShadow.addEllipse( mouseShadowBorder );
+    QRect mouseFlashlightBorder = QRect(c.x()-radius, c.y()-radius, radius*2, radius*2);
+    QPainterPath mouseFlashlight;
+    mouseFlashlight.addEllipse( mouseFlashlightBorder );
 
     // p.setPen(QColor(186,186,186,200));
-    // p.drawEllipse( mouseShadowBorder );
+    // p.drawEllipse( mouseFlashlightBorder );
 
     QPainterPath pixmapPath;
     pixmapPath.addRect(_drawnPixmap.rect());
 
-    QPainterPath shadowArea = pixmapPath.subtracted(mouseShadow);
-    p.fillPath(shadowArea, QColor(  0,  0,  0, 190));
+    QPainterPath flashlightArea = pixmapPath.subtracted(mouseFlashlight);
+    p.fillPath(flashlightArea, QColor(  0,  0,  0, 190));
   }
 
   // Draw user Texts.
@@ -320,13 +321,13 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
     else
       sign=-1;
 
-    if(_shadowMode && _shiftPressed) {
-      _shadowSize -= sign;
+    if(_flashlightMode && _shiftPressed) {
+      _flashlightRadius -= sign;
 
-      if( _shadowSize < 20)
-        _shadowSize=20;
-      if( _shadowSize > 180)
-        _shadowSize=180;
+      if( _flashlightRadius < 20)
+        _flashlightRadius=20;
+      if( _flashlightRadius > 180)
+        _flashlightRadius=180;
 
       update();
       return;
@@ -374,10 +375,10 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
   }
 
   if (key == Qt::Key_Escape) {
-    if(_desktopPixmapSize != _desktopPixmapOriginalSize || _shadowMode){ // If it's zoomed in, go back to normal
+    if(_desktopPixmapSize != _desktopPixmapOriginalSize || _flashlightMode){ // If it's zoomed in, go back to normal
       _desktopPixmapScale = 1.0f;
 
-      _shadowMode = false;
+      _flashlightMode = false;
 
       scalePixmapAt(QPoint(0,0));
       checkPixmapPos();
@@ -460,7 +461,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     // Save screenshot
     screenshot.save(pathFile);
   } else if (key == Qt::Key_Period) {
-    _shadowMode = !_shadowMode;
+    _flashlightMode = !_flashlightMode;
   }
 
   update();
