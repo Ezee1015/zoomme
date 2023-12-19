@@ -321,7 +321,7 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
       sign=-1;
 
     if(_shadowMode && shiftPressed) {
-      _shadowSize += sign;
+      _shadowSize -= sign;
 
       if( _shadowSize < 20)
         _shadowSize=20;
