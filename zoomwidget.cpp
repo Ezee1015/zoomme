@@ -322,7 +322,7 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
       sign=-1;
 
     if(_flashlightMode && _shiftPressed) {
-      _flashlightRadius -= sign * 10;
+      _flashlightRadius -= sign * _scaleSensivity * 100;
 
       if( _flashlightRadius < 20)
         _flashlightRadius=20;
