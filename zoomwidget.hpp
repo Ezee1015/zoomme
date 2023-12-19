@@ -88,7 +88,7 @@ class ZoomWidget : public QWidget
     float		_scaleSensivity;
 
     // Boolean for states
-    bool shiftPressed;
+    bool _shiftPressed;
     bool _boardMode;
     bool _liveMode;
     bool _shadowMode;

@@ -38,7 +38,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) :
   _drawMode = DRAWMODE_LINE;
   _boardMode=0;
 
-  shiftPressed = false;
+  _shiftPressed = false;
   _shadowMode = false;
   _shadowSize = 80;
 
@@ -237,7 +237,7 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
   if (_state == STATE_TYPING)
     _userTexts.removeLast();
 
-  if(!shiftPressed)
+  if(!_shiftPressed)
     _lastMousePos = event->pos();
 
   _state = STATE_DRAWING;
@@ -295,7 +295,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 }
 
 void ZoomWidget::updateAtMousePos(QPoint mousePos){
-  if (!shiftPressed){
+  if (!_shiftPressed){
     QPoint delta = mousePos - _lastMousePos;
 
     shiftPixmap(delta);
@@ -320,7 +320,7 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
     else
       sign=-1;
 
-    if(_shadowMode && shiftPressed) {
+    if(_shadowMode && _shiftPressed) {
       _shadowSize -= sign;
 
       if( _shadowSize < 20)
@@ -349,10 +349,10 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
   int key = event->key();
 
   if(key == Qt::Key_Shift)
-    shiftPressed = true;
+    _shiftPressed = true;
 
   if(_state == STATE_TYPING){
-    if ((!shiftPressed && key == Qt::Key_Return) || key == Qt::Key_Escape) {
+    if ((!_shiftPressed && key == Qt::Key_Return) || key == Qt::Key_Escape) {
       if( _userTexts.last().text.isEmpty() )
         _userTexts.removeLast();
       _state = STATE_MOVING;
@@ -363,7 +363,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     UserTextData textData = _userTexts.last();
     if (key == Qt::Key_Backspace)
       textData.text.chop(1);
-    else if(shiftPressed && (key == Qt::Key_Return))
+    else if(_shiftPressed && (key == Qt::Key_Return))
       textData.text += "\n";
     else
       textData.text += event->text();
@@ -469,7 +469,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
 {
   if(event->key() == Qt::Key_Shift) {
-    shiftPressed = false;
+    _shiftPressed = false;
     updateAtMousePos(mapFromGlobal(QCursor::pos()));
     update();
   }
