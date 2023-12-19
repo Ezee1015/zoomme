@@ -375,14 +375,15 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
   }
 
   if (key == Qt::Key_Escape) {
-    if(_desktopPixmapSize != _desktopPixmapOriginalSize || _flashlightMode){ // If it's zoomed in, go back to normal
-      _desktopPixmapScale = 1.0f;
-
+    if(_flashlightMode)
       _flashlightMode = false;
+
+    else if(_desktopPixmapSize != _desktopPixmapOriginalSize){ // If it's zoomed in, go back to normal
+      _desktopPixmapScale = 1.0f;
 
       scalePixmapAt(QPoint(0,0));
       checkPixmapPos();
-    } else {// Otherwise, exit
+    } else {
       QApplication::beep();
       QApplication::quit();
     }
