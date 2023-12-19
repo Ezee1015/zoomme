@@ -311,9 +311,6 @@ void ZoomWidget::updateAtMousePos(QPoint mousePos){
 
 void ZoomWidget::wheelEvent(QWheelEvent *event)
 {
-  if(_liveMode)
-    return;
-
   if (_state == STATE_MOVING) {
     int sign;
     if( event->angleDelta().y() > 0 )
@@ -332,6 +329,9 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
       update();
       return;
     }
+
+    if(_liveMode)
+      return;
 
     _desktopPixmapScale += sign * _scaleSensivity;
     if (_desktopPixmapScale < 1.0f) {
