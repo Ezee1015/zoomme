@@ -374,8 +374,10 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
   }
 
   if (key == Qt::Key_Escape) {
-    if(_desktopPixmapSize != _desktopPixmapOriginalSize){ // If it's zoomed in, go back to normal
+    if(_desktopPixmapSize != _desktopPixmapOriginalSize || _shadowMode){ // If it's zoomed in, go back to normal
       _desktopPixmapScale = 1.0f;
+
+      _shadowMode = false;
 
       scalePixmapAt(QPoint(0,0));
       checkPixmapPos();
