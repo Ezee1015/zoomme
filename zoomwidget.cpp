@@ -39,6 +39,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) :
   _boardMode=0;
 
   _shiftPressed = false;
+  _mousePressed = false;
   _flashlightMode = false;
   _flashlightRadius = 80;
 
@@ -132,7 +133,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
         _drawnPixmap);
   }
 
-  // Draw user objects.
+  // Draw user rectangles.
   int x, y, w, h;
   for (int i = 0; i < _userRects.size(); ++i) {
     p.setPen(_userRects.at(i).pen);
@@ -173,6 +174,23 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     getRealUserObjectPos(_userTexts.at(i).data, &x, &y, &w, &h);
     QString text = _userTexts.at(i).text;
     p.drawText(QRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
+  }
+
+  // Draw user FreeForms.
+  for (int i = 0; i < _userFreeForms.size(); ++i) {
+    p.setPen(_userFreeForms.at(i).pen);
+
+    for (int z = 0; z < _userFreeForms.at(i).points.size()-1; ++z) {
+      QPoint current = _userFreeForms.at(i).points.at(z);
+      QPoint next    = _userFreeForms.at(i).points.at(z+1);
+
+      int currentX = _desktopPixmapPos.x() + current.x()*_desktopPixmapScale;
+      int currentY = _desktopPixmapPos.y() + current.y()*_desktopPixmapScale;
+      int nextX    = _desktopPixmapPos.x() + next.x()   *_desktopPixmapScale;
+      int nextY    = _desktopPixmapPos.y() + next.y()   *_desktopPixmapScale;
+
+      p.drawLine(currentX, currentY, nextX, nextY);
+    }
   }
 
   // Opaque the area outside the circle of the cursor
@@ -254,6 +272,7 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
     _lastMousePos = event->pos();
 
   _state = STATE_DRAWING;
+  _mousePressed = true;
 
   _startDrawPoint = (event->pos() - _desktopPixmapPos)/_desktopPixmapScale;
   _endDrawPoint = _startDrawPoint;
@@ -261,6 +280,8 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
 
 void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
 {
+  _mousePressed = false;
+
   if (_state == STATE_DRAWING) {
     _endDrawPoint = (event->pos() - _desktopPixmapPos)/_desktopPixmapScale;
 
@@ -289,6 +310,12 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
       _state = STATE_TYPING;
       update();
       return;
+    } else if (_drawMode == DRAWMODE_FREEFORM) {
+      // The registration of the points of the FreeForms are in mouseMoveEvent()
+      UserFreeFormData data = _userFreeForms.last();
+      _userFreeForms.removeLast();
+      data.active = false;
+      _userFreeForms.append(data);
     }
 
     _state = STATE_MOVING;
@@ -303,6 +330,26 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
     QWidget::activateWindow();
 
   updateAtMousePos(event->pos());
+
+  // Register the position of the cursor for the FreeForm
+  if(_mousePressed && _drawMode == DRAWMODE_FREEFORM){
+    QPoint curPos = (event->pos() - _desktopPixmapPos) / _desktopPixmapScale;
+
+    if( _userFreeForms.isEmpty() || (!_userFreeForms.isEmpty() && !_userFreeForms.last().active) ){
+      UserFreeFormData data;
+      data.pen = _activePen;
+      data.active = true;
+      data.points.append(curPos);
+      _userFreeForms.append(data);
+    }
+
+    else if(!_userFreeForms.isEmpty() && _userFreeForms.last().points.last()!=curPos){
+      UserFreeFormData data = _userFreeForms.last();
+      _userFreeForms.removeLast();
+      data.points.append(curPos);
+      _userFreeForms.append(data);
+    }
+  }
 
   update();
 }
@@ -430,12 +477,15 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
       _userEllipses.removeLast();
     else if( _drawMode == DRAWMODE_TEXT && (! _userTexts.isEmpty()) )
       _userTexts.removeLast();
+    else if( _drawMode == DRAWMODE_FREEFORM && (! _userFreeForms.isEmpty()) )
+      _userFreeForms.removeLast();
   } else if (key == Qt::Key_Q) {
     _userRects.clear();
     _userLines.clear();
     _userArrows.clear();
     _userEllipses.clear();
     _userTexts.clear();
+    _userFreeForms.clear();
     _state = STATE_MOVING;
   } else if (key == Qt::Key_P) {
     _boardMode = !_boardMode;
@@ -453,6 +503,8 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     _drawMode = DRAWMODE_ELLIPSE;
   } else if (key == Qt::Key_T) {
     _drawMode = DRAWMODE_TEXT;
+  } else if (key == Qt::Key_F) {
+    _drawMode = DRAWMODE_FREEFORM;
   } else if (key == Qt::Key_S) {
     QApplication::beep();
 

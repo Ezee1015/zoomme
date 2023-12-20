@@ -37,6 +37,7 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 |      **`X`**      | To change the mode to drawing Rectangles              |
 |      **`A`**      | To change the mode to drawing Arrows                  |
 |      **`E`**      | To change the mode to drawing Ellipses                |
+|      **`F`**      | To change the mode to drawing Free forms / Hand draws |
 |      **`T`**      | To change the mode to insert Text                     |
 |    **`Enter`**    | To finish writing text                                |
 | **`Shift+Enter`** | To make a new line when writing text                  |

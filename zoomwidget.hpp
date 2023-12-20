@@ -23,6 +23,12 @@ struct UserTextData {
   QString text;
 };
 
+struct UserFreeFormData {
+  QVector<QPoint> points;
+  QPen pen;
+  bool active;
+};
+
 enum ZoomWidgetState {
   STATE_MOVING,
   STATE_DRAWING,
@@ -35,6 +41,7 @@ enum ZoomWidgetDrawMode {
   DRAWMODE_RECT,
   DRAWMODE_ELLIPSE,
   DRAWMODE_TEXT,
+  DRAWMODE_FREEFORM,
 };
 
 class ZoomWidget : public QWidget
@@ -78,17 +85,19 @@ class ZoomWidget : public QWidget
     QPixmap		_drawnPixmap;
 
     // User objects.
-    QVector<UserObjectData> _userRects;
-    QVector<UserObjectData> _userLines;
-    QVector<UserObjectData> _userArrows;
-    QVector<UserObjectData> _userEllipses;
-    QVector<UserTextData>   _userTexts;
+    QVector<UserObjectData>    _userRects;
+    QVector<UserObjectData>    _userLines;
+    QVector<UserObjectData>    _userArrows;
+    QVector<UserObjectData>    _userEllipses;
+    QVector<UserTextData>      _userTexts;
+    QVector<UserFreeFormData>  _userFreeForms;
 
     // Moving properties.
     float		_scaleSensivity;
 
     // Boolean for states
     bool _shiftPressed;
+    bool _mousePressed;
     bool _boardMode;
     bool _liveMode;
     bool _flashlightMode;
