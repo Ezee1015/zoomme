@@ -184,12 +184,10 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
       QPoint current = _userFreeForms.at(i).points.at(z);
       QPoint next    = _userFreeForms.at(i).points.at(z+1);
 
-      int currentX = _desktopPixmapPos.x() + current.x()*_desktopPixmapScale;
-      int currentY = _desktopPixmapPos.y() + current.y()*_desktopPixmapScale;
-      int nextX    = _desktopPixmapPos.x() + next.x()   *_desktopPixmapScale;
-      int nextY    = _desktopPixmapPos.y() + next.y()   *_desktopPixmapScale;
+      current = _desktopPixmapPos + current * _desktopPixmapScale;
+      next = _desktopPixmapPos + next * _desktopPixmapScale;
 
-      p.drawLine(currentX, currentY, nextX, nextY);
+      p.drawLine(current.x(), current.y(), next.x(), next.y());
     }
   }
 
