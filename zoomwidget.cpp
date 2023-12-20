@@ -234,40 +234,49 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     int width = (_endDrawPoint.x() - _startDrawPoint.x())*_desktopPixmapScale;
     int height = (_endDrawPoint.y() - _startDrawPoint.y())*_desktopPixmapScale;
 
-    if (_drawMode == DRAWMODE_RECT) {
-      p.drawRect(x, y, width, height);
-    } else if (_drawMode == DRAWMODE_LINE) {
-      p.drawLine(x, y, width + x, height + y);
-    } else if (_drawMode == DRAWMODE_ARROW) {
-      p.drawLine(x, y, width + x, height + y);
-      drawArrowHead(x, y, width, height, &p);
-    } else if (_drawMode == DRAWMODE_ELLIPSE) {
-      p.drawEllipse(x, y, width, height);
-    } else if (_drawMode == DRAWMODE_TEXT) {
-      QPen tempPen = p.pen(); tempPen.setWidth(1); p.setPen(tempPen);
-      QFont font; font.setPixelSize(_activePen.width() * 4); p.setFont(font);
-      p.drawRect(x, y, width, height);
-      QString defaultText;
-      defaultText.append("Sizing... (");
-      defaultText.append(QString::number(width));
-      defaultText.append("x");
-      defaultText.append(QString::number(height));
-      defaultText.append(")");
-      p.drawText(QRect(x, y, width, height), Qt::AlignCenter | Qt::TextWordWrap, defaultText);
-    } else if (_drawMode == DRAWMODE_FREEFORM) {
-      if( !_userFreeForms.isEmpty() && _userFreeForms.last().active ){
-        p.setPen(_userFreeForms.last().pen);
-
-        for (int z = 0; z < _userFreeForms.last().points.size()-1; ++z) {
-          QPoint current = _userFreeForms.last().points.at(z);
-          QPoint next    = _userFreeForms.last().points.at(z+1);
-
-          current = _desktopPixmapPos + current * _desktopPixmapScale;
-          next = _desktopPixmapPos + next * _desktopPixmapScale;
-
-          p.drawLine(current.x(), current.y(), next.x(), next.y());
+    switch(_drawMode) {
+      case DRAWMODE_RECT:
+        p.drawRect(x, y, width, height);
+        break;
+      case DRAWMODE_LINE:
+        p.drawLine(x, y, width + x, height + y);
+        break;
+      case DRAWMODE_ARROW:
+        p.drawLine(x, y, width + x, height + y);
+        drawArrowHead(x, y, width, height, &p);
+        break;
+      case DRAWMODE_ELLIPSE:
+        p.drawEllipse(x, y, width, height);
+        break;
+      case DRAWMODE_TEXT:
+        {
+          QPen tempPen = p.pen(); tempPen.setWidth(1); p.setPen(tempPen);
+          QFont font; font.setPixelSize(_activePen.width() * 4); p.setFont(font);
+          p.drawRect(x, y, width, height);
+          QString defaultText;
+          defaultText.append("Sizing... (");
+          defaultText.append(QString::number(width));
+          defaultText.append("x");
+          defaultText.append(QString::number(height));
+          defaultText.append(")");
+          p.drawText(QRect(x, y, width, height), Qt::AlignCenter | Qt::TextWordWrap, defaultText);
+          break;
         }
-      }
+      case DRAWMODE_FREEFORM:
+        if( !_userFreeForms.isEmpty() && _userFreeForms.last().active ){
+          p.setPen(_userFreeForms.last().pen);
+
+          for (int z = 0; z < _userFreeForms.last().points.size()-1; ++z) {
+            QPoint current = _userFreeForms.last().points.at(z);
+            QPoint next    = _userFreeForms.last().points.at(z+1);
+
+            current = _desktopPixmapPos + current * _desktopPixmapScale;
+            next = _desktopPixmapPos + next * _desktopPixmapScale;
+
+            p.drawLine(current.x(), current.y(), next.x(), next.y());
+          }
+        }
+        break;
     }
   }
 
