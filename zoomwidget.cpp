@@ -178,7 +178,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 
   // Draw user FreeForms.
   int freeFormCount = (!_userFreeForms.isEmpty() && _userFreeForms.last().active) ? _userFreeForms.size()-1: _userFreeForms.size();
-  for (int i = 0; i < freeFormSize; ++i) {
+  for (int i = 0; i < freeFormCount; ++i) {
     p.setPen(_userFreeForms.at(i).pen);
 
     for (int z = 0; z < _userFreeForms.at(i).points.size()-1; ++z) {
