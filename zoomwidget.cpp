@@ -311,33 +311,43 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
     data.pen = _activePen;
     data.startPoint = _startDrawPoint;
     data.endPoint = _endDrawPoint;
-    if (_drawMode == DRAWMODE_LINE) {
-      _userLines.append(data);
-    } else if (_drawMode == DRAWMODE_RECT) {
-      _userRects.append(data);
-    } else if (_drawMode == DRAWMODE_ARROW) {
-      _userArrows.append(data);
-    } else if (_drawMode == DRAWMODE_ELLIPSE) {
-      _userEllipses.append(data);
-    } else if (_drawMode == DRAWMODE_TEXT) {
-      QFont font;
-      font.setPixelSize(_activePen.width() * 4);
+    switch(_drawMode){
+      case DRAWMODE_LINE:
+        _userLines.append(data);
+        break;
+      case DRAWMODE_RECT:
+        _userRects.append(data);
+        break;
+      case DRAWMODE_ARROW:
+        _userArrows.append(data);
+        break;
+      case DRAWMODE_ELLIPSE:
+        _userEllipses.append(data);
+        break;
+      case DRAWMODE_TEXT:
+        {
+          QFont font;
+          font.setPixelSize(_activePen.width() * 4);
 
-      UserTextData textData;
-      textData.data = data;
-      textData.text = "";
-      textData.font = font;
-      _userTexts.append(textData);
+          UserTextData textData;
+          textData.data = data;
+          textData.text = "";
+          textData.font = font;
+          _userTexts.append(textData);
 
-      _state = STATE_TYPING;
-      update();
-      return;
-    } else if (_drawMode == DRAWMODE_FREEFORM) {
-      // The registration of the points of the FreeForms are in mouseMoveEvent()
-      UserFreeFormData data = _userFreeForms.last();
-      _userFreeForms.removeLast();
-      data.active = false;
-      _userFreeForms.append(data);
+          _state = STATE_TYPING;
+          update();
+          return;
+        }
+      case DRAWMODE_FREEFORM:
+        {
+          // The registration of the points of the FreeForms are in mouseMoveEvent()
+          UserFreeFormData data = _userFreeForms.last();
+          _userFreeForms.removeLast();
+          data.active = false;
+          _userFreeForms.append(data);
+          break;
+        }
     }
 
     _state = STATE_MOVING;
