@@ -177,7 +177,8 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   }
 
   // Draw user FreeForms.
-  for (int i = 0; i < _userFreeForms.size(); ++i) {
+  int freeFormCount = (!_userFreeForms.isEmpty() && _userFreeForms.last().active) ? _userFreeForms.size()-1: _userFreeForms.size();
+  for (int i = 0; i < freeFormSize; ++i) {
     p.setPen(_userFreeForms.at(i).pen);
 
     for (int z = 0; z < _userFreeForms.at(i).points.size()-1; ++z) {
@@ -253,6 +254,20 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
       defaultText.append(QString::number(height));
       defaultText.append(")");
       p.drawText(QRect(x, y, width, height), Qt::AlignCenter | Qt::TextWordWrap, defaultText);
+    } else if (_drawMode == DRAWMODE_FREEFORM) {
+      if( !_userFreeForms.isEmpty() && _userFreeForms.last().active ){
+        p.setPen(_userFreeForms.last().pen);
+
+        for (int z = 0; z < _userFreeForms.last().points.size()-1; ++z) {
+          QPoint current = _userFreeForms.last().points.at(z);
+          QPoint next    = _userFreeForms.last().points.at(z+1);
+
+          current = _desktopPixmapPos + current * _desktopPixmapScale;
+          next = _desktopPixmapPos + next * _desktopPixmapScale;
+
+          p.drawLine(current.x(), current.y(), next.x(), next.y());
+        }
+      }
     }
   }
 
