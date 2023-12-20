@@ -33,7 +33,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) :
   _desktopPixmapOriginalSize = _desktopPixmapSize;
   _desktopPixmapScale = 1.0f;
 
-  _scaleSensivity = 0.1f;
+  _scaleSensivity = 0.2f;
 
   _drawMode = DRAWMODE_LINE;
   _boardMode=0;
@@ -331,7 +331,7 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
       sign=-1;
 
     if(_flashlightMode && _shiftPressed) {
-      _flashlightRadius -= sign * _scaleSensivity * 100;
+      _flashlightRadius -= sign * _scaleSensivity * 50;
 
       if( _flashlightRadius < 20)
         _flashlightRadius=20;
