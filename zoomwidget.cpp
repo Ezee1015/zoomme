@@ -163,19 +163,6 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     p.drawEllipse(x, y, w, h);
   }
 
-  // Draw user Texts.
-  for (int i = 0; i < _userTexts.size(); ++i) {
-    // If it's writing, not draw it
-    if( (i == _userTexts.size()-1) && (_state == STATE_TYPING) )
-      break;
-
-    p.setPen(_userTexts.at(i).data.pen);
-    p.setFont(_userTexts.at(i).font);
-    getRealUserObjectPos(_userTexts.at(i).data, &x, &y, &w, &h);
-    QString text = _userTexts.at(i).text;
-    p.drawText(QRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
-  }
-
   // Draw user FreeForms.
   int freeFormCount = (!_userFreeForms.isEmpty() && _userFreeForms.last().active) ? _userFreeForms.size()-1: _userFreeForms.size();
   for (int i = 0; i < freeFormCount; ++i) {
@@ -190,6 +177,19 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 
       p.drawLine(current.x(), current.y(), next.x(), next.y());
     }
+  }
+
+  // Draw user Texts.
+  for (int i = 0; i < _userTexts.size(); ++i) {
+    // If it's writing, not draw it
+    if( (i == _userTexts.size()-1) && (_state == STATE_TYPING) )
+      break;
+
+    p.setPen(_userTexts.at(i).data.pen);
+    p.setFont(_userTexts.at(i).font);
+    getRealUserObjectPos(_userTexts.at(i).data, &x, &y, &w, &h);
+    QString text = _userTexts.at(i).text;
+    p.drawText(QRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
   }
 
   // Opaque the area outside the circle of the cursor
