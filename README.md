@@ -6,10 +6,10 @@
 Application for zooming/magnifying and noting the desktop (like ZoomIt under windows).
 
 You can...
-- Draw lines, rectangles, arrows and ellipses.
-- Insert text.
+- Draw lines, rectangles, arrows, ellipses and hand draws (free forms)!
+- Insert text
 - Highlight parts of the screen with colors (a highlighter)
-- Use a "Flashlight" function to concentrate attention on the cursor.
+- Use a "Flashlight" function to concentrate attention on the cursor
 - Zoom in and out of the desktop.
 - Switch between your desktop and a blackboard
 - Take a screenshot and save it to your Pictures folder
