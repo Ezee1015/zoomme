@@ -8,12 +8,17 @@ Application for zooming/magnifying and noting the desktop (like ZoomIt under win
 You can...
 - Draw lines, rectangles, arrows and ellipses.
 - Insert text.
+- Highlight parts of the screen with colors (a highlighter)
+- Use a "Flashlight" function to concentrate attention on the cursor.
 - Zoom in and out of the desktop.
+- Switch between your desktop and a blackboard
+- Take a screenshot and save it to yours Pictures folder
 
 Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https://github.com/Ezee1015/zoomme/tree/Qt5)) and OpenGL.
 
 ![Demonstration of the functionality](resources/demonstration.gif)
-> The dots in the GIF are artifacts from ffmpeg
+
+> *The idea of the Flashlight effect was taken from [tsoding/boomer](https://github.com/tsoding/boomer)*
 
 ## Functions & Mappings
 
@@ -24,7 +29,7 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 |          **`U`**          | To delete the last drawing of the current draw mode (undo)                                                                                                                                                                               |
 |        **`Shift`**        | When it's zoomed in, if you press and hold the key, the screen will not follow the mouse, so you can freely move it around that part of the screen (for drawing, for example). When you release it, it will continue following the mouse |
 |     **`Mouse Wheel`**     | To zoom in and zoom out                                                                                                                                                                                                                  |
-|      **`.`** (period)     | To toggle the "Flashlight effect" on the cursor. *Idea taken from [tsoding/boomer](https://github.com/tsoding/boomer)*                                                                                                                   |
+|      **`.`** (period)     | To toggle the "Flashlight effect" on the cursor.                                                                                                                                                                                         |
 | **`Shift + Mouse Wheel`** | When the shadow/flashlight effect is turn on, this will increase/decrease the size of the "light"                                                                                                                                        |
 |          **`Q`**          | To clear all the drawings                                                                                                                                                                                                                |
 |          **`P`**          | To toggle between your screen and a blackboard mode. By the way, your drawings will persist between the modes                                                                                                                            |
