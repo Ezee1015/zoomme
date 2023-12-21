@@ -141,6 +141,14 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     p.drawRect(x, y, w, h);
   }
 
+  // Draw user Highlights
+  for (int i = 0; i < _userHighlights.size(); ++i) {
+    p.setPen(_userHighlights.at(i).pen);
+    getRealUserObjectPos(_userHighlights.at(i), &x, &y, &w, &h);
+    QColor color = p.pen().color();
+    p.fillRect(QRect(x, y, w, h), QColor(color.red(), color.green(), color.blue(), 75));
+  }
+
   // Draw user lines.
   for (int i = 0; i < _userLines.size(); ++i) {
     p.setPen(_userLines.at(i).pen);
@@ -277,6 +285,10 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
           }
         }
         break;
+      case DRAWMODE_HIGHLIGHT:
+        QColor color = p.pen().color();
+        p.fillRect(QRect(x, y, width, height), QColor(color.red(), color.green(), color.blue(), 75));
+        break;
     }
   }
 
@@ -348,6 +360,9 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
           _userFreeForms.append(data);
           break;
         }
+      case DRAWMODE_HIGHLIGHT:
+        _userHighlights.append(data);
+        break;
     }
 
     _state = STATE_MOVING;
@@ -511,6 +526,8 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
       _userTexts.removeLast();
     else if( _drawMode == DRAWMODE_FREEFORM && (! _userFreeForms.isEmpty()) )
       _userFreeForms.removeLast();
+    else if( _drawMode == DRAWMODE_HIGHLIGHT && (! _userHighlights.isEmpty()) )
+      _userHighlights.removeLast();
   } else if (key == Qt::Key_Q) {
     _userRects.clear();
     _userLines.clear();
@@ -518,6 +535,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     _userEllipses.clear();
     _userTexts.clear();
     _userFreeForms.clear();
+    _userHighlights.clear();
     _state = STATE_MOVING;
   } else if (key == Qt::Key_P) {
     _boardMode = !_boardMode;
@@ -537,6 +555,8 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     _drawMode = DRAWMODE_TEXT;
   } else if (key == Qt::Key_F) {
     _drawMode = DRAWMODE_FREEFORM;
+  } else if (key == Qt::Key_H) {
+    _drawMode = DRAWMODE_HIGHLIGHT;
   } else if (key == Qt::Key_S) {
     QApplication::beep();
 

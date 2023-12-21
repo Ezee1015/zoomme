@@ -42,6 +42,7 @@ enum ZoomWidgetDrawMode {
   DRAWMODE_ELLIPSE,
   DRAWMODE_TEXT,
   DRAWMODE_FREEFORM,
+  DRAWMODE_HIGHLIGHT,
 };
 
 class ZoomWidget : public QWidget
@@ -91,6 +92,7 @@ class ZoomWidget : public QWidget
     QVector<UserObjectData>    _userEllipses;
     QVector<UserTextData>      _userTexts;
     QVector<UserFreeFormData>  _userFreeForms;
+    QVector<UserObjectData>    _userHighlights;
 
     // Moving properties.
     float		_scaleSensivity;
