@@ -5,8 +5,10 @@
 #include <QImage>
 #include <string.h>
 #include <QSystemTrayIcon>
+#include <stdio.h>
+#include <stdlib.h>
 
-void printHelp(int exitStatus, const char* errorMsg){
+void printHelp(const int exitStatus, const char* errorMsg){
   if(strlen(errorMsg) != 0)
     printf("[ERROR] %s\n", errorMsg);
   else
@@ -17,7 +19,7 @@ void printHelp(int exitStatus, const char* errorMsg){
   printf("  -i <image_path>   Specify the path to an image as the background, instead of the desktop\n");
   printf("  -l                EXPERIMENTAL: Not use a background (live mode/transparent). In this mode there's no zooming, only drawings allowed\n");
 
-  printf("\n\n  For more information, visit https://github.com/Ezee1015/zoomme\n");
+  printf("\n  For more information, visit https://github.com/Ezee1015/zoomme\n");
 
   exit(exitStatus);
 }
@@ -34,14 +36,14 @@ int main(int argc, char *argv[])
   // Parsing arguments
   for(int i=0; i<argc ; ++i){
     if(strcmp(argv[i], "-h") == 0)
-      printHelp(0, "");
+      printHelp(EXIT_SUCCESS, "");
 
     if(strcmp(argv[i], "-l") == 0)
       liveMode=true;
 
     if(strcmp(argv[i], "-i") == 0) {
       if((i+1) == argc)
-        printHelp(1, "Image path not provided");
+        printHelp(EXIT_FAILURE, "Image path not provided");
 
       img = argv[i+1];
     }
@@ -59,7 +61,7 @@ int main(int argc, char *argv[])
   if(img.isEmpty()) w.grabDesktop(liveMode);
   else {
     if (w.grabImage(img) == false)
-      printHelp(1, "Couldn't open the image");
+      printHelp(EXIT_FAILURE, "Couldn't open the image");
   }
 
   QApplication::beep();
