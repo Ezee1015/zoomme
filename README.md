@@ -12,7 +12,7 @@ You can...
 - Use a "Flashlight" function to concentrate attention on the cursor.
 - Zoom in and out of the desktop.
 - Switch between your desktop and a blackboard
-- Take a screenshot and save it to yours Pictures folder
+- Take a screenshot and save it to your Pictures folder
 
 Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https://github.com/Ezee1015/zoomme/tree/Qt5)) and OpenGL.
 
