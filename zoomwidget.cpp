@@ -228,6 +228,8 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     QString text = textObject.text;
     if( text.isEmpty() )
       text="Type some text... \nThen press Enter to finish...";
+    else
+      text.insert(textObject.caretPos, '|');
     p.drawText(QRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
     QPen tempPen = p.pen(); tempPen.setWidth(1); p.setPen(tempPen);
     p.drawRect(x, y, w, h);
@@ -345,6 +347,7 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
           textData.data = data;
           textData.text = "";
           textData.font = font;
+          textData.caretPos = 0;
           _userTexts.append(textData);
 
           _state = STATE_TYPING;
@@ -475,8 +478,10 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 {
   int key = event->key();
 
-  if(key == Qt::Key_Shift)
+  if(key == Qt::Key_Shift){
     _shiftPressed = true;
+    return;
+  }
 
   if(_state == STATE_TYPING){
     if ((!_shiftPressed && key == Qt::Key_Return) || key == Qt::Key_Escape) {
@@ -488,12 +493,32 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     }
 
     UserTextData textData = _userTexts.last();
-    if (key == Qt::Key_Backspace)
-      textData.text.chop(1);
-    else if(_shiftPressed && (key == Qt::Key_Return))
-      textData.text += "\n";
-    else
-      textData.text += event->text();
+    switch(key) {
+      case Qt::Key_Backspace:
+        textData.text.removeAt(textData.caretPos-1);
+        textData.caretPos--;
+        break;
+      case Qt::Key_Return:
+        if(!_shiftPressed)
+          return;
+        textData.text.insert(textData.caretPos, '\n');
+        textData.caretPos++;
+        break;
+      case Qt::Key_Left:
+        if(textData.caretPos == 0)
+          return;
+        textData.caretPos--;
+        break;
+      case Qt::Key_Right:
+        if(textData.caretPos == textData.text.size())
+          return;
+        textData.caretPos++;
+        break;
+      default:
+        textData.text.insert(textData.caretPos, event->text());
+        textData.caretPos++;
+        break;
+    }
     _userTexts.removeLast();
     _userTexts.append(textData);
     update();

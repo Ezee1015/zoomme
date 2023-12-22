@@ -20,6 +20,7 @@ struct UserObjectData {
 struct UserTextData {
   UserObjectData data;
   QFont font;
+  int caretPos;
   QString text;
 };
 
