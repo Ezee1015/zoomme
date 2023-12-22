@@ -451,6 +451,26 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
   }
 }
 
+void ZoomWidget::saveScreenshot(){
+  // Screenshot
+  QPixmap screenshot = _desktopScreen->grabWindow(0);
+
+  // Path
+  QString pathFile = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
+  if (pathFile.isEmpty())
+    pathFile = QDir::currentPath();
+
+  // File
+  const QString date = QDateTime::currentDateTime().toString("dd-MM-yyyy hh.mm.ss");
+  const QString format = "png";
+  pathFile.append("/ZoomMe ");
+  pathFile.append(date);
+  pathFile.append("." + format);
+
+  // Save screenshot
+  screenshot.save(pathFile);
+}
+
 void ZoomWidget::keyPressEvent(QKeyEvent *event)
 {
   int key = event->key();
@@ -480,105 +500,129 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     return;
   }
 
-  if (key == Qt::Key_Escape) {
-    if(_flashlightMode)
-      _flashlightMode = false;
-
-    else if(_desktopPixmapSize != _desktopPixmapOriginalSize){ // If it's zoomed in, go back to normal
-      _desktopPixmapScale = 1.0f;
-
-      scalePixmapAt(QPoint(0,0));
-      checkPixmapPos();
-    } else {
-      QApplication::beep();
-      QApplication::quit();
-    }
-  } else if ((key >= Qt::Key_1) && (key <= Qt::Key_9)) {
-    _activePen.setWidth(key - Qt::Key_0);
-  } else if (key == Qt::Key_R) {
-    _activePen.setColor(QColor(255, 0, 0));
-  } else if (key == Qt::Key_G) {
-    _activePen.setColor(QColor(0, 255, 0));
-  } else if (key == Qt::Key_B) {
-    _activePen.setColor(QColor(0, 0, 255));
-  } else if (key == Qt::Key_C) {
-    _activePen.setColor(QColor(0, 255, 255));
-  } else if (key == Qt::Key_O) {
-    _activePen.setColor(QColor(255, 140, 0));
-  } else if (key == Qt::Key_M) {
-    _activePen.setColor(QColor(255, 0, 255));
-  } else if (key == Qt::Key_Y) {
-    _activePen.setColor(QColor(255, 255, 0));
-  } else if (key == Qt::Key_W) {
-    _activePen.setColor(QColor(255, 255, 255));
-  } else if (key == Qt::Key_D) {
-    _activePen.setColor(QColor(0, 0, 0));
-  } else if (key == Qt::Key_U) {
-    if( _drawMode == DRAWMODE_LINE && (! _userLines.isEmpty()) )
-      _userLines.removeLast();
-    else if( _drawMode == DRAWMODE_RECT && (! _userRects.isEmpty()) )
-      _userRects.removeLast();
-    else if( _drawMode == DRAWMODE_ARROW && (! _userArrows.isEmpty()) )
-      _userArrows.removeLast();
-    else if( _drawMode == DRAWMODE_ELLIPSE && (! _userEllipses.isEmpty()) )
-      _userEllipses.removeLast();
-    else if( _drawMode == DRAWMODE_TEXT && (! _userTexts.isEmpty()) )
-      _userTexts.removeLast();
-    else if( _drawMode == DRAWMODE_FREEFORM && (! _userFreeForms.isEmpty()) )
-      _userFreeForms.removeLast();
-    else if( _drawMode == DRAWMODE_HIGHLIGHT && (! _userHighlights.isEmpty()) )
-      _userHighlights.removeLast();
-  } else if (key == Qt::Key_Q) {
-    _userRects.clear();
-    _userLines.clear();
-    _userArrows.clear();
-    _userEllipses.clear();
-    _userTexts.clear();
-    _userFreeForms.clear();
-    _userHighlights.clear();
-    _state = STATE_MOVING;
-  } else if (key == Qt::Key_P) {
-    _boardMode = !_boardMode;
-    if(_boardMode)
-      _drawnPixmap.fill("#2C2C2C");
-    else
-      _drawnPixmap = _desktopPixmap;
-  } else if (key == Qt::Key_Z) {
-    _drawMode = DRAWMODE_LINE;
-  } else if (key == Qt::Key_X) {
-    _drawMode = DRAWMODE_RECT;
-  } else if (key == Qt::Key_A) {
-    _drawMode = DRAWMODE_ARROW;
-  } else if (key == Qt::Key_E) {
-    _drawMode = DRAWMODE_ELLIPSE;
-  } else if (key == Qt::Key_T) {
-    _drawMode = DRAWMODE_TEXT;
-  } else if (key == Qt::Key_F) {
-    _drawMode = DRAWMODE_FREEFORM;
-  } else if (key == Qt::Key_H) {
-    _drawMode = DRAWMODE_HIGHLIGHT;
-  } else if (key == Qt::Key_S) {
-    QApplication::beep();
-
-    // Screenshot
-    QPixmap screenshot = _desktopScreen->grabWindow(0);
-
-    // Path
-    QString pathFile = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
-    if (pathFile.isEmpty())
-      pathFile = QDir::currentPath();
-
-    // File
-    const QString date = QDateTime::currentDateTime().toString("dd-MM-yyyy hh.mm.ss");
-    const QString format = "png";
-    pathFile.append("/ZoomMe ");
-    pathFile.append(date);
-    pathFile.append("." + format);
-
-    // Save screenshot
-    screenshot.save(pathFile);
-  } else if (key == Qt::Key_Period) {
-    _flashlightMode = !_flashlightMode;
+  switch(key){
+    case Qt::Key_Escape:
+      // If it's in flashlight mode, disable it
+      if(_flashlightMode)
+        _flashlightMode = false;
+      // Else, if it's zoomed in, go back to normal
+      else if(_desktopPixmapSize != _desktopPixmapOriginalSize){
+        _desktopPixmapScale = 1.0f;
+        scalePixmapAt(QPoint(0,0));
+        checkPixmapPos();
+      // Otherwise, exit
+      } else {
+        QApplication::beep();
+        QApplication::quit();
+      }
+      break;
+    case Qt::Key_1:
+    case Qt::Key_2:
+    case Qt::Key_3:
+    case Qt::Key_4:
+    case Qt::Key_5:
+    case Qt::Key_6:
+    case Qt::Key_7:
+    case Qt::Key_8:
+    case Qt::Key_9:
+      _activePen.setWidth(key - Qt::Key_0);
+      break;
+    case Qt::Key_R:
+      _activePen.setColor(QColor(255, 0, 0));
+      break;
+    case Qt::Key_G:
+      _activePen.setColor(QColor(0, 255, 0));
+      break;
+    case Qt::Key_B:
+      _activePen.setColor(QColor(0, 0, 255));
+      break;
+    case Qt::Key_C:
+      _activePen.setColor(QColor(0, 255, 255));
+      break;
+    case Qt::Key_O:
+      _activePen.setColor(QColor(255, 140, 0));
+      break;
+    case Qt::Key_M:
+      _activePen.setColor(QColor(255, 0, 255));
+      break;
+    case Qt::Key_Y:
+      _activePen.setColor(QColor(255, 255, 0));
+      break;
+    case Qt::Key_W:
+      _activePen.setColor(QColor(255, 255, 255));
+      break;
+    case Qt::Key_D:
+      _activePen.setColor(QColor(0, 0, 0));
+      break;
+    case Qt::Key_U:
+      // Remove last draw from the current draw mode
+      switch(_drawMode){
+        case DRAWMODE_LINE:
+          if(!_userLines.isEmpty()) _userLines.removeLast();
+          break;
+        case DRAWMODE_RECT:
+          if(!_userRects.isEmpty()) _userRects.removeLast();
+          break;
+        case DRAWMODE_ARROW:
+          if(!_userArrows.isEmpty()) _userArrows.removeLast();
+          break;
+        case DRAWMODE_ELLIPSE:
+          if(!_userEllipses.isEmpty()) _userEllipses.removeLast();
+          break;
+        case DRAWMODE_TEXT:
+          if(!_userTexts.isEmpty()) _userTexts.removeLast();
+          break;
+        case DRAWMODE_FREEFORM:
+          if(!_userFreeForms.isEmpty()) _userFreeForms.removeLast();
+          break;
+        case DRAWMODE_HIGHLIGHT:
+          if(!_userHighlights.isEmpty()) _userHighlights.removeLast();
+          break;
+      } // draw mode switch
+      break;
+    case Qt::Key_Q:
+      _userRects.clear();
+      _userLines.clear();
+      _userArrows.clear();
+      _userEllipses.clear();
+      _userTexts.clear();
+      _userFreeForms.clear();
+      _userHighlights.clear();
+      _state = STATE_MOVING;
+      break;
+    case Qt::Key_P:
+      _boardMode = !_boardMode;
+      if(_boardMode) _drawnPixmap.fill("#2C2C2C");
+      else _drawnPixmap = _desktopPixmap;
+      break;
+    case Qt::Key_Z:
+      _drawMode = DRAWMODE_LINE;
+      break;
+    case Qt::Key_X:
+      _drawMode = DRAWMODE_RECT;
+      break;
+    case Qt::Key_A:
+      _drawMode = DRAWMODE_ARROW;
+      break;
+    case Qt::Key_E:
+      _drawMode = DRAWMODE_ELLIPSE;
+      break;
+    case Qt::Key_T:
+      _drawMode = DRAWMODE_TEXT;
+      break;
+    case Qt::Key_F:
+      _drawMode = DRAWMODE_FREEFORM;
+      break;
+    case Qt::Key_H:
+      _drawMode = DRAWMODE_HIGHLIGHT;
+      break;
+    case Qt::Key_S:
+        QApplication::beep();
+        saveScreenshot();
+        break;
+    case Qt::Key_Period:
+      _flashlightMode = !_flashlightMode;
+      break;
   }
 
   update();

@@ -116,6 +116,7 @@ class ZoomWidget : public QWidget
     QPoint	_endDrawPoint;
     QPen	_activePen;
 
+    void saveScreenshot();
 
     void updateAtMousePos(QPoint mousePos);
     void shiftPixmap(const QPoint delta);
