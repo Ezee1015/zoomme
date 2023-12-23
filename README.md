@@ -48,6 +48,7 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 |        **`H`**        | To change the mode to a Highlighter (rectangular)       |
 |      **`Enter`**      | To finish writing text                                  |
 |   **`Shift+Enter`**   | To make a new line when writing text                    |
+| **`Left/Right keys`** | To go to the previous/next character when writing text  |
 |   **`Up/Down keys`**  | To go to the previous/next line break when writing text |
 
 ### Change the color of the lines
