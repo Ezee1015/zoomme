@@ -514,6 +514,26 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
           return;
         textData.caretPos++;
         break;
+      case Qt::Key_Up:
+        for(int i = textData.caretPos-1; i > 0; --i) {
+          if(i == 1){
+            textData.caretPos = 0;
+            break;
+          }
+          if(textData.text.at(i-1) == '\n') {
+            textData.caretPos = i;
+            break;
+          }
+        }
+        break;
+      case Qt::Key_Down:
+        for(int i = textData.caretPos+1; i <= textData.text.size(); ++i) {
+          if(textData.text.at(i-1) == '\n' || i == textData.text.size()) {
+            textData.caretPos = i;
+            break;
+          }
+        }
+        break;
       default:
         textData.text.insert(textData.caretPos, event->text());
         textData.caretPos++;
