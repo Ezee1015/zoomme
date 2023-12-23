@@ -23,18 +23,20 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 
 ## Functions & Mappings
 
-### General mappings
+### General functions
 
-|     Key/Event     | Function                                                                                                                                                                                                                                                                                            |
-|:-----------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **`Mouse Wheel`** | To zoom in and zoom out                                                                                                                                                                                                                                                                             |
-|    **`Shift`**    | When it's zoomed in, if you press and hold the key, the screen will not follow the mouse, so you can freely move it around in that part of the screen (for drawing, for example). When you release it, it will continue following the mouse                                                         |
-|      **`S`**      | To take a Screenshot in the current position and Save it to the standard Pictures folder (or the current path if it isn't found)                                                                                                                                                                    |
-|      **`U`**      | To delete the last drawing of the current draw mode (undo)                                                                                                                                                                                                                                          |
-|      **`Q`**      | To clear all the drawings                                                                                                                                                                                                                                                                           |
-|     **`ESC`**     | To **finish writing text** (if you're writing), **restore zoom** (if you are zoomed in), **exit the "deleting a drawing" mode** (if it's on), **disable the mouse shadow/flashlight** (if it's on) or **quit/exit** (If you are not zoomed in, not writing text, not deleting a drawing, nor in shadow/flashlight mode) |
+|         Key/Event         | Function                                                                                                                                                                                                                                                                                                                |
+|:-------------------------:|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|     **`Mouse Wheel`**     | To zoom in and zoom out                                                                                                                                                                                                                                                                                                 |
+|        **`Shift`**        | When it's zoomed in, if you press and hold the key, the screen will not follow the mouse, so you can freely move it around in that part of the screen (for drawing, for example). When you release it, it will continue following the mouse                                                                             |
+|      **`.`** (period)     | To toggle the "Flashlight effect" on the cursor.                                                                                                                                                                                                                                                                        |
+| **`Shift + Mouse Wheel`** | When the flashlight effect is turn on, this will increase/decrease the size of the "light"                                                                                                                                                                                                                       |
+|          **`S`**          | To take a Screenshot in the current position and Save it to the standard Pictures folder (or the current path if it isn't found)                                                                                                                                                                                        |
+|          **`P`**          | To toggle between your screen and a blackboard mode. By the way, your drawings will persist between the modes                                                                                                                                                                                                           |
+|         **`ESC`**         | To **finish writing text** (if you're writing), **exit the "delete a drawing" mode** (if it's on), **disable the mouse flashlight** (if it's on), **restore zoom** (if you are zoomed in), or **quit/exit** (If you are not zoomed in, not writing text, not deleting a drawing, nor in flashlight mode) |
 
-### Available Modes
+### Available Drawing Modes
+
 |            Key            | Function                                                                                                                               |
 |:-------------------------:|----------------------------------------------------------------------------------------------------------------------------------------|
 |          **`Z`**          | To change the mode to drawing Lines (mode by default)                                                                                  |
@@ -44,10 +46,6 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 |          **`F`**          | To change the mode to drawing Free forms / Hand draws                                                                                  |
 |          **`T`**          | To change the mode to insert Text                                                                                                      |
 |          **`H`**          | To change the mode to a Highlighter (rectangular)                                                                                      |
-|          **`,`**          | To delete a drawing (from the current mode) with the mouse. You can exit by deleting a form, with the Escape key or pressing ',' again |
-|      **`.`** (period)     | To toggle the "Flashlight effect" on the cursor.                                                                                       |
-| **`Shift + Mouse Wheel`** | When the shadow/flashlight effect is turn on, this will increase/decrease the size of the "light"                                      |
-|          **`P`**          | To toggle between your screen and a blackboard mode. By the way, your drawings will persist between the modes                          |
 
 #### Text Mode Mappings
 
@@ -58,6 +56,14 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 |     **`Left/Right keys`**    | To go to the previous/next character when writing text                                                                                                    |
 |      **`Up/Down keys`**      | To go to the previous/next line break when writing text                                                                                                   |
 | **`Shift and click a text`** | You can access and modify the text by clicking on it when you're in insert text mode. However, you cannot be writing or drawing a new text while clicking |
+
+### Available Actions for the drawing modes
+
+|   Key   | Function                                                                                                                               |
+|:-------:|----------------------------------------------------------------------------------------------------------------------------------------|
+| **`U`** | To delete the last drawing of the current draw mode (undo)                                                                             |
+| **`,`** | To delete a drawing (from the current mode) with the mouse. You can exit by deleting a form, with the Escape key or pressing `,` again |
+| **`Q`** | To clear all the drawings                                                                                                              |
 
 
 ### Change the color of the lines
