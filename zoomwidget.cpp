@@ -472,8 +472,11 @@ void ZoomWidget::updateCursorShape(){
 
   // If it's in text mode, the shift it's pressed and there's a text below the
   // cursor, change the cursor shape
-  if( _state==STATE_MOVING && _drawMode==DRAWMODE_TEXT &&
-      _shiftPressed && cursorOverForm(QCursor::pos())!=1 ){
+  if( _state==STATE_MOVING &&
+      _drawMode==DRAWMODE_TEXT &&
+      _shiftPressed &&
+      cursorOverForm(mapFromGlobal(QCursor::pos()))!=-1 )
+  {
     setCursor(QCursor(Qt::PointingHandCursor));
     return;
   }
