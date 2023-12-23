@@ -127,9 +127,10 @@ class ZoomWidget : public QWidget
     void checkPixmapPos();
 
     // Returns the position of the form (from the current draw mode) that is
-    // behind the cursor position
+    // behind the cursor position. Returns -1 if there's no form under the cursor
     int cursorOverForm(QPoint cursorPos);
     void removeFormBehindCursor(QPoint cursorPos);
+    void updateCursorShape();
 
     void getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h);
 };

@@ -127,7 +127,12 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 
   // This is the position of the form (in the current draw mode) in the vector,
   // that is behind the cursor.
-  int formPosBehindCursor = cursorOverForm(mapFromGlobal(QCursor::pos()));
+  int formPosBehindCursor;
+  // If it's deleting or if it's trying to modify a text
+  if(_state == STATE_DELETING || (_state==STATE_MOVING && _drawMode==DRAWMODE_TEXT && _shiftPressed))
+    formPosBehindCursor = cursorOverForm(mapFromGlobal(QCursor::pos()));
+  else
+    formPosBehindCursor = -1;
 
   // Draw desktop pixmap.
   if(!_liveMode || _boardMode){
@@ -361,7 +366,7 @@ void ZoomWidget::removeFormBehindCursor(QPoint cursorPos){
   }
 
   _state = STATE_MOVING;
-  setCursor(QCursor(Qt::CrossCursor));
+  updateCursorShape();
   update();
 }
 
@@ -374,6 +379,21 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
 
   if(_state == STATE_DELETING)
     return removeFormBehindCursor(event->pos());
+
+  // If you're in text mode (without drawing nor writing) and you press a text
+  // with shift pressed, you access it and you can modify it
+  if(_state==STATE_MOVING && _drawMode==DRAWMODE_TEXT && cursorOverForm(event->pos())!=-1 ){
+    _state = STATE_TYPING;
+    updateCursorShape();
+
+    int formPosBehindCursor = cursorOverForm(event->pos());
+    UserTextData textData = _userTexts.at(formPosBehindCursor);
+    _userTexts.remove(formPosBehindCursor);
+    _userTexts.append(textData);
+
+    update();
+    return;
+  }
 
   if(!_shiftPressed)
     _lastMousePos = event->pos();
@@ -444,11 +464,30 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
   }
 }
 
+void ZoomWidget::updateCursorShape(){
+  if(_state == STATE_DELETING){
+    setCursor(QCursor(Qt::PointingHandCursor));
+    return;
+  }
+
+  // If it's in text mode, the shift it's pressed and there's a text below the
+  // cursor, change the cursor shape
+  if( _state==STATE_MOVING && _drawMode==DRAWMODE_TEXT &&
+      _shiftPressed && cursorOverForm(QCursor::pos())!=1 ){
+    setCursor(QCursor(Qt::PointingHandCursor));
+    return;
+  }
+
+  setCursor(QCursor(Qt::CrossCursor));
+}
+
 void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 {
   // If the app lost focus, request it again
   if(!QWidget::isActiveWindow())
     QWidget::activateWindow();
+
+  updateCursorShape();
 
   updateAtMousePos(event->pos());
 
@@ -546,9 +585,6 @@ void ZoomWidget::saveScreenshot(){
 }
 
 int ZoomWidget::cursorOverForm(QPoint cursorPos){
-  if(_state != STATE_DELETING)
-    return -1;
-
   int x, y, w, h;
   switch(_drawMode){
     case DRAWMODE_LINE:
@@ -622,6 +658,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 
   if(key == Qt::Key_Shift){
     _shiftPressed = true;
+    updateCursorShape();
     return;
   }
 
@@ -694,7 +731,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
       // If it's in flashlight mode, disable it
       if(_state == STATE_DELETING){
         _state = STATE_MOVING;
-        setCursor(QCursor(Qt::CrossCursor));
+        updateCursorShape();
       } else if(_flashlightMode)
         _flashlightMode = false;
       // Else, if it's zoomed in, go back to normal
@@ -816,13 +853,12 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
       _flashlightMode = !_flashlightMode;
       break;
     case Qt::Key_Comma:
-      if(_state == STATE_MOVING){
+      if(_state == STATE_MOVING)
         _state = STATE_DELETING;
-        setCursor(QCursor(Qt::PointingHandCursor));
-      } else if(_state == STATE_DELETING){
+      else if(_state == STATE_DELETING)
         _state = STATE_MOVING;
-        setCursor(QCursor(Qt::CrossCursor));
-      }
+
+      updateCursorShape();
       break;
   }
 
@@ -833,6 +869,7 @@ void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
 {
   if(event->key() == Qt::Key_Shift) {
     _shiftPressed = false;
+    updateCursorShape();
     updateAtMousePos(mapFromGlobal(QCursor::pos()));
     update();
   }

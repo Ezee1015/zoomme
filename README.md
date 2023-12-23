@@ -38,19 +38,20 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 |         **`ESC`**         | To finish writing text (if you're writing), restore zoom (if you are zoomed in), exit the "deleting a drawing" mode (if it's on), disable the mouse shadow/flashlight (if it's on) or quit/exit (If you are not zoomed in, not writing text, not deleting a drawing, nor in shadow/flashlight mode) |
 
 ### Available Modes
-|          Key          | Function                                                |
-|:---------------------:|---------------------------------------------------------|
-|        **`Z`**        | To change the mode to drawing Lines (mode by default)   |
-|        **`X`**        | To change the mode to drawing Rectangles                |
-|        **`A`**        | To change the mode to drawing Arrows                    |
-|        **`E`**        | To change the mode to drawing Ellipses                  |
-|        **`F`**        | To change the mode to drawing Free forms / Hand draws   |
-|        **`T`**        | To change the mode to insert Text                       |
-|        **`H`**        | To change the mode to a Highlighter (rectangular)       |
-|      **`Enter`**      | To finish writing text                                  |
-|   **`Shift+Enter`**   | To make a new line when writing text                    |
-| **`Left/Right keys`** | To go to the previous/next character when writing text  |
-|   **`Up/Down keys`**  | To go to the previous/next line break when writing text |
+|              Key             | Function                                                                                                                                                  |
+|:----------------------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+|            **`Z`**           | To change the mode to drawing Lines (mode by default)                                                                                                     |
+|            **`X`**           | To change the mode to drawing Rectangles                                                                                                                  |
+|            **`A`**           | To change the mode to drawing Arrows                                                                                                                      |
+|            **`E`**           | To change the mode to drawing Ellipses                                                                                                                    |
+|            **`F`**           | To change the mode to drawing Free forms / Hand draws                                                                                                     |
+|            **`T`**           | To change the mode to insert Text                                                                                                                         |
+|            **`H`**           | To change the mode to a Highlighter (rectangular)                                                                                                         |
+|          **`Enter`**         | To finish writing text                                                                                                                                    |
+|       **`Shift+Enter`**      | To make a new line when writing text                                                                                                                      |
+|     **`Left/Right keys`**    | To go to the previous/next character when writing text                                                                                                    |
+|      **`Up/Down keys`**      | To go to the previous/next line break when writing text                                                                                                   |
+| **`Shift and click a text`** | You can access and modify the text by clicking on it when you're in insert text mode. However, you cannot be writing or drawing a new text while clicking |
 
 ### Change the color of the lines
 
