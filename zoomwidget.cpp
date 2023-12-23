@@ -382,7 +382,11 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
 
   // If you're in text mode (without drawing nor writing) and you press a text
   // with shift pressed, you access it and you can modify it
-  if(_state==STATE_MOVING && _drawMode==DRAWMODE_TEXT && cursorOverForm(event->pos())!=-1 ){
+  if( _state==STATE_MOVING &&
+      _drawMode==DRAWMODE_TEXT &&
+      cursorOverForm(event->pos())!=-1 &&
+      _shiftPressed)
+  {
     _state = STATE_TYPING;
     updateCursorShape();
 
