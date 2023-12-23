@@ -34,6 +34,7 @@ enum ZoomWidgetState {
   STATE_MOVING,
   STATE_DRAWING,
   STATE_TYPING,
+  STATE_DELETING,
 };
 
 enum ZoomWidgetDrawMode {
@@ -124,6 +125,11 @@ class ZoomWidget : public QWidget
     void scalePixmapAt(const QPointF pos);
 
     void checkPixmapPos();
+
+    // Returns the position of the form (from the current draw mode) that is
+    // behind the cursor position
+    int cursorOverForm(QPoint cursorPos);
+    void removeFormBehindCursor(QPoint cursorPos);
 
     void getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h);
 };

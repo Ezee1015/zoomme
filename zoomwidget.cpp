@@ -125,6 +125,10 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 
   p.begin(this);
 
+  // This is the position of the form (in the current draw mode) in the vector,
+  // that is behind the cursor.
+  int formPosBehindCursor = cursorOverForm(mapFromGlobal(QCursor::pos()));
+
   // Draw desktop pixmap.
   if(!_liveMode || _boardMode){
     setAttribute(Qt::WA_TranslucentBackground, false);
@@ -138,6 +142,10 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   for (int i = 0; i < _userRects.size(); ++i) {
     p.setPen(_userRects.at(i).pen);
     getRealUserObjectPos(_userRects.at(i), &x, &y, &w, &h);
+
+    if(_drawMode == DRAWMODE_RECT && formPosBehindCursor==i)
+      p.setPen(QColor(140, 5, 5,255));
+
     p.drawRect(x, y, w, h);
   }
 
@@ -145,6 +153,10 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   for (int i = 0; i < _userHighlights.size(); ++i) {
     p.setPen(_userHighlights.at(i).pen);
     getRealUserObjectPos(_userHighlights.at(i), &x, &y, &w, &h);
+
+    if(_drawMode == DRAWMODE_HIGHLIGHT && formPosBehindCursor==i)
+      p.setPen(QColor(140, 5, 5,255));
+
     QColor color = p.pen().color();
     p.fillRect(QRect(x, y, w, h), QColor(color.red(), color.green(), color.blue(), 75));
   }
@@ -153,6 +165,10 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   for (int i = 0; i < _userLines.size(); ++i) {
     p.setPen(_userLines.at(i).pen);
     getRealUserObjectPos(_userLines.at(i), &x, &y, &w, &h);
+
+    if(_drawMode == DRAWMODE_LINE && formPosBehindCursor==i)
+      p.setPen(QColor(140, 5, 5,255));
+
     p.drawLine(x, y, x+w, y+h);
   }
 
@@ -160,6 +176,10 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   for (int i = 0; i < _userArrows.size(); ++i) {
     p.setPen(_userArrows.at(i).pen);
     getRealUserObjectPos(_userArrows.at(i), &x, &y, &w, &h);
+
+    if(_drawMode == DRAWMODE_ARROW && formPosBehindCursor==i)
+      p.setPen(QColor(140, 5, 5,255));
+
     p.drawLine(x, y, x+w, y+h);
     drawArrowHead(x, y, w, h, &p);
   }
@@ -168,6 +188,10 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   for (int i = 0; i < _userEllipses.size(); ++i) {
     p.setPen(_userEllipses.at(i).pen);
     getRealUserObjectPos(_userEllipses.at(i), &x, &y, &w, &h);
+
+    if(_drawMode == DRAWMODE_ELLIPSE && formPosBehindCursor==i)
+      p.setPen(QColor(140, 5, 5,255));
+
     p.drawEllipse(x, y, w, h);
   }
 
@@ -175,6 +199,9 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   int freeFormCount = (!_userFreeForms.isEmpty() && _userFreeForms.last().active) ? _userFreeForms.size()-1: _userFreeForms.size();
   for (int i = 0; i < freeFormCount; ++i) {
     p.setPen(_userFreeForms.at(i).pen);
+
+    if(_drawMode == DRAWMODE_FREEFORM && formPosBehindCursor==i)
+      p.setPen(QColor(140, 5, 5,255));
 
     for (int z = 0; z < _userFreeForms.at(i).points.size()-1; ++z) {
       QPoint current = _userFreeForms.at(i).points.at(z);
@@ -196,6 +223,10 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     p.setPen(_userTexts.at(i).data.pen);
     p.setFont(_userTexts.at(i).font);
     getRealUserObjectPos(_userTexts.at(i).data, &x, &y, &w, &h);
+
+    if(_drawMode == DRAWMODE_TEXT && formPosBehindCursor==i)
+      p.setPen(QColor(140, 5, 5,255));
+
     QString text = _userTexts.at(i).text;
     p.drawText(QRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
   }
@@ -297,12 +328,52 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   p.end();
 }
 
+void ZoomWidget::removeFormBehindCursor(QPoint cursorPos){
+  // This is the position of the form (in the current draw mode) in the vector,
+  // that is behind the cursor.
+  int formPosBehindCursor = cursorOverForm(cursorPos);
+
+  if(formPosBehindCursor == -1)
+    return;
+
+  switch(_drawMode){
+    case DRAWMODE_LINE:
+      _userLines.remove(formPosBehindCursor);
+      break;
+    case DRAWMODE_RECT:
+      _userRects.remove(formPosBehindCursor);
+      break;
+    case DRAWMODE_HIGHLIGHT:
+      _userHighlights.remove(formPosBehindCursor);
+      break;
+    case DRAWMODE_ARROW:
+      _userArrows.remove(formPosBehindCursor);
+      break;
+    case DRAWMODE_ELLIPSE:
+      _userEllipses.remove(formPosBehindCursor);
+      break;
+    case DRAWMODE_TEXT:
+      _userTexts.remove(formPosBehindCursor);
+      break;
+    case DRAWMODE_FREEFORM:
+      _userFreeForms.remove(formPosBehindCursor);
+      break;
+  }
+
+  _state = STATE_MOVING;
+  setCursor(QCursor(Qt::CrossCursor));
+  update();
+}
+
 void ZoomWidget::mousePressEvent(QMouseEvent *event)
 {
   // If it's writing a text and didn't saved it (by pressing Enter or
   // Escape), it removes. To disable this, just comment this if statement below
   if (_state == STATE_TYPING)
     _userTexts.removeLast();
+
+  if(_state == STATE_DELETING)
+    return removeFormBehindCursor(event->pos());
 
   if(!_shiftPressed)
     _lastMousePos = event->pos();
@@ -474,6 +545,77 @@ void ZoomWidget::saveScreenshot(){
   screenshot.save(pathFile);
 }
 
+int ZoomWidget::cursorOverForm(QPoint cursorPos){
+  if(_state != STATE_DELETING)
+    return -1;
+
+  int x, y, w, h;
+  switch(_drawMode){
+    case DRAWMODE_LINE:
+      for (int i = 0; i < _userLines.size(); ++i) {
+        getRealUserObjectPos(_userLines.at(i), &x, &y, &w, &h);
+        QRect rect = QRect(x, y, w, h);
+        if(rect.contains(cursorPos))
+          return i;
+      }
+      break;
+    case DRAWMODE_RECT:
+      for (int i = 0; i < _userRects.size(); ++i) {
+        getRealUserObjectPos(_userRects.at(i), &x, &y, &w, &h);
+        QRect rect = QRect(x, y, w, h);
+        if(rect.contains(cursorPos))
+          return i;
+      }
+      break;
+    case DRAWMODE_HIGHLIGHT:
+      for (int i = 0; i < _userHighlights.size(); ++i) {
+        getRealUserObjectPos(_userHighlights.at(i), &x, &y, &w, &h);
+        QRect rect = QRect(x, y, w, h);
+        if(rect.contains(cursorPos))
+          return i;
+      }
+      break;
+    case DRAWMODE_ARROW:
+      for (int i = 0; i < _userArrows.size(); ++i) {
+        getRealUserObjectPos(_userArrows.at(i), &x, &y, &w, &h);
+        QRect rect = QRect(x, y, w, h);
+        if(rect.contains(cursorPos))
+          return i;
+      }
+      break;
+    case DRAWMODE_ELLIPSE:
+      for (int i = 0; i < _userEllipses.size(); ++i) {
+        getRealUserObjectPos(_userEllipses.at(i), &x, &y, &w, &h);
+        QRect rect = QRect(x, y, w, h);
+        if(rect.contains(cursorPos))
+          return i;
+      }
+      break;
+    case DRAWMODE_TEXT:
+      for (int i = 0; i < _userTexts.size(); ++i) {
+        getRealUserObjectPos(_userTexts.at(i).data, &x, &y, &w, &h);
+        QRect rect = QRect(x, y, w, h);
+        if(rect.contains(cursorPos))
+          return i;
+      }
+      break;
+    case DRAWMODE_FREEFORM:
+      for (int i = 0; i < _userFreeForms.size(); ++i) {
+        for(int z = 0; z < _userFreeForms.at(i).points.size()-1; ++z){
+          x = _userFreeForms.at(i).points.at(z).x();
+          y = _userFreeForms.at(i).points.at(z).y();
+          w = _userFreeForms.at(i).points.at(z+1).x() - x;
+          h = _userFreeForms.at(i).points.at(z+1).y() - y;
+          QRect rect = QRect(x, y, w, h);
+          if(rect.contains(cursorPos))
+            return i;
+        }
+      }
+      break;
+  }
+  return -1;
+}
+
 void ZoomWidget::keyPressEvent(QKeyEvent *event)
 {
   int key = event->key();
@@ -550,7 +692,10 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
   switch(key){
     case Qt::Key_Escape:
       // If it's in flashlight mode, disable it
-      if(_flashlightMode)
+      if(_state == STATE_DELETING){
+        _state = STATE_MOVING;
+        setCursor(QCursor(Qt::CrossCursor));
+      } else if(_flashlightMode)
         _flashlightMode = false;
       // Else, if it's zoomed in, go back to normal
       else if(_desktopPixmapSize != _desktopPixmapOriginalSize){
@@ -669,6 +814,15 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
         break;
     case Qt::Key_Period:
       _flashlightMode = !_flashlightMode;
+      break;
+    case Qt::Key_Comma:
+      if(_state == STATE_MOVING){
+        _state = STATE_DELETING;
+        setCursor(QCursor(Qt::PointingHandCursor));
+      } else if(_state == STATE_DELETING){
+        _state = STATE_MOVING;
+        setCursor(QCursor(Qt::CrossCursor));
+      }
       break;
   }
 
