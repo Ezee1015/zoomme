@@ -662,6 +662,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
   if(key == Qt::Key_Shift){
     _shiftPressed = true;
     updateCursorShape();
+    update();
     return;
   }
 
