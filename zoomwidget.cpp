@@ -535,6 +535,8 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
         }
         break;
       default:
+        if(event->text().isEmpty())
+          break;
         textData.text.insert(textData.caretPos, event->text());
         textData.caretPos++;
         break;
