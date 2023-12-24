@@ -615,12 +615,12 @@ bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorP
   int minimumSize = 25;
   if(abs(w) < minimumSize){
     int direction = w!=0 ? (w / abs(w)) : 1;
-    x -=  (minimumSize-w)/2;
+    x -=  (minimumSize*direction-w)/2;
     w = minimumSize * direction;
   }
   if(abs(h) < minimumSize){
     int direction = h!=0 ? (h / abs(h)) : 1;
-    y -=  (minimumSize-h)/2;
+    y -=  (minimumSize*direction-h)/2;
     h = minimumSize * direction;
   }
 
@@ -676,10 +676,16 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos){
     case DRAWMODE_FREEFORM:
       for (int i = 0; i < _userFreeForms.size(); ++i) {
         for(int z = 0; z < _userFreeForms.at(i).points.size()-1; ++z){
-          x = _userFreeForms.at(i).points.at(z).x();
-          y = _userFreeForms.at(i).points.at(z).y();
-          w = _userFreeForms.at(i).points.at(z+1).x() - x;
-          h = _userFreeForms.at(i).points.at(z+1).y() - y;
+          QPoint current = _userFreeForms.at(i).points.at(z);
+          QPoint next    = _userFreeForms.at(i).points.at(z+1);
+          current = _desktopPixmapPos + current * _desktopPixmapScale;
+          next = _desktopPixmapPos + next * _desktopPixmapScale;
+
+          x = current.x();
+          y = current.y();
+          w = next.x() - x;
+          h = next.y() - y;
+
           if(isCursorInsideHitBox(x, y, w, h, cursorPos))
             return i;
         }
