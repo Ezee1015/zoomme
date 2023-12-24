@@ -598,62 +598,66 @@ void ZoomWidget::saveScreenshot(){
   screenshot.save(pathFile);
 }
 
+bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos){
+  // Minimum size of the hit box
+  int minimumSize = 25;
+  if(abs(w) < minimumSize){
+    int direction = w!=0 ? (w / abs(w)) : 1;
+    x -=  (minimumSize-w)/2;
+    w = minimumSize * direction;
+  }
+  if(abs(h) < minimumSize){
+    int direction = h!=0 ? (h / abs(h)) : 1;
+    y -=  (minimumSize-h)/2;
+    h = minimumSize * direction;
+  }
+
+  QRect hitBox = QRect(x, y, w, h);
+  return hitBox.contains(cursorPos);
+}
+
 int ZoomWidget::cursorOverForm(QPoint cursorPos){
   int x, y, w, h;
   switch(_drawMode){
     case DRAWMODE_LINE:
       for (int i = 0; i < _userLines.size(); ++i) {
         getRealUserObjectPos(_userLines.at(i), &x, &y, &w, &h);
-        // If the line has no width or no height (the "hit box" has no volume)
-        if(w==0) { x-=2; w=4; }
-        if(h==0) { y-=2; h=4; }
-
-        QRect rect = QRect(x, y, w, h);
-        if(rect.contains(cursorPos))
+        if(isCursorInsideHitBox(x, y, w, h, cursorPos))
           return i;
       }
       break;
     case DRAWMODE_RECT:
       for (int i = 0; i < _userRects.size(); ++i) {
         getRealUserObjectPos(_userRects.at(i), &x, &y, &w, &h);
-        QRect rect = QRect(x, y, w, h);
-        if(rect.contains(cursorPos))
+        if(isCursorInsideHitBox(x, y, w, h, cursorPos))
           return i;
       }
       break;
     case DRAWMODE_HIGHLIGHT:
       for (int i = 0; i < _userHighlights.size(); ++i) {
         getRealUserObjectPos(_userHighlights.at(i), &x, &y, &w, &h);
-        QRect rect = QRect(x, y, w, h);
-        if(rect.contains(cursorPos))
+        if(isCursorInsideHitBox(x, y, w, h, cursorPos))
           return i;
       }
       break;
     case DRAWMODE_ARROW:
       for (int i = 0; i < _userArrows.size(); ++i) {
         getRealUserObjectPos(_userArrows.at(i), &x, &y, &w, &h);
-        // If the arrow has no width or no height (the "hit box" has no volume)
-        if(w==0) { x-=2; w=4; }
-        if(h==0) { y-=2; h=4; }
-
-        QRect rect = QRect(x, y, w, h);
-        if(rect.contains(cursorPos))
+        if(isCursorInsideHitBox(x, y, w, h, cursorPos))
           return i;
       }
       break;
     case DRAWMODE_ELLIPSE:
       for (int i = 0; i < _userEllipses.size(); ++i) {
         getRealUserObjectPos(_userEllipses.at(i), &x, &y, &w, &h);
-        QRect rect = QRect(x, y, w, h);
-        if(rect.contains(cursorPos))
+        if(isCursorInsideHitBox(x, y, w, h, cursorPos))
           return i;
       }
       break;
     case DRAWMODE_TEXT:
       for (int i = 0; i < _userTexts.size(); ++i) {
         getRealUserObjectPos(_userTexts.at(i).data, &x, &y, &w, &h);
-        QRect rect = QRect(x, y, w, h);
-        if(rect.contains(cursorPos))
+        if(isCursorInsideHitBox(x, y, w, h, cursorPos))
           return i;
       }
       break;
@@ -664,12 +668,7 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos){
           y = _userFreeForms.at(i).points.at(z).y();
           w = _userFreeForms.at(i).points.at(z+1).x() - x;
           h = _userFreeForms.at(i).points.at(z+1).y() - y;
-          // If the line has no width or no height (the "hit box" has no volume)
-          if(w==0) { x-=2; w=4; }
-          if(h==0) { y-=2; h=4; }
-
-          QRect rect = QRect(x, y, w, h);
-          if(rect.contains(cursorPos))
+          if(isCursorInsideHitBox(x, y, w, h, cursorPos))
             return i;
         }
       }

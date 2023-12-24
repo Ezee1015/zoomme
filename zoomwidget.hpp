@@ -129,6 +129,8 @@ class ZoomWidget : public QWidget
     // Returns the position of the form (from the current draw mode) that is
     // behind the cursor position. Returns -1 if there's no form under the cursor
     int cursorOverForm(QPoint cursorPos);
+
+    bool isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos);
     void removeFormBehindCursor(QPoint cursorPos);
     void updateCursorShape();
     bool isDrawingHovered(int drawMode, int i);
