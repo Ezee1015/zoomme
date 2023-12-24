@@ -623,12 +623,21 @@ bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorP
     y -=  (minimumSize*direction-h)/2;
     h = minimumSize * direction;
   }
+  // ONLY FOR DEBUG PURPOSE
+  // Add hint box to the _userRect
+  // UserObjectData data;
+  // data.pen = QColor(Qt::blue);
+  // data.startPoint = QPoint(x,y);
+  // data.endPoint = QPoint(w+x,h+y);
+  // _userRects.append(data);
 
   QRect hitBox = QRect(x, y, w, h);
   return hitBox.contains(cursorPos);
 }
 
 int ZoomWidget::cursorOverForm(QPoint cursorPos){
+  // ONLY FOR DEBUG PURPOSE
+  // _userRects.clear();
   int x, y, w, h;
   switch(_drawMode){
     case DRAWMODE_LINE:
