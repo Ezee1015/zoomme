@@ -141,6 +141,18 @@ bool ZoomWidget::isTextEditable(QPoint cursorPos){
   return true;
 }
 
+void invertColorPainter(QPainter *painter){
+  QPen pen = painter->pen();
+  QColor color = pen.color();
+
+  color.setRed(255 - color.red());
+  color.setGreen(255 - color.green());
+  color.setBlue(255 - color.blue());
+
+  pen.setColor(color);
+  painter->setPen(pen);
+}
+
 void ZoomWidget::paintEvent(QPaintEvent *event)
 {
   QPainter p;
@@ -162,7 +174,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     getRealUserObjectPos(_userRects.at(i), &x, &y, &w, &h);
 
     if(isDrawingHovered(DRAWMODE_RECT, i))
-      p.setPen(QColor(140, 5, 5,255));
+      invertColorPainter(&p);
 
     p.drawRect(x, y, w, h);
   }
@@ -173,7 +185,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     getRealUserObjectPos(_userHighlights.at(i), &x, &y, &w, &h);
 
     if(isDrawingHovered(DRAWMODE_HIGHLIGHT, i))
-      p.setPen(QColor(140, 5, 5,255));
+      invertColorPainter(&p);
 
     QColor color = p.pen().color();
     p.fillRect(QRect(x, y, w, h), QColor(color.red(), color.green(), color.blue(), 75));
@@ -185,7 +197,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     getRealUserObjectPos(_userLines.at(i), &x, &y, &w, &h);
 
     if(isDrawingHovered(DRAWMODE_LINE, i))
-      p.setPen(QColor(140, 5, 5,255));
+      invertColorPainter(&p);
 
     p.drawLine(x, y, x+w, y+h);
   }
@@ -196,7 +208,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     getRealUserObjectPos(_userArrows.at(i), &x, &y, &w, &h);
 
     if(isDrawingHovered(DRAWMODE_ARROW, i))
-      p.setPen(QColor(140, 5, 5,255));
+      invertColorPainter(&p);
 
     p.drawLine(x, y, x+w, y+h);
     drawArrowHead(x, y, w, h, &p);
@@ -208,7 +220,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     getRealUserObjectPos(_userEllipses.at(i), &x, &y, &w, &h);
 
     if(isDrawingHovered(DRAWMODE_ELLIPSE, i))
-      p.setPen(QColor(140, 5, 5,255));
+      invertColorPainter(&p);
 
     p.drawEllipse(x, y, w, h);
   }
@@ -220,7 +232,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     p.setPen(_userFreeForms.at(i).pen);
 
     if(isDrawingHovered(DRAWMODE_FREEFORM, i))
-      p.setPen(QColor(140, 5, 5,255));
+      invertColorPainter(&p);
 
     for (int z = 0; z < _userFreeForms.at(i).points.size()-1; ++z) {
       QPoint current = _userFreeForms.at(i).points.at(z);
@@ -243,7 +255,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     getRealUserObjectPos(_userTexts.at(i).data, &x, &y, &w, &h);
 
     if(isDrawingHovered(DRAWMODE_TEXT, i))
-      p.setPen(QColor(140, 5, 5,255));
+      invertColorPainter(&p);
 
     QString text = _userTexts.at(i).text;
     p.drawText(QRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
