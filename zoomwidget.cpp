@@ -664,6 +664,10 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos){
           y = _userFreeForms.at(i).points.at(z).y();
           w = _userFreeForms.at(i).points.at(z+1).x() - x;
           h = _userFreeForms.at(i).points.at(z+1).y() - y;
+          // If the line has no width or no height (the "hit box" has no volume)
+          if(w==0) { x-=2; w=4; }
+          if(h==0) { y-=2; h=4; }
+
           QRect rect = QRect(x, y, w, h);
           if(rect.contains(cursorPos))
             return i;
