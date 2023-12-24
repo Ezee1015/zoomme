@@ -597,6 +597,10 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos){
     case DRAWMODE_LINE:
       for (int i = 0; i < _userLines.size(); ++i) {
         getRealUserObjectPos(_userLines.at(i), &x, &y, &w, &h);
+        // If the line has no width or no height (the "hit box" has no volume)
+        if(w==0) { x-=2; w=4; }
+        if(h==0) { y-=2; h=4; }
+
         QRect rect = QRect(x, y, w, h);
         if(rect.contains(cursorPos))
           return i;
@@ -621,6 +625,10 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos){
     case DRAWMODE_ARROW:
       for (int i = 0; i < _userArrows.size(); ++i) {
         getRealUserObjectPos(_userArrows.at(i), &x, &y, &w, &h);
+        // If the arrow has no width or no height (the "hit box" has no volume)
+        if(w==0) { x-=2; w=4; }
+        if(h==0) { y-=2; h=4; }
+
         QRect rect = QRect(x, y, w, h);
         if(rect.contains(cursorPos))
           return i;
