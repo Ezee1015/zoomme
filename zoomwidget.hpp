@@ -131,6 +131,8 @@ class ZoomWidget : public QWidget
     int cursorOverForm(QPoint cursorPos);
     void removeFormBehindCursor(QPoint cursorPos);
     void updateCursorShape();
+    bool isDrawingHovered(int drawMode, int i);
+    bool isTextEditable(QPoint cursorPos);
 
     void getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h);
 };
