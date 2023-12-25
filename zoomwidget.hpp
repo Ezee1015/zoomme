@@ -83,8 +83,8 @@ class ZoomWidget : public QWidget
     // When there is no Scaling this variable is the same that _desktopPixmap.size()
     QSize		_desktopPixmapOriginalSize;
 
-    // Pixmap shown in the screen. This can be the _desktopPixmap, or the a "board"
-    // if it's activated the boardMode
+    // Pixmap shown in the screen. This can either be the _desktopPixmap, or the
+    // blackboard if it's activated the _boardMode
     QPixmap		_drawnPixmap;
 
     // User objects.
@@ -111,7 +111,6 @@ class ZoomWidget : public QWidget
     ZoomWidgetState	_state;
     QPoint		_lastMousePos;
 
-
     // Drawing properties.
     ZoomWidgetDrawMode	_drawMode;
     QPoint	_startDrawPoint;
@@ -126,8 +125,9 @@ class ZoomWidget : public QWidget
 
     void checkPixmapPos();
 
-    // Returns the position of the form (from the current draw mode) that is
-    // behind the cursor position. Returns -1 if there's no form under the cursor
+    // Returns the position in the vector of the form (from the current draw
+    // mode) that is behind the cursor position. Returns -1 if there's no form
+    // under the cursor
     int cursorOverForm(QPoint cursorPos);
 
     bool isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos);
