@@ -503,6 +503,11 @@ void ZoomWidget::updateCursorShape(){
     return;
   }
 
+  if(_flashlightMode) {
+    setCursor(QCursor(Qt::BlankCursor));
+    return;
+  }
+
   setCursor(QCursor(Qt::CrossCursor));
 }
 
@@ -708,12 +713,8 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 {
   int key = event->key();
 
-  if(key == Qt::Key_Shift){
+  if(key == Qt::Key_Shift)
     _shiftPressed = true;
-    updateCursorShape();
-    update();
-    return;
-  }
 
   if(_state == STATE_TYPING){
     if ((!_shiftPressed && key == Qt::Key_Return) || key == Qt::Key_Escape) {
@@ -781,13 +782,11 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 
   switch(key){
     case Qt::Key_Escape:
-      if(_state == STATE_DELETING){
+      if(_state == STATE_DELETING)
         _state = STATE_MOVING;
-        updateCursorShape();
-      } else if(_flashlightMode)
+      else if(_flashlightMode)
         _flashlightMode = false;
-      // Else, if it's zoomed in, go back to normal
-      else if(_desktopPixmapSize != _desktopPixmapOriginalSize){
+      else if(_desktopPixmapSize != _desktopPixmapOriginalSize){ // Else, if it's zoomed in, go back to normal
         _desktopPixmapScale = 1.0f;
         scalePixmapAt(QPoint(0,0));
         checkPixmapPos();
@@ -909,11 +908,10 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
         _state = STATE_DELETING;
       else if(_state == STATE_DELETING)
         _state = STATE_MOVING;
-
-      updateCursorShape();
       break;
   }
 
+  updateCursorShape();
   update();
 }
 
