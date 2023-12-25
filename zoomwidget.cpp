@@ -560,39 +560,40 @@ void ZoomWidget::updateAtMousePos(QPoint mousePos){
 
 void ZoomWidget::wheelEvent(QWheelEvent *event)
 {
-  if (_state == STATE_MOVING) {
-    int sign;
-    if( event->angleDelta().y() > 0 )
-      sign=1;
-    else
-      sign=-1;
+  if (_state != STATE_MOVING && _state != STATE_DELETING)
+    return;
 
-    // Adjust flashlight radius
-    if(_flashlightMode && _shiftPressed) {
-      _flashlightRadius -= sign * _scaleSensivity * 50;
+  int sign;
+  if( event->angleDelta().y() > 0 )
+    sign=1;
+  else
+    sign=-1;
 
-      if( _flashlightRadius < 20)
-        _flashlightRadius=20;
-      if( _flashlightRadius > 180)
-        _flashlightRadius=180;
+  // Adjust flashlight radius
+  if(_flashlightMode && _shiftPressed) {
+    _flashlightRadius -= sign * _scaleSensivity * 50;
 
-      update();
-      return;
-    }
-
-    if(_liveMode)
-      return;
-
-    _desktopPixmapScale += sign * _scaleSensivity;
-    if (_desktopPixmapScale < 1.0f) {
-      _desktopPixmapScale = 1.0f;
-    }
-
-    scalePixmapAt(event->position());
-    checkPixmapPos();
+    if( _flashlightRadius < 20)
+      _flashlightRadius=20;
+    if( _flashlightRadius > 180)
+      _flashlightRadius=180;
 
     update();
+    return;
   }
+
+  if(_liveMode)
+    return;
+
+  _desktopPixmapScale += sign * _scaleSensivity;
+  if (_desktopPixmapScale < 1.0f) {
+    _desktopPixmapScale = 1.0f;
+  }
+
+  scalePixmapAt(event->position());
+  checkPixmapPos();
+
+  update();
 }
 
 void ZoomWidget::saveScreenshot(){
