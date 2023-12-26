@@ -18,9 +18,7 @@
 #include <QColor>
 #include <QPainterPath>
 
-ZoomWidget::ZoomWidget(QWidget *parent) :
-  QWidget(parent),
-  ui(new Ui::zoomwidget)
+ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget)
 {
   ui->setupUi(this);
   setMouseTracking(true);
@@ -52,7 +50,8 @@ ZoomWidget::~ZoomWidget()
   delete ui;
 }
 
-void drawArrowHead(int x, int y, int width, int height, QPainter *p) {
+void drawArrowHead(int x, int y, int width, int height, QPainter *p)
+{
   float opposite=-1 * height;
   float adjacent=width;
   float hypotenuse=sqrt(pow(opposite,2) + pow(adjacent,2));
@@ -101,7 +100,7 @@ void drawArrowHead(int x, int y, int width, int height, QPainter *p) {
   leftLineY  *= (angle<=(1*M_PI/4)) || (angle>(5*M_PI/4)) ? -1 : 1;
 
   // Multiply the size with the proportion
-  if( (angle<=(M_PI/2)) || (angle>M_PI && angle<=(3*M_PI/2)) ){
+  if( (angle<=(M_PI/2)) || (angle>M_PI && angle<=(3*M_PI/2)) ) {
     rightLineX *= (1-lengthProportion); rightLineY *= lengthProportion;
     leftLineX  *= lengthProportion;     leftLineY  *= (1-lengthProportion);
   } else{
@@ -113,7 +112,8 @@ void drawArrowHead(int x, int y, int width, int height, QPainter *p) {
   p->drawLine(originX, originY, originX+leftLineX, originY+leftLineY);
 }
 
-bool ZoomWidget::isDrawingHovered(int drawType, int vectorPos){
+bool ZoomWidget::isDrawingHovered(int drawType, int vectorPos)
+{
   // Only if it's deleting or if it's trying to modify a text
   bool isDeleting       = _state == STATE_DELETING;
   bool isInEditTextMode = _state == STATE_MOVING && _drawMode == DRAWMODE_TEXT && _shiftPressed;
@@ -127,15 +127,17 @@ bool ZoomWidget::isDrawingHovered(int drawType, int vectorPos){
   return (_drawMode == drawType) && (formPosBehindCursor==vectorPos);
 }
 
-bool ZoomWidget::isTextEditable(QPoint cursorPos){
   bool isInEditTextMode = _state == STATE_MOVING && _drawMode == DRAWMODE_TEXT && _shiftPressed;
+bool ZoomWidget::isTextEditable(QPoint cursorPos)
+{
   if(!isInEditTextMode || cursorOverForm(cursorPos)==-1)
     return false;
 
   return true;
 }
 
-void invertColorPainter(QPainter *painter){
+void invertColorPainter(QPainter *painter)
+{
   QPen pen = painter->pen();
   QColor color = pen.color();
 
@@ -154,8 +156,8 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   p.begin(this);
 
   // Draw desktop pixmap.
-  if(!_liveMode || _boardMode){
     setAttribute(Qt::WA_TranslucentBackground, false);
+  if(!_liveMode || _boardMode) {
     p.drawPixmap(_desktopPixmapPos.x(), _desktopPixmapPos.y(),
         _desktopPixmapSize.width(), _desktopPixmapSize.height(),
         _drawnPixmap);
@@ -256,7 +258,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   }
 
   // Opaque the area outside the circle of the cursor
-  if(_flashlightMode){
+  if(_flashlightMode) {
     QPoint c = mapFromGlobal(QCursor::pos());
     int radius = _flashlightRadius;
 
@@ -275,7 +277,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   }
 
   // If it's writing the text (text active)
-  if(_state == STATE_TYPING){
+  if(_state == STATE_TYPING) {
     UserTextData textObject = _userTexts.last();
     p.setPen(textObject.data.pen);
     p.setFont(textObject.font);
@@ -291,7 +293,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   }
 
   // Draw active user object.
-  if (_state == STATE_DRAWING) {
+  if(_state == STATE_DRAWING) {
     p.setPen(_activePen);
 
     int x = _desktopPixmapPos.x() + _startDrawPoint.x()*_desktopPixmapScale;
@@ -354,7 +356,8 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   p.end();
 }
 
-void ZoomWidget::removeFormBehindCursor(QPoint cursorPos){
+void ZoomWidget::removeFormBehindCursor(QPoint cursorPos)
+{
   // This is the position of the form (in the current draw mode) in the vector,
   // that is behind the cursor.
   int formPosBehindCursor = cursorOverForm(cursorPos);
@@ -362,7 +365,7 @@ void ZoomWidget::removeFormBehindCursor(QPoint cursorPos){
   if(formPosBehindCursor == -1)
     return;
 
-  switch(_drawMode){
+  switch(_drawMode) {
     case DRAWMODE_LINE:
       _userLines.remove(formPosBehindCursor);
       break;
@@ -403,7 +406,7 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
 
   // If you're in text mode (without drawing nor writing) and you press a text
   // with shift pressed, you access it and you can modify it
-  if(isTextEditable(event->pos())){
+  if(isTextEditable(event->pos())) {
     _state = STATE_TYPING;
     updateCursorShape();
 
@@ -486,8 +489,9 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
   }
 }
 
-void ZoomWidget::updateCursorShape(){
-  if(_state == STATE_DELETING){
+void ZoomWidget::updateCursorShape()
+{
+  if(_state == STATE_DELETING) {
     setCursor(QCursor(Qt::PointingHandCursor));
     return;
   }
@@ -516,10 +520,10 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
   updateAtMousePos(event->pos());
 
   // Register the position of the cursor for the FreeForm
-  if(_mousePressed && _drawMode == DRAWMODE_FREEFORM){
+  if(_mousePressed && _drawMode == DRAWMODE_FREEFORM) {
     QPoint curPos = (event->pos() - _desktopPixmapPos) / _desktopPixmapScale;
 
-    if( _userFreeForms.isEmpty() || (!_userFreeForms.isEmpty() && !_userFreeForms.last().active) ){
+    if( _userFreeForms.isEmpty() || (!_userFreeForms.isEmpty() && !_userFreeForms.last().active) ) {
       UserFreeFormData data;
       data.pen = _activePen;
       data.active = true;
@@ -527,7 +531,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
       _userFreeForms.append(data);
     }
 
-    else if(!_userFreeForms.isEmpty() && _userFreeForms.last().points.last()!=curPos){
+    else if(!_userFreeForms.isEmpty() && _userFreeForms.last().points.last()!=curPos) {
       UserFreeFormData data = _userFreeForms.last();
       _userFreeForms.removeLast();
       data.points.append(curPos);
@@ -538,8 +542,9 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
   update();
 }
 
-void ZoomWidget::updateAtMousePos(QPoint mousePos){
-  if (!_shiftPressed){
+void ZoomWidget::updateAtMousePos(QPoint mousePos)
+{
+  if (!_shiftPressed) {
     QPoint delta = mousePos - _lastMousePos;
 
     shiftPixmap(delta);
@@ -580,9 +585,8 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
     return;
 
   _desktopPixmapScale += sign * _scaleSensivity;
-  if (_desktopPixmapScale < 1.0f) {
+  if (_desktopPixmapScale < 1.0f)
     _desktopPixmapScale = 1.0f;
-  }
 
   scalePixmapAt(event->position());
   checkPixmapPos();
@@ -590,7 +594,8 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
   update();
 }
 
-void ZoomWidget::saveScreenshot(){
+void ZoomWidget::saveScreenshot()
+{
   // Screenshot
   QPixmap screenshot = _desktopScreen->grabWindow(0);
 
@@ -610,15 +615,16 @@ void ZoomWidget::saveScreenshot(){
   screenshot.save(pathFile);
 }
 
-bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos){
+bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos)
+{
   // Minimum size of the hit box
   int minimumSize = 25;
-  if(abs(w) < minimumSize){
+  if(abs(w) < minimumSize) {
     int direction = w!=0 ? (w / abs(w)) : 1;
     x -=  (minimumSize*direction-w)/2;
     w = minimumSize * direction;
   }
-  if(abs(h) < minimumSize){
+  if(abs(h) < minimumSize) {
     int direction = h!=0 ? (h / abs(h)) : 1;
     y -=  (minimumSize*direction-h)/2;
     h = minimumSize * direction;
@@ -635,11 +641,12 @@ bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorP
   return hitBox.contains(cursorPos);
 }
 
-int ZoomWidget::cursorOverForm(QPoint cursorPos){
+int ZoomWidget::cursorOverForm(QPoint cursorPos)
+{
   // ONLY FOR DEBUG PURPOSE
   // _userRects.clear();
   int x, y, w, h;
-  switch(_drawMode){
+  switch(_drawMode) {
     case DRAWMODE_LINE:
       for (int i = 0; i < _userLines.size(); ++i) {
         getRealUserObjectPos(_userLines.at(i), &x, &y, &w, &h);
@@ -684,7 +691,7 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos){
       break;
     case DRAWMODE_FREEFORM:
       for (int i = 0; i < _userFreeForms.size(); ++i) {
-        for(int z = 0; z < _userFreeForms.at(i).points.size()-1; ++z){
+        for(int z = 0; z < _userFreeForms.at(i).points.size()-1; ++z) {
           QPoint current = _userFreeForms.at(i).points.at(z);
           QPoint next    = _userFreeForms.at(i).points.at(z+1);
           current = _desktopPixmapPos + current * _desktopPixmapScale;
@@ -711,7 +718,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
   if(key == Qt::Key_Shift)
     _shiftPressed = true;
 
-  if(_state == STATE_TYPING){
+  if(_state == STATE_TYPING) {
     // If it's pressed Enter (without Shift) or Escape
     if ((!_shiftPressed && key == Qt::Key_Return) || key == Qt::Key_Escape) {
       if( _userTexts.last().text.isEmpty() )
@@ -771,13 +778,13 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     return;
   }
 
-  switch(key){
+  switch(key) {
     case Qt::Key_Escape:
       if(_state == STATE_DELETING)
         _state = STATE_MOVING;
       else if(_flashlightMode)
         _flashlightMode = false;
-      else if(_desktopPixmapSize != _desktopPixmapOriginalSize){ // Else, if it's zoomed in, go back to normal
+      else if(_desktopPixmapSize != _desktopPixmapOriginalSize) { // If it's zoomed in, go back to normal
         _desktopPixmapScale = 1.0f;
         scalePixmapAt(QPoint(0,0));
         checkPixmapPos();
@@ -827,7 +834,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
       break;
     case Qt::Key_U:
       // Remove last draw from the current draw mode
-      switch(_drawMode){
+      switch(_drawMode) {
         case DRAWMODE_LINE:
           if(!_userLines.isEmpty()) _userLines.removeLast();
           break;
@@ -927,7 +934,8 @@ void ZoomWidget::grabDesktop(bool liveMode)
     showFullScreen();
 }
 
-bool ZoomWidget::grabImage(QString path){
+bool ZoomWidget::grabImage(QString path)
+{
   _desktopPixmap = QPixmap(path);
 
   if(_desktopPixmap.isNull())
