@@ -13,6 +13,7 @@ void printHelp(const int exitStatus, const char* errorMsg){
     printf("[ERROR] %s\n", errorMsg);
   else
     printf("ZoomMe is an application for zooming/magnifying and noting the desktop.\n");
+
   printf("\nUsage: zoomme [options]\n");
   printf("Options:\n");
   printf("  -h,               Display this help message\n");
@@ -54,10 +55,10 @@ int main(int argc, char *argv[])
   w.resize(QApplication::screenAt(QCursor::pos())->geometry().size());
   w.move(QApplication::screenAt(QCursor::pos())->geometry().topLeft());
   w.setCursor(QCursor(Qt::CrossCursor));
-  // Set transparent
+  // Set transparency
   w.setAttribute(Qt::WA_TranslucentBackground, true);
-
   w.show();
+
   if(img.isEmpty()) w.grabDesktop(liveMode);
   else {
     if (w.grabImage(img) == false)
