@@ -286,7 +286,8 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     if(text.isEmpty()) text="Type some text... \nThen press Enter to finish...";
     else text.insert(textObject.caretPos, '|');
     p.drawText(QRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
-    QPen tempPen = p.pen(); tempPen.setWidth(1); p.setPen(tempPen);
+
+    changePenWidthFromPainter(p, 1);
     p.drawRect(x, y, w, h);
   }
 
@@ -315,7 +316,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
         break;
       case DRAWMODE_TEXT:
         {
-          QPen tempPen = p.pen(); tempPen.setWidth(1); p.setPen(tempPen);
+          changePenWidthFromPainter(p, 1);
           QFont font; font.setPixelSize(_activePen.width() * 4); p.setFont(font);
           p.drawRect(x, y, width, height);
           QString defaultText;

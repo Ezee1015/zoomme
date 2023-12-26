@@ -16,6 +16,9 @@
 #define QCOLOR_BLACK   QColor(0, 0, 0)
 #define QCOLOR_WHITE   QColor(255, 255, 255)
 
+#define changePenWidthFromPainter(painter, width) \
+  QPen tempPen = painter.pen(); tempPen.setWidth(width); p.setPen(tempPen);
+
 namespace Ui {
   class zoomwidget;
 }
