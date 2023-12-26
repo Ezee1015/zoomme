@@ -593,13 +593,13 @@ bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorP
   // Minimum size of the hit box
   int minimumSize = 25;
   if(abs(w) < minimumSize) {
-    int direction = w!=0 ? (w / abs(w)) : 1;
-    x -=  (minimumSize*direction-w)/2;
+    int direction = (w >= 0) ? 1 : -1;
+    x -= (minimumSize*direction-w)/2;
     w = minimumSize * direction;
   }
   if(abs(h) < minimumSize) {
-    int direction = h!=0 ? (h / abs(h)) : 1;
-    y -=  (minimumSize*direction-h)/2;
+    int direction = (h >= 0) ? 1 : -1;
+    y -= (minimumSize*direction-h)/2;
     h = minimumSize * direction;
   }
   // ONLY FOR DEBUG PURPOSE
