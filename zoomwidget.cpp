@@ -799,6 +799,45 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
   update();
 }
 
+void ZoomWidget::switchDeleteMode()
+{
+  if(_state == STATE_MOVING)        _state = STATE_DELETING;
+  else if(_state == STATE_DELETING) _state = STATE_MOVING;
+}
+
+void ZoomWidget::switchBoardMode()
+{
+  _boardMode = !_boardMode;
+  if(_boardMode) _drawnPixmap.fill(BLACKBOARD_COLOR);
+  else _drawnPixmap = _desktopPixmap;
+}
+
+void ZoomWidget::clearAllDrawings()
+{
+  _userRects.clear();
+  _userLines.clear();
+  _userArrows.clear();
+  _userEllipses.clear();
+  _userTexts.clear();
+  _userFreeForms.clear();
+  _userHighlights.clear();
+  _state = STATE_MOVING;
+}
+
+// Remove last drawing from the current draw mode
+void ZoomWidget::undoLastDrawing()
+{
+  switch(_drawMode) {
+    case DRAWMODE_LINE:      if(!_userLines.isEmpty())      _userLines.removeLast();      break;
+    case DRAWMODE_RECT:      if(!_userRects.isEmpty())      _userRects.removeLast();      break;
+    case DRAWMODE_ARROW:     if(!_userArrows.isEmpty())     _userArrows.removeLast();     break;
+    case DRAWMODE_ELLIPSE:   if(!_userEllipses.isEmpty())   _userEllipses.removeLast();   break;
+    case DRAWMODE_TEXT:      if(!_userTexts.isEmpty())      _userTexts.removeLast();      break;
+    case DRAWMODE_FREEFORM:  if(!_userFreeForms.isEmpty())  _userFreeForms.removeLast();  break;
+    case DRAWMODE_HIGHLIGHT: if(!_userHighlights.isEmpty()) _userHighlights.removeLast(); break;
+  }
+}
+
 void ZoomWidget::escapeKeyFunction()
 {
   if(_state == STATE_DELETING){
