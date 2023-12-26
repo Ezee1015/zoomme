@@ -21,6 +21,63 @@
 #define changePenWidthFromPainter(painter, width) \
   QPen tempPen = painter.pen(); tempPen.setWidth(width); p.setPen(tempPen);
 
+// SWITCH MODES
+#define switchFlashlightMode() _flashlightMode = !_flashlightMode;
+
+#define switchDeleteMode()             \
+  do {                                 \
+    if(_state == STATE_MOVING)         \
+      _state = STATE_DELETING;         \
+    else if(_state == STATE_DELETING)  \
+      _state = STATE_MOVING;           \
+  } while (0)                          \
+
+#define switchBoardMode()                               \
+  do {                                                  \
+    _boardMode = !_boardMode;                           \
+    if(_boardMode) _drawnPixmap.fill(BLACKBOARD_COLOR); \
+    else _drawnPixmap = _desktopPixmap;                 \
+  } while (0)
+
+// REMOVE DRAWINGS
+#define clearAllDrawings()   \
+  do {                       \
+    _userRects.clear();      \
+    _userLines.clear();      \
+    _userArrows.clear();     \
+    _userEllipses.clear();   \
+    _userTexts.clear();      \
+    _userFreeForms.clear();  \
+    _userHighlights.clear(); \
+    _state = STATE_MOVING;   \
+  } while (0)
+
+// Remove last drawing from the current draw mode
+#define undoLastDrawing()                                          \
+  switch(_drawMode) {                                              \
+    case DRAWMODE_LINE:                                            \
+      if(!_userLines.isEmpty())      _userLines.removeLast();      \
+      break;                                                       \
+    case DRAWMODE_RECT:                                            \
+      if(!_userRects.isEmpty())      _userRects.removeLast();      \
+      break;                                                       \
+    case DRAWMODE_ARROW:                                           \
+      if(!_userArrows.isEmpty())     _userArrows.removeLast();     \
+      break;                                                       \
+    case DRAWMODE_ELLIPSE:                                         \
+      if(!_userEllipses.isEmpty())   _userEllipses.removeLast();   \
+      break;                                                       \
+    case DRAWMODE_TEXT:                                            \
+      if(!_userTexts.isEmpty())      _userTexts.removeLast();      \
+      break;                                                       \
+    case DRAWMODE_FREEFORM:                                        \
+      if(!_userFreeForms.isEmpty())  _userFreeForms.removeLast();  \
+      break;                                                       \
+    case DRAWMODE_HIGHLIGHT:                                       \
+      if(!_userHighlights.isEmpty()) _userHighlights.removeLast(); \
+      break;                                                       \
+  }
+
 namespace Ui {
   class zoomwidget;
 }
@@ -150,6 +207,8 @@ class ZoomWidget : public QWidget
     void updateCursorShape();
     bool isDrawingHovered(int drawMode, int i);
     bool isTextEditable(QPoint cursorPos);
+
+    void escapeKeyFunction();
 
     void getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h);
 };

@@ -587,6 +587,9 @@ void ZoomWidget::saveScreenshot()
 
   // Save screenshot
   screenshot.save(pathFile);
+
+  // Beep for fun :)
+  QApplication::beep();
 }
 
 bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos)
@@ -753,21 +756,32 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
   }
 
   switch(key) {
-    case Qt::Key_Escape:
-      if(_state == STATE_DELETING)
-        _state = STATE_MOVING;
-      else if(_flashlightMode)
-        _flashlightMode = false;
-      else if(_desktopPixmapSize != _desktopPixmapOriginalSize) { // If it's zoomed in, go back to normal
-        _desktopPixmapScale = 1.0f;
-        scalePixmapAt(QPoint(0,0));
-        checkPixmapPos();
-      // Otherwise, exit
-      } else {
-        QApplication::beep();
-        QApplication::quit();
-      }
-      break;
+    case Qt::Key_R: _activePen.setColor(QCOLOR_RED);     break;
+    case Qt::Key_G: _activePen.setColor(QCOLOR_GREEN);   break;
+    case Qt::Key_B: _activePen.setColor(QCOLOR_BLUE);    break;
+    case Qt::Key_C: _activePen.setColor(QCOLOR_CYAN);    break;
+    case Qt::Key_O: _activePen.setColor(QCOLOR_ORANGE);  break;
+    case Qt::Key_M: _activePen.setColor(QCOLOR_MAGENTA); break;
+    case Qt::Key_Y: _activePen.setColor(QCOLOR_YELLOW);  break;
+    case Qt::Key_W: _activePen.setColor(QCOLOR_WHITE);   break;
+    case Qt::Key_D: _activePen.setColor(QCOLOR_BLACK);   break;
+
+    case Qt::Key_Z: _drawMode = DRAWMODE_LINE;      break;
+    case Qt::Key_X: _drawMode = DRAWMODE_RECT;      break;
+    case Qt::Key_A: _drawMode = DRAWMODE_ARROW;     break;
+    case Qt::Key_E: _drawMode = DRAWMODE_ELLIPSE;   break;
+    case Qt::Key_T: _drawMode = DRAWMODE_TEXT;      break;
+    case Qt::Key_F: _drawMode = DRAWMODE_FREEFORM;  break;
+    case Qt::Key_H: _drawMode = DRAWMODE_HIGHLIGHT; break;
+
+    case Qt::Key_S:      saveScreenshot();       break;
+    case Qt::Key_U:      undoLastDrawing();      break;
+    case Qt::Key_Q:      clearAllDrawings();     break;
+    case Qt::Key_P:      switchBoardMode();      break;
+    case Qt::Key_Period: switchFlashlightMode(); break;
+    case Qt::Key_Comma:  switchDeleteMode();     break;
+    case Qt::Key_Escape: escapeKeyFunction();    break;
+
     case Qt::Key_1:
     case Qt::Key_2:
     case Qt::Key_3:
@@ -779,112 +793,26 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     case Qt::Key_9:
       _activePen.setWidth(key - Qt::Key_0);
       break;
-    case Qt::Key_R:
-      _activePen.setColor(QCOLOR_RED);
-      break;
-    case Qt::Key_G:
-      _activePen.setColor(QCOLOR_GREEN);
-      break;
-    case Qt::Key_B:
-      _activePen.setColor(QCOLOR_BLUE);
-      break;
-    case Qt::Key_C:
-      _activePen.setColor(QCOLOR_CYAN);
-      break;
-    case Qt::Key_O:
-      _activePen.setColor(QCOLOR_ORANGE);
-      break;
-    case Qt::Key_M:
-      _activePen.setColor(QCOLOR_MAGENTA);
-      break;
-    case Qt::Key_Y:
-      _activePen.setColor(QCOLOR_YELLOW);
-      break;
-    case Qt::Key_W:
-      _activePen.setColor(QCOLOR_WHITE);
-      break;
-    case Qt::Key_D:
-      _activePen.setColor(QCOLOR_BLACK);
-      break;
-    case Qt::Key_U:
-      // Remove last draw from the current draw mode
-      switch(_drawMode) {
-        case DRAWMODE_LINE:
-          if(!_userLines.isEmpty()) _userLines.removeLast();
-          break;
-        case DRAWMODE_RECT:
-          if(!_userRects.isEmpty()) _userRects.removeLast();
-          break;
-        case DRAWMODE_ARROW:
-          if(!_userArrows.isEmpty()) _userArrows.removeLast();
-          break;
-        case DRAWMODE_ELLIPSE:
-          if(!_userEllipses.isEmpty()) _userEllipses.removeLast();
-          break;
-        case DRAWMODE_TEXT:
-          if(!_userTexts.isEmpty()) _userTexts.removeLast();
-          break;
-        case DRAWMODE_FREEFORM:
-          if(!_userFreeForms.isEmpty()) _userFreeForms.removeLast();
-          break;
-        case DRAWMODE_HIGHLIGHT:
-          if(!_userHighlights.isEmpty()) _userHighlights.removeLast();
-          break;
-      } // draw mode switch
-      break;
-    case Qt::Key_Q:
-      _userRects.clear();
-      _userLines.clear();
-      _userArrows.clear();
-      _userEllipses.clear();
-      _userTexts.clear();
-      _userFreeForms.clear();
-      _userHighlights.clear();
-      _state = STATE_MOVING;
-      break;
-    case Qt::Key_P:
-      _boardMode = !_boardMode;
-      if(_boardMode) _drawnPixmap.fill(BLACKBOARD_COLOR);
-      else _drawnPixmap = _desktopPixmap;
-      break;
-    case Qt::Key_Z:
-      _drawMode = DRAWMODE_LINE;
-      break;
-    case Qt::Key_X:
-      _drawMode = DRAWMODE_RECT;
-      break;
-    case Qt::Key_A:
-      _drawMode = DRAWMODE_ARROW;
-      break;
-    case Qt::Key_E:
-      _drawMode = DRAWMODE_ELLIPSE;
-      break;
-    case Qt::Key_T:
-      _drawMode = DRAWMODE_TEXT;
-      break;
-    case Qt::Key_F:
-      _drawMode = DRAWMODE_FREEFORM;
-      break;
-    case Qt::Key_H:
-      _drawMode = DRAWMODE_HIGHLIGHT;
-      break;
-    case Qt::Key_S:
-        QApplication::beep();
-        saveScreenshot();
-        break;
-    case Qt::Key_Period:
-      _flashlightMode = !_flashlightMode;
-      break;
-    case Qt::Key_Comma:
-      if(_state == STATE_MOVING)
-        _state = STATE_DELETING;
-      else if(_state == STATE_DELETING)
-        _state = STATE_MOVING;
-      break;
   }
 
   updateCursorShape();
   update();
+}
+
+void ZoomWidget::escapeKeyFunction()
+{
+  if(_state == STATE_DELETING){
+    _state = STATE_MOVING;
+  } else if(_flashlightMode) {
+    _flashlightMode = false;
+  } else if(_desktopPixmapSize != _desktopPixmapOriginalSize) {
+    _desktopPixmapScale = 1.0f;
+    scalePixmapAt(QPoint(0,0));
+    checkPixmapPos();
+  } else {
+    QApplication::beep();
+    QApplication::quit();
+  }
 }
 
 void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
