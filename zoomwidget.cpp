@@ -366,27 +366,13 @@ void ZoomWidget::removeFormBehindCursor(QPoint cursorPos)
     return;
 
   switch(_drawMode) {
-    case DRAWMODE_LINE:
-      _userLines.remove(formPosBehindCursor);
-      break;
-    case DRAWMODE_RECT:
-      _userRects.remove(formPosBehindCursor);
-      break;
-    case DRAWMODE_HIGHLIGHT:
-      _userHighlights.remove(formPosBehindCursor);
-      break;
-    case DRAWMODE_ARROW:
-      _userArrows.remove(formPosBehindCursor);
-      break;
-    case DRAWMODE_ELLIPSE:
-      _userEllipses.remove(formPosBehindCursor);
-      break;
-    case DRAWMODE_TEXT:
-      _userTexts.remove(formPosBehindCursor);
-      break;
-    case DRAWMODE_FREEFORM:
-      _userFreeForms.remove(formPosBehindCursor);
-      break;
+    case DRAWMODE_LINE:      _userLines.remove(formPosBehindCursor);      break;
+    case DRAWMODE_RECT:      _userRects.remove(formPosBehindCursor);      break;
+    case DRAWMODE_HIGHLIGHT: _userHighlights.remove(formPosBehindCursor); break;
+    case DRAWMODE_ARROW:     _userArrows.remove(formPosBehindCursor);     break;
+    case DRAWMODE_ELLIPSE:   _userEllipses.remove(formPosBehindCursor);   break;
+    case DRAWMODE_TEXT:      _userTexts.remove(formPosBehindCursor);      break;
+    case DRAWMODE_FREEFORM:  _userFreeForms.remove(formPosBehindCursor);  break;
   }
 
   _state = STATE_MOVING;
@@ -433,60 +419,51 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
 {
   _mousePressed = false;
 
-  if (_state == STATE_DRAWING) {
-    _endDrawPoint = (event->pos() - _desktopPixmapPos)/_desktopPixmapScale;
+  if (_state != STATE_DRAWING)
+    return;
 
-    UserObjectData data;
-    data.pen = _activePen;
-    data.startPoint = _startDrawPoint;
-    data.endPoint = _endDrawPoint;
-    switch(_drawMode){
-      case DRAWMODE_LINE:
-        _userLines.append(data);
-        break;
-      case DRAWMODE_RECT:
-        _userRects.append(data);
-        break;
-      case DRAWMODE_ARROW:
-        _userArrows.append(data);
-        break;
-      case DRAWMODE_ELLIPSE:
-        _userEllipses.append(data);
-        break;
-      case DRAWMODE_TEXT:
-        {
-          QFont font;
-          font.setPixelSize(_activePen.width() * 4);
+  _endDrawPoint = (event->pos() - _desktopPixmapPos)/_desktopPixmapScale;
 
-          UserTextData textData;
-          textData.data = data;
-          textData.text = "";
-          textData.font = font;
-          textData.caretPos = 0;
-          _userTexts.append(textData);
+  UserObjectData data;
+  data.pen = _activePen;
+  data.startPoint = _startDrawPoint;
+  data.endPoint = _endDrawPoint;
+  switch(_drawMode) {
+    case DRAWMODE_LINE:      _userLines.append(data);      break;
+    case DRAWMODE_RECT:      _userRects.append(data);      break;
+    case DRAWMODE_HIGHLIGHT: _userHighlights.append(data); break;
+    case DRAWMODE_ARROW:     _userArrows.append(data);     break;
+    case DRAWMODE_ELLIPSE:   _userEllipses.append(data);   break;
+    case DRAWMODE_TEXT:
+      {
+        QFont font;
+        font.setPixelSize(_activePen.width() * 4);
 
-          _state = STATE_TYPING;
-          update();
-          return;
-        }
-      case DRAWMODE_FREEFORM:
-        {
-          // The registration of the points of the FreeForms are in mouseMoveEvent()
-          // This only indicates that the drawing is no longer being actively drawn
-          UserFreeFormData data = _userFreeForms.last();
-          _userFreeForms.removeLast();
-          data.active = false;
-          _userFreeForms.append(data);
-          break;
-        }
-      case DRAWMODE_HIGHLIGHT:
-        _userHighlights.append(data);
+        UserTextData textData;
+        textData.data = data;
+        textData.text = "";
+        textData.font = font;
+        textData.caretPos = 0;
+        _userTexts.append(textData);
+
+        _state = STATE_TYPING;
+        update();
+        return;
+      }
+    case DRAWMODE_FREEFORM:
+      {
+        // The registration of the points of the FreeForms are in mouseMoveEvent()
+        // This only indicates that the drawing is no longer being actively drawn
+        UserFreeFormData data = _userFreeForms.last();
+        _userFreeForms.removeLast();
+        data.active = false;
+        _userFreeForms.append(data);
         break;
-    }
-
-    _state = STATE_MOVING;
-    update();
+      }
   }
+
+  _state = STATE_MOVING;
+  update();
 }
 
 void ZoomWidget::updateCursorShape()
