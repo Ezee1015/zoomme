@@ -184,7 +184,8 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
       invertColorPainter(&p);
 
     QColor color = p.pen().color();
-    p.fillRect(QRect(x, y, w, h), QColor(color.red(), color.green(), color.blue(), 75));
+    color.setAlpha(75); // Transparency
+    p.fillRect(QRect(x, y, w, h), color);
   }
 
   // Draw user lines.
@@ -348,7 +349,8 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
         break;
       case DRAWMODE_HIGHLIGHT:
         QColor color = p.pen().color();
-        p.fillRect(QRect(x, y, width, height), QColor(color.red(), color.green(), color.blue(), 75));
+        color.setAlpha(75); // Transparency
+        p.fillRect(QRect(x, y, width, height), color);
         break;
     }
   }
