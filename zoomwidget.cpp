@@ -115,21 +115,21 @@ void drawArrowHead(int x, int y, int width, int height, QPainter *p)
 bool ZoomWidget::isDrawingHovered(int drawType, int vectorPos)
 {
   // Only if it's deleting or if it's trying to modify a text
-  bool isDeleting       = _state == STATE_DELETING;
-  bool isInEditTextMode = _state == STATE_MOVING && _drawMode == DRAWMODE_TEXT && _shiftPressed;
+  bool isDeleting       = (_state == STATE_DELETING);
+  bool isInEditTextMode = (_state == STATE_MOVING) && (_drawMode == DRAWMODE_TEXT) && (_shiftPressed);
   if(!isDeleting && !isInEditTextMode)
     return false;
 
   // This is the position of the form (in the current draw mode) in the vector,
   // that is behind the cursor.
-  int formPosBehindCursor = cursorOverForm(mapFromGlobal(QCursor::pos()));
+  int posFormBehindCursor = cursorOverForm(mapFromGlobal(QCursor::pos()));
 
-  return (_drawMode == drawType) && (formPosBehindCursor==vectorPos);
+  return (_drawMode == drawType) && (posFormBehindCursor==vectorPos);
 }
 
-  bool isInEditTextMode = _state == STATE_MOVING && _drawMode == DRAWMODE_TEXT && _shiftPressed;
 bool ZoomWidget::isTextEditable(QPoint cursorPos)
 {
+  bool isInEditTextMode = (_state == STATE_MOVING) && (_drawMode == DRAWMODE_TEXT) && (_shiftPressed);
   if(!isInEditTextMode || cursorOverForm(cursorPos)==-1)
     return false;
 
