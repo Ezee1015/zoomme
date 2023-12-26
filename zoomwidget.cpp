@@ -43,7 +43,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) :
   _flashlightMode = false;
   _flashlightRadius = 80;
 
-  _activePen.setColor(QColor(255, 0, 0));
+  _activePen.setColor(QCOLOR_RED);
   _activePen.setWidth(4);
 }
 
@@ -805,31 +805,31 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
       _activePen.setWidth(key - Qt::Key_0);
       break;
     case Qt::Key_R:
-      _activePen.setColor(QColor(255, 0, 0));
+      _activePen.setColor(QCOLOR_RED);
       break;
     case Qt::Key_G:
-      _activePen.setColor(QColor(0, 255, 0));
+      _activePen.setColor(QCOLOR_GREEN);
       break;
     case Qt::Key_B:
-      _activePen.setColor(QColor(0, 0, 255));
+      _activePen.setColor(QCOLOR_BLUE);
       break;
     case Qt::Key_C:
-      _activePen.setColor(QColor(0, 255, 255));
+      _activePen.setColor(QCOLOR_CYAN);
       break;
     case Qt::Key_O:
-      _activePen.setColor(QColor(255, 140, 0));
+      _activePen.setColor(QCOLOR_ORANGE);
       break;
     case Qt::Key_M:
-      _activePen.setColor(QColor(255, 0, 255));
+      _activePen.setColor(QCOLOR_MAGENTA);
       break;
     case Qt::Key_Y:
-      _activePen.setColor(QColor(255, 255, 0));
+      _activePen.setColor(QCOLOR_YELLOW);
       break;
     case Qt::Key_W:
-      _activePen.setColor(QColor(255, 255, 255));
+      _activePen.setColor(QCOLOR_WHITE);
       break;
     case Qt::Key_D:
-      _activePen.setColor(QColor(0, 0, 0));
+      _activePen.setColor(QCOLOR_BLACK);
       break;
     case Qt::Key_U:
       // Remove last draw from the current draw mode

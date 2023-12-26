@@ -6,6 +6,16 @@
 #include <QScreen>
 #include <QPen>
 
+#define QCOLOR_RED     QColor(255, 0, 0)
+#define QCOLOR_GREEN   QColor(0, 255, 0)
+#define QCOLOR_BLUE    QColor(0, 0, 255)
+#define QCOLOR_YELLOW  QColor(255, 255, 0)
+#define QCOLOR_MAGENTA QColor(255, 0, 255)
+#define QCOLOR_CYAN    QColor(0, 255, 255)
+#define QCOLOR_ORANGE  QColor(255, 140, 0)
+#define QCOLOR_BLACK   QColor(0, 0, 0)
+#define QCOLOR_WHITE   QColor(255, 255, 255)
+
 namespace Ui {
   class zoomwidget;
 }
