@@ -539,11 +539,7 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
   if (_state != STATE_MOVING && _state != STATE_DELETING)
     return;
 
-  int sign;
-  if( event->angleDelta().y() > 0 )
-    sign=1;
-  else
-    sign=-1;
+  int sign = (event->angleDelta().y() > 0) ? 1 : -1;
 
   // Adjust flashlight radius
   if(_flashlightMode && _shiftPressed) {
