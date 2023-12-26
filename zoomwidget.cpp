@@ -276,7 +276,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     p.fillPath(flashlightArea, QColor(  0,  0,  0, 190));
   }
 
-  // If it's writing the text (text active)
+  // If it's writing the text (active text)
   if(_state == STATE_TYPING) {
     UserTextData textObject = _userTexts.last();
     p.setPen(textObject.data.pen);
