@@ -844,7 +844,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
       break;
     case Qt::Key_P:
       _boardMode = !_boardMode;
-      if(_boardMode) _drawnPixmap.fill("#2C2C2C");
+      if(_boardMode) _drawnPixmap.fill(BLACKBOARD_COLOR);
       else _drawnPixmap = _desktopPixmap;
       break;
     case Qt::Key_Z:
@@ -918,7 +918,7 @@ bool ZoomWidget::grabImage(QString path)
   // If it has transparency, fill it with some color
   if (_desktopPixmap.hasAlpha()) {
     QPixmap background(_desktopPixmap.size());
-    background.fill("#2C2C2C");
+    background.fill(BLACKBOARD_COLOR);
 
     QPainter painter(&background);
     painter.drawPixmap(0, 0, _desktopPixmap);

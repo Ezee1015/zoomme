@@ -16,6 +16,8 @@
 #define QCOLOR_BLACK   QColor(0, 0, 0)
 #define QCOLOR_WHITE   QColor(255, 255, 255)
 
+#define BLACKBOARD_COLOR "#2C2C2C"
+
 #define changePenWidthFromPainter(painter, width) \
   QPen tempPen = painter.pen(); tempPen.setWidth(width); p.setPen(tempPen);
 
