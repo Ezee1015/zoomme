@@ -156,7 +156,6 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   p.begin(this);
 
   // Draw desktop pixmap.
-    setAttribute(Qt::WA_TranslucentBackground, false);
   if(!_liveMode || _boardMode) {
     p.drawPixmap(_desktopPixmapPos.x(), _desktopPixmapPos.y(),
         _desktopPixmapSize.width(), _desktopPixmapSize.height(),
