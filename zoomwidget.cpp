@@ -718,6 +718,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     _shiftPressed = true;
 
   if(_state == STATE_TYPING){
+    // If it's pressed Enter (without Shift) or Escape
     if ((!_shiftPressed && key == Qt::Key_Return) || key == Qt::Key_Escape) {
       if( _userTexts.last().text.isEmpty() )
         _userTexts.removeLast();
@@ -729,35 +730,30 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     UserTextData textData = _userTexts.last();
     switch(key) {
       case Qt::Key_Backspace:
-        textData.text.removeAt(textData.caretPos-1);
         textData.caretPos--;
+        textData.text.removeAt(textData.caretPos);
         break;
       case Qt::Key_Return:
-        if(!_shiftPressed)
-          return;
+        // Shift IS pressed in here because if it wasn't pressed it would fall
+        // into the previous ´if´ statement
         textData.text.insert(textData.caretPos, '\n');
         textData.caretPos++;
         break;
       case Qt::Key_Left:
-        if(textData.caretPos == 0)
-          return;
+        if(textData.caretPos == 0) return;
         textData.caretPos--;
         break;
       case Qt::Key_Right:
-        if(textData.caretPos == textData.text.size())
-          return;
+        if(textData.caretPos == textData.text.size()) return;
         textData.caretPos++;
         break;
       case Qt::Key_Up:
         for(int i = textData.caretPos-1; i > 0; --i) {
-          if(i == 1){
-            textData.caretPos = 0;
-            break;
-          }
           if(textData.text.at(i-1) == '\n') {
             textData.caretPos = i;
             break;
           }
+          if(i == 1) textData.caretPos = 0;
         }
         break;
       case Qt::Key_Down:
