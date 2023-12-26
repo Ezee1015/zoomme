@@ -283,10 +283,8 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     p.setFont(textObject.font);
     getRealUserObjectPos(textObject.data, &x, &y, &w, &h);
     QString text = textObject.text;
-    if( text.isEmpty() )
-      text="Type some text... \nThen press Enter to finish...";
-    else
-      text.insert(textObject.caretPos, '|');
+    if(text.isEmpty()) text="Type some text... \nThen press Enter to finish...";
+    else text.insert(textObject.caretPos, '|');
     p.drawText(QRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
     QPen tempPen = p.pen(); tempPen.setWidth(1); p.setPen(tempPen);
     p.drawRect(x, y, w, h);
