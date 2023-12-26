@@ -55,6 +55,7 @@ ZoomWidget::~ZoomWidget()
 void drawArrowHead(int x, int y, int width, int height, QPainter *p) {
   float opposite=-1 * height;
   float adjacent=width;
+  float hypotenuse=sqrt(pow(opposite,2) + pow(adjacent,2));
 
   float angle;
   if(adjacent==0) angle=M_PI/2;
@@ -67,52 +68,45 @@ void drawArrowHead(int x, int y, int width, int height, QPainter *p) {
   else if( opposite<=0 && adjacent>0 )
     angle = 2*M_PI-angle;
 
-  float proportion= 0.25 * sin(4*angle-(M_PI/2)) + 0.75;
-  int large = sqrt(pow(opposite,2) + pow(adjacent,2)) * 0.15;
-  if (large>85) large=85;
-  int originX=width+x, originY=height+y;
-  int rightLineX, rightLineY, leftLineX, leftLineY;
+  // This proportion determines the inclination of the arrowhead's lines.
+  // For example, when the arrow is horizontal, the X and Y lengths of the arrow
+  // should be the same. When it's at a 45º angle, the right-side line of the arrowhead
+  // in X should be 0%, while in Y it should be 100%. When the arrow is at 90º,
+  // the results should be the same as when it was horizontal, and so on...
 
-  if(angle<=(M_PI/4)){
-    rightLineX=-large*proportion;
-    rightLineY=-large*(1-proportion);
-    leftLineX=-large*(1-proportion);
-    leftLineY=large*proportion;
-  } else if(angle<=(2*M_PI/4)){
-    rightLineX=-large*proportion;
-    rightLineY=large*(1-proportion);
-    leftLineX=large*(1-proportion);
-    leftLineY=large*proportion;
-  } else if(angle<=(3*M_PI/4)){
-    rightLineX=-large*(1-proportion);
-    rightLineY=large*proportion;
-    leftLineX=large*proportion;
-    leftLineY=large*(1-proportion);
-  } else if(angle<=(4*M_PI/4)){
-    rightLineX=large*(1-proportion);
-    rightLineY=large*proportion;
-    leftLineX=large*proportion;
-    leftLineY=-large*(1-proportion);
-  } else if(angle<=(5*M_PI/4)){
-    rightLineX=large*proportion;
-    rightLineY=large*(1-proportion);
-    leftLineX=large*(1-proportion);
-    leftLineY=-large*proportion;
-  } else if(angle<=(6*M_PI/4)){
-    rightLineX=large*proportion;
-    rightLineY=-large*(1-proportion);
-    leftLineX=-large*(1-proportion);
-    leftLineY=-large*proportion;
-  } else if(angle<=(7*M_PI/4)){
-    rightLineX=large*(1-proportion);
-    rightLineY=-large*proportion;
-    leftLineX=-large*proportion;
-    leftLineY=-large*(1-proportion);
-  } else {
-    rightLineX=-large*(1-proportion);
-    rightLineY=-large*proportion;
-    leftLineX=-large*proportion;
-    leftLineY=large*(1-proportion);
+  // I concluded that the Y-axis should be the opposite of the X-axis on the right-
+  // side line of the arrowhead, and the left-side line of the arrowhead is
+  // the opposite of the right-side line of the arrowhead.
+
+  // I've simplified this behavior with a sinusoidal function, so that:
+  // 0º = 0.5 (min); 45º = 1 (max); 90º = 0.5(min); etc.
+  float lengthProportion = 0.25 * sin(4*angle-(M_PI/2)) + 0.75;
+
+  // The line's length of the arrow head is a 15% of the main line size
+  int lineLength = hypotenuse * 0.15;
+  if (lineLength>85) lineLength=85;
+
+  // Tip of the line where the arrow head should be drawn
+  int originX=width+x, originY=height+y;
+
+  int rightLineX  = lineLength,
+      rightLineY  = lineLength,
+      leftLineX = lineLength,
+      leftLineY = lineLength;
+
+  // Multiple the size with the direction in the axis
+  rightLineX *= (angle<=(  M_PI/4)) || (angle>(5*M_PI/4)) ? -1 : 1;
+  rightLineY *= (angle<=(3*M_PI/4)) || (angle>(7*M_PI/4)) ? 1 : -1;
+  leftLineX  *= (angle<=(3*M_PI/4)) || (angle>(7*M_PI/4)) ? -1 : 1;
+  leftLineY  *= (angle<=(1*M_PI/4)) || (angle>(5*M_PI/4)) ? -1 : 1;
+
+  // Multiply the size with the proportion
+  if( (angle<=(M_PI/2)) || (angle>M_PI && angle<=(3*M_PI/2)) ){
+    rightLineX *= (1-lengthProportion); rightLineY *= lengthProportion;
+    leftLineX  *= lengthProportion;     leftLineY  *= (1-lengthProportion);
+  } else{
+    rightLineX *= lengthProportion;     rightLineY *= (1-lengthProportion);
+    leftLineX  *= (1-lengthProportion); leftLineY  *= lengthProportion;
   }
 
   p->drawLine(originX, originY, originX+rightLineX, originY+rightLineY);
