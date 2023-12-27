@@ -6,17 +6,17 @@
 #include <QScreen>
 #include <QPen>
 
-#define QCOLOR_RED     QColor(255, 0, 0)
-#define QCOLOR_GREEN   QColor(0, 255, 0)
-#define QCOLOR_BLUE    QColor(0, 0, 255)
-#define QCOLOR_YELLOW  QColor(255, 255, 0)
-#define QCOLOR_MAGENTA QColor(255, 0, 255)
-#define QCOLOR_CYAN    QColor(0, 255, 255)
-#define QCOLOR_ORANGE  QColor(255, 140, 0)
-#define QCOLOR_BLACK   QColor(0, 0, 0)
-#define QCOLOR_WHITE   QColor(255, 255, 255)
+#define QCOLOR_RED       QColor(224,  49,  49)
+#define QCOLOR_GREEN     QColor( 47, 158,  68)
+#define QCOLOR_BLUE      QColor( 25, 113, 194)
+#define QCOLOR_YELLOW    QColor(252, 196,  25)
+#define QCOLOR_MAGENTA   QColor(156,  54, 181)
+#define QCOLOR_CYAN      QColor( 27, 170, 191)
+#define QCOLOR_ORANGE    QColor(232,  89,  12)
+#define QCOLOR_BLACK     QColor(  7,   7,   7)
+#define QCOLOR_WHITE     QColor(248, 249, 250)
 
-#define BLACKBOARD_COLOR "#2C2C2C"
+#define BLACKBOARD_COLOR QColor( 33,  37,  41)
 
 #define changePenWidthFromPainter(painter, width) \
   QPen tempPen = painter.pen(); tempPen.setWidth(width); p.setPen(tempPen);
