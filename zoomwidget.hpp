@@ -19,7 +19,7 @@
 #define BLACKBOARD_COLOR QColor( 33,  37,  41)
 
 #define changePenWidthFromPainter(painter, width) \
-  QPen tempPen = painter.pen(); tempPen.setWidth(width); p.setPen(tempPen);
+  QPen tempPen = painter.pen(); tempPen.setWidth(width); painter.setPen(tempPen);
 
 #define switchFlashlightMode() _flashlightMode = !_flashlightMode;
 
