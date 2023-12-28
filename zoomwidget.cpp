@@ -40,6 +40,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _mousePressed = false;
   _flashlightMode = false;
   _flashlightRadius = 80;
+  _showStatus = true;
 
   _activePen.setColor(QCOLOR_RED);
   _activePen.setWidth(4);
@@ -116,7 +117,6 @@ bool ZoomWidget::isDrawingHovered(int drawType, int vectorPos)
 {
   // Only if it's deleting or if it's trying to modify a text
   bool isDeleting       = (_state == STATE_DELETING);
-  bool isInEditTextMode = (_state == STATE_MOVING) && (_drawMode == DRAWMODE_TEXT) && (_shiftPressed);
   if(!isDeleting && !isInEditTextMode)
     return false;
 
@@ -129,38 +129,129 @@ bool ZoomWidget::isDrawingHovered(int drawType, int vectorPos)
 
 bool ZoomWidget::isTextEditable(QPoint cursorPos)
 {
-  bool isInEditTextMode = (_state == STATE_MOVING) && (_drawMode == DRAWMODE_TEXT) && (_shiftPressed);
   if(!isInEditTextMode || cursorOverForm(cursorPos)==-1)
     return false;
 
   return true;
 }
 
-void invertColorPainter(QPainter *painter)
-{
-  QPen pen = painter->pen();
-  QColor color = pen.color();
-
+QColor invertColor(QColor color){
   color.setRed(255 - color.red());
   color.setGreen(255 - color.green());
   color.setBlue(255 - color.blue());
+
+  return color;
+}
+
+void invertColorPainter(QPainter *painter)
+{
+  QPen pen = painter->pen();
+  QColor color = invertColor(pen.color());
 
   pen.setColor(color);
   painter->setPen(pen);
 }
 
+void ZoomWidget::drawStatus(QPainter *painter)
+{
+  const int lineHeight = 25;
+  const int padding    = 20;
+  const int penWidth   = 5;
+  const int fontSize   = 16;
+  const int w          = 120;
+
+  int h = 0;
+
+  // Text to display
+  QString text;
+
+  // Line 1
+  h += lineHeight;
+  switch(_drawMode) {
+    case DRAWMODE_LINE:      text.append("Line");        break;
+    case DRAWMODE_RECT:      text.append("Rectangle");   break;
+    case DRAWMODE_HIGHLIGHT: text.append("Highlighter"); break;
+    case DRAWMODE_ARROW:     text.append("Arrow");       break;
+    case DRAWMODE_ELLIPSE:   text.append("Ellipse");     break;
+    case DRAWMODE_TEXT:      text.append("Text");        break;
+    case DRAWMODE_FREEFORM:  text.append("Free Form");   break;
+  }
+  text.append(" (");
+  text.append(QString::number(_activePen.width()));
+  text.append(")");
+
+  // Line 2
+  switch(_state) {
+    case STATE_MOVING:   break;
+    case STATE_DRAWING:  break;
+    case STATE_TYPING:   text.append("\n-- TYPING --");   h += lineHeight; break;
+    case STATE_DELETING: text.append("\n-- DELETING --"); h += lineHeight; break;
+  };
+  if(isInEditTextMode){
+    text += "\n-- SELECT --";
+    h += lineHeight;
+  }
+
+  // Line 3
+  // You can't forget that you have enabled the board mode, as you can clearly
+  // see that there's no desktop
+  // if(_boardMode){
+  //   text += "\n# Black board #";
+  //   h += lineHeight;
+  // }
+
+  // Line 4
+  // You can't forget that you have enabled the flashlight effect, as you can
+  // clearly see it
+  // if(_flashlightMode){
+  //   text += "\n# Flashlight #";
+  //   h += lineHeight;
+  // }
+
+  // Position
+  const int x = _desktopPixmapOriginalSize.width() - w - padding;
+  const int y = padding;
+
+  // If the mouse is near the hit box, don't draw it
+  QRect hitBox = QRect(x-padding, y-padding, w+padding*2, h+padding*2);
+  if( isCursorInsideHitBox( hitBox.x(),
+                            hitBox.y(),
+                            hitBox.width(),
+                            hitBox.height(),
+                            mapFromGlobal(QCursor::pos()),
+                            false) ) {
+    return;
+  }
+
+  const QRect rect = QRect(x, y, w, h);
+
+  // Settings
+  painter->setPen(_activePen);
+  QFont font; font.setPixelSize(fontSize); painter->setFont(font);
+  QPen tempPen = painter->pen(); tempPen.setWidth(penWidth); painter->setPen(tempPen);
+
+  // Background (highlight)
+  QColor color = _activePen.color();
+  color.setAlpha(65); // Transparency
+  painter->fillRect(rect, color);
+
+  // Border
+  painter->drawRect(rect);
+
+  // Text
+  painter->drawText(rect, Qt::AlignCenter | Qt::TextWordWrap, text);
+}
+
 void ZoomWidget::paintEvent(QPaintEvent *event)
 {
-  QPainter p;
+  if(_boardMode)
+    _drawnPixmap.fill(BLACKBOARD_COLOR);
+  else if(!_liveMode)
+    _drawnPixmap = _desktopPixmap;
+  else
+    _drawnPixmap.fill(Qt::transparent);
 
-  p.begin(this);
-
-  // Draw desktop pixmap.
-  if(!_liveMode || _boardMode) {
-    p.drawPixmap(_desktopPixmapPos.x(), _desktopPixmapPos.y(),
-        _desktopPixmapSize.width(), _desktopPixmapSize.height(),
-        _drawnPixmap);
-  }
+  QPainter p(&_drawnPixmap);
 
   // Draw user rectangles.
   int x, y, w, h;
@@ -234,9 +325,6 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
       QPoint current = _userFreeForms.at(i).points.at(z);
       QPoint next    = _userFreeForms.at(i).points.at(z+1);
 
-      current = _desktopPixmapPos + current * _desktopPixmapScale;
-      next = _desktopPixmapPos + next * _desktopPixmapScale;
-
       p.drawLine(current.x(), current.y(), next.x(), next.y());
     }
   }
@@ -296,10 +384,10 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   if(_state == STATE_DRAWING) {
     p.setPen(_activePen);
 
-    int x = _desktopPixmapPos.x() + _startDrawPoint.x()*_desktopPixmapScale;
-    int y = _desktopPixmapPos.y() + _startDrawPoint.y()*_desktopPixmapScale;
-    int width = (_endDrawPoint.x() - _startDrawPoint.x())*_desktopPixmapScale;
-    int height = (_endDrawPoint.y() - _startDrawPoint.y())*_desktopPixmapScale;
+    int x = _startDrawPoint.x();
+    int y = _startDrawPoint.y();
+    int width  = _endDrawPoint.x() - _startDrawPoint.x();
+    int height = _endDrawPoint.y() - _startDrawPoint.y();
 
     switch(_drawMode) {
       case DRAWMODE_RECT:
@@ -340,9 +428,6 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
           QPoint current = _userFreeForms.last().points.at(z);
           QPoint next    = _userFreeForms.last().points.at(z+1);
 
-          current = _desktopPixmapPos + current * _desktopPixmapScale;
-          next = _desktopPixmapPos + next * _desktopPixmapScale;
-
           p.drawLine(current.x(), current.y(), next.x(), next.y());
         }
         break;
@@ -354,6 +439,17 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     }
   }
 
+  // Draw the drawn pixmap onto the screen
+  QPainter screen; screen.begin(this);
+
+  screen.drawPixmap(_desktopPixmapPos.x(), _desktopPixmapPos.y(),
+      _desktopPixmapSize.width(), _desktopPixmapSize.height(),
+      _drawnPixmap);
+
+  if(_showStatus)
+    drawStatus(&screen);
+
+  screen.end();
   p.end();
 }
 
@@ -412,7 +508,7 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
   _state = STATE_DRAWING;
   _mousePressed = true;
 
-  _startDrawPoint = (event->pos() - _desktopPixmapPos)/_desktopPixmapScale;
+  _startDrawPoint = screenPointToPixmapPos(event->pos());
   _endDrawPoint = _startDrawPoint;
 }
 
@@ -423,7 +519,7 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
   if (_state != STATE_DRAWING)
     return;
 
-  _endDrawPoint = (event->pos() - _desktopPixmapPos)/_desktopPixmapScale;
+  _endDrawPoint = screenPointToPixmapPos(event->pos());
 
   UserObjectData data;
   data.pen = _activePen;
@@ -499,7 +595,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 
   // Register the position of the cursor for the FreeForm
   if(_mousePressed && _drawMode == DRAWMODE_FREEFORM) {
-    QPoint curPos = (event->pos() - _desktopPixmapPos) / _desktopPixmapScale;
+    QPoint curPos = screenPointToPixmapPos(event->pos());
 
     if( _userFreeForms.isEmpty() || (!_userFreeForms.isEmpty() && !_userFreeForms.last().active) ) {
       UserFreeFormData data;
@@ -532,7 +628,7 @@ void ZoomWidget::updateAtMousePos(QPoint mousePos)
   }
 
   if (_state == STATE_DRAWING)
-    _endDrawPoint = (mousePos - _desktopPixmapPos)/_desktopPixmapScale;
+    _endDrawPoint = screenPointToPixmapPos(mousePos);
 }
 
 void ZoomWidget::wheelEvent(QWheelEvent *event)
@@ -571,7 +667,7 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
 void ZoomWidget::saveScreenshot()
 {
   // Screenshot
-  QPixmap screenshot = _desktopScreen->grabWindow(0);
+  QPixmap screenshot = _drawnPixmap;
 
   // Path
   QString pathFile = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
@@ -592,8 +688,19 @@ void ZoomWidget::saveScreenshot()
   QApplication::beep();
 }
 
-bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos)
+// If positionFromPixmap is TRUE, the X and Y arguments must be a point in the SCREEN
+// If positionFromPixmap is FALSE, the X and Y arguments must be a point in the PIXMAP
+bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos, bool positionFromPixmap)
 {
+  // Converts the position in the pixmap to the position in the screen (to match
+  // it with the cursor pos, because its position is relative to the screen, not
+  // the pixmap)
+  if(positionFromPixmap){
+    QPoint startPoint = pixmapPointToScreenPos(QPoint(x,y));
+    x = startPoint.x();
+    y = startPoint.y();
+  }
+
   // Minimum size of the hit box
   int minimumSize = 25;
   if(abs(w) < minimumSize) {
@@ -606,13 +713,16 @@ bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorP
     y -= (minimumSize*direction-h)/2;
     h = minimumSize * direction;
   }
+
   // ONLY FOR DEBUG PURPOSE
   // Add hint box to the _userRect
   // UserObjectData data;
   // data.pen = QColor(Qt::blue);
-  // data.startPoint = QPoint(x,y);
-  // data.endPoint = QPoint(w+x,h+y);
+  // QPoint startPoint = screenPointToPixmapPos(QPoint(x,y));
+  // data.startPoint = QPoint(startPoint.x(),startPoint.y());
+  // data.endPoint = QPoint(w+startPoint.x(),h+startPoint.y());
   // _userRects.append(data);
+  ///////////////////////////////////
 
   QRect hitBox = QRect(x, y, w, h);
   return hitBox.contains(cursorPos);
@@ -622,47 +732,48 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos)
 {
   // ONLY FOR DEBUG PURPOSE
   // _userRects.clear();
+  /////////////////////////
   int x, y, w, h;
   switch(_drawMode) {
     case DRAWMODE_LINE:
       for (int i = 0; i < _userLines.size(); ++i) {
         getRealUserObjectPos(_userLines.at(i), &x, &y, &w, &h);
-        if(isCursorInsideHitBox(x, y, w, h, cursorPos))
+        if(isCursorInsideHitBox(x, y, w, h, cursorPos, true))
           return i;
       }
       break;
     case DRAWMODE_RECT:
       for (int i = 0; i < _userRects.size(); ++i) {
         getRealUserObjectPos(_userRects.at(i), &x, &y, &w, &h);
-        if(isCursorInsideHitBox(x, y, w, h, cursorPos))
+        if(isCursorInsideHitBox(x, y, w, h, cursorPos, true))
           return i;
       }
       break;
     case DRAWMODE_HIGHLIGHT:
       for (int i = 0; i < _userHighlights.size(); ++i) {
         getRealUserObjectPos(_userHighlights.at(i), &x, &y, &w, &h);
-        if(isCursorInsideHitBox(x, y, w, h, cursorPos))
+        if(isCursorInsideHitBox(x, y, w, h, cursorPos, true))
           return i;
       }
       break;
     case DRAWMODE_ARROW:
       for (int i = 0; i < _userArrows.size(); ++i) {
         getRealUserObjectPos(_userArrows.at(i), &x, &y, &w, &h);
-        if(isCursorInsideHitBox(x, y, w, h, cursorPos))
+        if(isCursorInsideHitBox(x, y, w, h, cursorPos, true))
           return i;
       }
       break;
     case DRAWMODE_ELLIPSE:
       for (int i = 0; i < _userEllipses.size(); ++i) {
         getRealUserObjectPos(_userEllipses.at(i), &x, &y, &w, &h);
-        if(isCursorInsideHitBox(x, y, w, h, cursorPos))
+        if(isCursorInsideHitBox(x, y, w, h, cursorPos, true))
           return i;
       }
       break;
     case DRAWMODE_TEXT:
       for (int i = 0; i < _userTexts.size(); ++i) {
         getRealUserObjectPos(_userTexts.at(i).data, &x, &y, &w, &h);
-        if(isCursorInsideHitBox(x, y, w, h, cursorPos))
+        if(isCursorInsideHitBox(x, y, w, h, cursorPos, true))
           return i;
       }
       break;
@@ -671,15 +782,13 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos)
         for(int z = 0; z < _userFreeForms.at(i).points.size()-1; ++z) {
           QPoint current = _userFreeForms.at(i).points.at(z);
           QPoint next    = _userFreeForms.at(i).points.at(z+1);
-          current = _desktopPixmapPos + current * _desktopPixmapScale;
-          next = _desktopPixmapPos + next * _desktopPixmapScale;
 
           x = current.x();
           y = current.y();
           w = next.x() - x;
           h = next.y() - y;
 
-          if(isCursorInsideHitBox(x, y, w, h, cursorPos))
+          if(isCursorInsideHitBox(x, y, w, h, cursorPos, true))
             return i;
         }
       }
@@ -778,6 +887,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     case Qt::Key_U:      undoLastDrawing();      break;
     case Qt::Key_Q:      clearAllDrawings();     break;
     case Qt::Key_P:      switchBoardMode();      break;
+    case Qt::Key_Space:  switchStatus();         break;
     case Qt::Key_Period: switchFlashlightMode(); break;
     case Qt::Key_Comma:  switchDeleteMode();     break;
     case Qt::Key_Escape: escapeKeyFunction();    break;
@@ -803,13 +913,6 @@ void ZoomWidget::switchDeleteMode()
 {
   if(_state == STATE_MOVING)        _state = STATE_DELETING;
   else if(_state == STATE_DELETING) _state = STATE_MOVING;
-}
-
-void ZoomWidget::switchBoardMode()
-{
-  _boardMode = !_boardMode;
-  if(_boardMode) _drawnPixmap.fill(BLACKBOARD_COLOR);
-  else _drawnPixmap = _desktopPixmap;
 }
 
 void ZoomWidget::clearAllDrawings()
@@ -942,10 +1045,20 @@ void ZoomWidget::checkPixmapPos()
   }
 }
 
+QPoint ZoomWidget::screenPointToPixmapPos(QPoint pos)
+{
+  return (pos - _desktopPixmapPos)/_desktopPixmapScale;
+}
+
+QPoint ZoomWidget::pixmapPointToScreenPos(QPoint pos)
+{
+  return _desktopPixmapPos + pos * _desktopPixmapScale;
+}
+
 void ZoomWidget::getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h)
 {
-  *x = _desktopPixmapPos.x() + userObj.startPoint.x()*_desktopPixmapScale;
-  *y = _desktopPixmapPos.y() + userObj.startPoint.y()*_desktopPixmapScale;
-  *w = (userObj.endPoint.x() - userObj.startPoint.x())*_desktopPixmapScale;
-  *h = (userObj.endPoint.y() - userObj.startPoint.y())*_desktopPixmapScale;
+  *x = userObj.startPoint.x();
+  *y = userObj.startPoint.y();
+  *w = (userObj.endPoint.x() - userObj.startPoint.x());
+  *h = (userObj.endPoint.y() - userObj.startPoint.y());
 }

@@ -22,6 +22,10 @@
   QPen tempPen = painter.pen(); tempPen.setWidth(width); painter.setPen(tempPen);
 
 #define switchFlashlightMode() _flashlightMode = !_flashlightMode;
+#define switchBoardMode() _boardMode = !_boardMode;
+#define switchStatus() _showStatus = !_showStatus;
+
+#define isInEditTextMode ((_state == STATE_MOVING) && (_drawMode == DRAWMODE_TEXT) && (_shiftPressed))
 
 namespace Ui {
   class zoomwidget;
@@ -29,8 +33,8 @@ namespace Ui {
 
 // User data structs.
 struct UserObjectData {
-  QPoint startPoint;
-  QPoint endPoint;
+  QPoint startPoint; // Point in the pixmap
+  QPoint endPoint;   // Point in the pixmap
   QPen pen;
 };
 
@@ -122,6 +126,10 @@ class ZoomWidget : public QWidget
     bool _boardMode;
     bool _liveMode;
     bool _flashlightMode;
+    // The status is design to remember you things that you can forget they are
+    // on or selected, for example, that you have selected some drawing mode,
+    // the size of the pen, etc.
+    bool _showStatus;
 
     int _flashlightRadius;
 
@@ -134,20 +142,28 @@ class ZoomWidget : public QWidget
     QPoint	_endDrawPoint;
     QPen	_activePen;
 
+    void drawStatus(QPainter *painter);
     void saveScreenshot();
 
     void updateAtMousePos(QPoint mousePos);
     void shiftPixmap(const QPoint delta);
     void scalePixmapAt(const QPointF pos);
-
     void checkPixmapPos();
+
+    // From a point in the screen (like the mouse cursor, because its position
+    // is relative to the screen, not the pixmap), it returns the position in the
+    // pixmap (which can be zoomed in and moved)
+    QPoint screenPointToPixmapPos(QPoint pos);
+    // From a point in the pixmap (like the position of the drawings), it
+    // returns the position relative to the screen
+    QPoint pixmapPointToScreenPos(QPoint pos);
 
     // Returns the position in the vector of the form (from the current draw
     // mode) that is behind the cursor position. Returns -1 if there's no form
     // under the cursor
     int cursorOverForm(QPoint cursorPos);
 
-    bool isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos);
+    bool isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos, bool positionFromPixmap);
     void removeFormBehindCursor(QPoint cursorPos);
     void updateCursorShape();
     bool isDrawingHovered(int drawMode, int i);
@@ -156,7 +172,6 @@ class ZoomWidget : public QWidget
     // Functions for the mappings
     void escapeKeyFunction();
     void switchDeleteMode();
-    void switchBoardMode();
     void clearAllDrawings();
     void undoLastDrawing();
 
