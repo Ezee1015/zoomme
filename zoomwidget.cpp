@@ -818,7 +818,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     switch(key) {
       case Qt::Key_Backspace:
         textData.caretPos--;
-        textData.text.removeAt(textData.caretPos);
+        textData.text.remove(textData.caretPos, 1);
         break;
       case Qt::Key_Return:
         // Shift IS pressed in here because if it wasn't pressed it would fall
