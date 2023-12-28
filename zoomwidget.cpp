@@ -158,7 +158,7 @@ void ZoomWidget::drawStatus(QPainter *painter)
   const int padding    = 20;
   const int penWidth   = 5;
   const int fontSize   = 16;
-  const int w          = 120;
+  const int w          = 140;
 
   int h = 0;
 
