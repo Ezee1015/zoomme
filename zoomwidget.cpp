@@ -219,7 +219,7 @@ void ZoomWidget::drawStatus(QPainter *painter)
                             hitBox.width(),
                             hitBox.height(),
                             mapFromGlobal(QCursor::pos()),
-                            false) ) {
+                            true) ) {
     return;
   }
 
@@ -448,6 +448,15 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 
   if(_showStatus)
     drawStatus(&screen);
+
+  // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
+  // for (int i = 0; i < _userTests.size(); ++i) {
+  //   screen.setPen(_userTests.at(i).pen);
+  //   getRealUserObjectPos(_userTests.at(i), &x, &y, &w, &h);
+  //
+  //   screen.drawRect(x, y, w, h);
+  // }
+  ///////////////////////////////////
 
   screen.end();
   p.end();
@@ -688,21 +697,29 @@ void ZoomWidget::saveScreenshot()
   QApplication::beep();
 }
 
-// If positionFromPixmap is TRUE, the X and Y arguments must be a point in the SCREEN
-// If positionFromPixmap is FALSE, the X and Y arguments must be a point in the PIXMAP
-bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos, bool positionFromPixmap)
+bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos, bool floatingWindow)
 {
-  // Converts the position in the pixmap to the position in the screen (to match
-  // it with the cursor pos, because its position is relative to the screen, not
-  // the pixmap)
-  if(positionFromPixmap){
+  // Minimum size of the hit box
+  int minimumSize =  25;
+
+  // Converts the position in the pixmap of the drawing to the position in the
+  // screen (to match it with the cursor pos, because its position is relative
+  // to the screen, not the pixmap)
+  if(!floatingWindow){
     QPoint startPoint = pixmapPointToScreenPos(QPoint(x,y));
     x = startPoint.x();
     y = startPoint.y();
+
+    // If it's zoomed in, increase the size of the width and height by the scale
+    // factor
+    QSize size = pixmapSizeToScreenSize(QSize(w,h));
+    w = size.width();
+    h = size.height();
+
+    // Adjust the minimum size to the scale factor
+    minimumSize *= _desktopPixmapScale;
   }
 
-  // Minimum size of the hit box
-  int minimumSize = 25;
   if(abs(w) < minimumSize) {
     int direction = (w >= 0) ? 1 : -1;
     x -= (minimumSize*direction-w)/2;
@@ -714,14 +731,12 @@ bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorP
     h = minimumSize * direction;
   }
 
-  // ONLY FOR DEBUG PURPOSE
-  // Add hint box to the _userRect
+  // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
   // UserObjectData data;
   // data.pen = QColor(Qt::blue);
-  // QPoint startPoint = screenPointToPixmapPos(QPoint(x,y));
-  // data.startPoint = QPoint(startPoint.x(),startPoint.y());
-  // data.endPoint = QPoint(w+startPoint.x(),h+startPoint.y());
-  // _userRects.append(data);
+  // data.startPoint = QPoint(x,y);
+  // data.endPoint = QPoint(w+x,h+y);
+  // _userTests.append(data);
   ///////////////////////////////////
 
   QRect hitBox = QRect(x, y, w, h);
@@ -730,50 +745,50 @@ bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorP
 
 int ZoomWidget::cursorOverForm(QPoint cursorPos)
 {
-  // ONLY FOR DEBUG PURPOSE
-  // _userRects.clear();
+  // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
+  // _userTests.clear();
   /////////////////////////
   int x, y, w, h;
   switch(_drawMode) {
     case DRAWMODE_LINE:
       for (int i = 0; i < _userLines.size(); ++i) {
         getRealUserObjectPos(_userLines.at(i), &x, &y, &w, &h);
-        if(isCursorInsideHitBox(x, y, w, h, cursorPos, true))
+        if(isCursorInsideHitBox(x, y, w, h, cursorPos, false))
           return i;
       }
       break;
     case DRAWMODE_RECT:
       for (int i = 0; i < _userRects.size(); ++i) {
         getRealUserObjectPos(_userRects.at(i), &x, &y, &w, &h);
-        if(isCursorInsideHitBox(x, y, w, h, cursorPos, true))
+        if(isCursorInsideHitBox(x, y, w, h, cursorPos, false))
           return i;
       }
       break;
     case DRAWMODE_HIGHLIGHT:
       for (int i = 0; i < _userHighlights.size(); ++i) {
         getRealUserObjectPos(_userHighlights.at(i), &x, &y, &w, &h);
-        if(isCursorInsideHitBox(x, y, w, h, cursorPos, true))
+        if(isCursorInsideHitBox(x, y, w, h, cursorPos, false))
           return i;
       }
       break;
     case DRAWMODE_ARROW:
       for (int i = 0; i < _userArrows.size(); ++i) {
         getRealUserObjectPos(_userArrows.at(i), &x, &y, &w, &h);
-        if(isCursorInsideHitBox(x, y, w, h, cursorPos, true))
+        if(isCursorInsideHitBox(x, y, w, h, cursorPos, false))
           return i;
       }
       break;
     case DRAWMODE_ELLIPSE:
       for (int i = 0; i < _userEllipses.size(); ++i) {
         getRealUserObjectPos(_userEllipses.at(i), &x, &y, &w, &h);
-        if(isCursorInsideHitBox(x, y, w, h, cursorPos, true))
+        if(isCursorInsideHitBox(x, y, w, h, cursorPos, false))
           return i;
       }
       break;
     case DRAWMODE_TEXT:
       for (int i = 0; i < _userTexts.size(); ++i) {
         getRealUserObjectPos(_userTexts.at(i).data, &x, &y, &w, &h);
-        if(isCursorInsideHitBox(x, y, w, h, cursorPos, true))
+        if(isCursorInsideHitBox(x, y, w, h, cursorPos, false))
           return i;
       }
       break;
@@ -788,7 +803,7 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos)
           w = next.x() - x;
           h = next.y() - y;
 
-          if(isCursorInsideHitBox(x, y, w, h, cursorPos, true))
+          if(isCursorInsideHitBox(x, y, w, h, cursorPos, false))
             return i;
         }
       }
@@ -1053,6 +1068,11 @@ QPoint ZoomWidget::screenPointToPixmapPos(QPoint pos)
 QPoint ZoomWidget::pixmapPointToScreenPos(QPoint pos)
 {
   return _desktopPixmapPos + pos * _desktopPixmapScale;
+}
+
+QSize ZoomWidget::pixmapSizeToScreenSize(QSize size)
+{
+  return size * _desktopPixmapScale;
 }
 
 void ZoomWidget::getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h)

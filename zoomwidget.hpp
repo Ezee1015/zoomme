@@ -117,6 +117,9 @@ class ZoomWidget : public QWidget
     QVector<UserFreeFormData>  _userFreeForms;
     QVector<UserObjectData>    _userHighlights;
 
+    // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
+    // QVector<UserObjectData>    _userTests;
+
     // Moving properties.
     float		_scaleSensivity;
 
@@ -157,17 +160,27 @@ class ZoomWidget : public QWidget
     // From a point in the pixmap (like the position of the drawings), it
     // returns the position relative to the screen
     QPoint pixmapPointToScreenPos(QPoint pos);
+    // From the width and height of a form in the pixmap, it returns the correct
+    // width and height for the form in the screen applying the scale factor to
+    // them.
+    QSize pixmapSizeToScreenSize(QSize size);
 
     // Returns the position in the vector of the form (from the current draw
     // mode) that is behind the cursor position. Returns -1 if there's no form
     // under the cursor
     int cursorOverForm(QPoint cursorPos);
 
-    bool isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos, bool positionFromPixmap);
     void removeFormBehindCursor(QPoint cursorPos);
     void updateCursorShape();
     bool isDrawingHovered(int drawMode, int i);
     bool isTextEditable(QPoint cursorPos);
+
+    // If floatingWindow is FALSE, it's a drawing: the X and Y arguments must be
+    // a point in the PIXMAP, and the drawing is affected by the zoom.
+    // If floatingWindow is TRUE, it's a floating sign: the X and Y arguments
+    // must be a point in the SCREEN, and it isn't affected by the zoom (like
+    // the floating status bar).
+    bool isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos, bool positionFromPixmap);
 
     // Functions for the mappings
     void escapeKeyFunction();
