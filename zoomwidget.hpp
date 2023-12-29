@@ -22,6 +22,11 @@
 #define changePenWidthFromPainter(painter, width) \
   QPen tempPen = painter->pen(); tempPen.setWidth(width); painter->setPen(tempPen);
 
+#define drawDrawnPixmap(painter)                                   \
+  painter.drawPixmap(_desktopPixmapPos.x(), _desktopPixmapPos.y(), \
+      _desktopPixmapSize.width(), _desktopPixmapSize.height(),     \
+      _drawnPixmap);
+
 #define switchFlashlightMode() _flashlightMode = !_flashlightMode;
 #define switchBoardMode() _boardMode = !_boardMode;
 #define switchStatus() _showStatus = !_showStatus;
@@ -147,10 +152,11 @@ class ZoomWidget : public QWidget
     QPoint	_endDrawPoint;
     QPen	_activePen;
 
-    void drawSavedForms(QPainter *painter);
-    void drawFlashlightEffect(QPainter *painter);
-    void drawActiveForm(QPainter *painter);
-    void drawStatus(QPainter *painter);
+    void drawSavedForms(QPainter *pixmapPainter);
+    // Opaque the area outside the circle of the cursor
+    void drawFlashlightEffect(QPainter *screenPainter);
+    void drawActiveForm(QPainter *painter, bool drawToScreen);
+    void drawStatus(QPainter *screenPainter);
 
     void saveScreenshot();
 

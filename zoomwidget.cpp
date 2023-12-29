@@ -152,7 +152,7 @@ void invertColorPainter(QPainter *painter)
   painter->setPen(pen);
 }
 
-void ZoomWidget::drawStatus(QPainter *painter)
+void ZoomWidget::drawStatus(QPainter *screenPainter)
 {
   const int lineHeight = 25;
   const int padding    = 20;
@@ -226,20 +226,20 @@ void ZoomWidget::drawStatus(QPainter *painter)
   const QRect rect = QRect(x, y, w, h);
 
   // Settings
-  painter->setPen(_activePen);
-  QFont font; font.setPixelSize(fontSize); painter->setFont(font);
-  changePenWidthFromPainter(painter, penWidth);
+  screenPainter->setPen(_activePen);
+  QFont font; font.setPixelSize(fontSize); screenPainter->setFont(font);
+  changePenWidthFromPainter(screenPainter, penWidth);
 
   // Background (highlight)
   QColor color = _activePen.color();
   color.setAlpha(65); // Transparency
-  painter->fillRect(rect, color);
+  screenPainter->fillRect(rect, color);
 
   // Border
-  painter->drawRect(rect);
+  screenPainter->drawRect(rect);
 
   // Text
-  painter->drawText(rect, Qt::AlignCenter | Qt::TextWordWrap, text);
+  screenPainter->drawText(rect, Qt::AlignCenter | Qt::TextWordWrap, text);
 }
 
 void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
@@ -339,51 +339,53 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
 
 void ZoomWidget::drawFlashlightEffect(QPainter *screenPainter)
 {
-  // Opaque the area outside the circle of the cursor
-  if(_flashlightMode) {
-    QPoint c = mapFromGlobal(QCursor::pos());
-    int radius = _flashlightRadius;
+  QPoint c = mapFromGlobal(QCursor::pos());
+  int radius = _flashlightRadius;
 
-    QRect mouseFlashlightBorder = QRect(c.x()-radius, c.y()-radius, radius*2, radius*2);
-    QPainterPath mouseFlashlight;
-    mouseFlashlight.addEllipse( mouseFlashlightBorder );
+  QRect mouseFlashlightBorder = QRect(c.x()-radius, c.y()-radius, radius*2, radius*2);
+  QPainterPath mouseFlashlight;
+  mouseFlashlight.addEllipse( mouseFlashlightBorder );
 
-    // painter->setPen(QColor(186,186,186,200));
-    // painter->drawEllipse( mouseFlashlightBorder );
+  // painter->setPen(QColor(186,186,186,200));
+  // painter->drawEllipse( mouseFlashlightBorder );
 
-    QPainterPath pixmapPath;
-    pixmapPath.addRect(_drawnPixmap.rect());
+  QPainterPath pixmapPath;
+  pixmapPath.addRect(_drawnPixmap.rect());
 
-    QPainterPath flashlightArea = pixmapPath.subtracted(mouseFlashlight);
-    screenPainter->fillPath(flashlightArea, QColor(  0,  0,  0, 190));
-  }
+  QPainterPath flashlightArea = pixmapPath.subtracted(mouseFlashlight);
+  screenPainter->fillPath(flashlightArea, QColor(  0,  0,  0, 190));
 }
 
-void ZoomWidget::drawActiveForm(QPainter *screenPainter)
+void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
 {
   // If it's writing the text (active text)
   if(_state == STATE_TYPING) {
     UserTextData textObject = _userTexts.last();
     int x, y, w, h;
-    screenPainter->setPen(textObject.data.pen);
-    screenPainter->setFont(textObject.font);
-    getRealUserObjectPos(textObject.data, &x, &y, &w, &h, true);
+    painter->setPen(textObject.data.pen);
+    painter->setFont(textObject.font);
+    getRealUserObjectPos(textObject.data, &x, &y, &w, &h, drawToScreen);
 
     QString text = textObject.text;
     if(text.isEmpty()) text="Type some text... \nThen press Enter to finish...";
     else text.insert(textObject.caretPos, '|');
-    screenPainter->drawText(QRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
+    painter->drawText(QRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
 
-    changePenWidthFromPainter(screenPainter, 1);
-    screenPainter->drawRect(x, y, w, h);
+    changePenWidthFromPainter(painter, 1);
+    painter->drawRect(x, y, w, h);
   }
 
   // Draw active user object.
   if(_state == STATE_DRAWING) {
-    screenPainter->setPen(_activePen);
+    painter->setPen(_activePen);
 
-    QPoint startPoint = pixmapPointToScreenPos(_startDrawPoint);
-    QPoint endPoint = pixmapPointToScreenPos(_endDrawPoint);
+    QPoint startPoint = _startDrawPoint;
+    QPoint endPoint   = _endDrawPoint;
+
+    if(drawToScreen){
+      startPoint = pixmapPointToScreenPos(startPoint);
+      endPoint   = pixmapPointToScreenPos(endPoint);
+    }
 
     int x = startPoint.x();
     int y = startPoint.y();
@@ -392,30 +394,30 @@ void ZoomWidget::drawActiveForm(QPainter *screenPainter)
 
     switch(_drawMode) {
       case DRAWMODE_RECT:
-        screenPainter->drawRect(x, y, width, height);
+        painter->drawRect(x, y, width, height);
         break;
       case DRAWMODE_LINE:
-        screenPainter->drawLine(x, y, width + x, height + y);
+        painter->drawLine(x, y, width + x, height + y);
         break;
       case DRAWMODE_ARROW:
-        screenPainter->drawLine(x, y, width + x, height + y);
-        drawArrowHead(x, y, width, height, screenPainter);
+        painter->drawLine(x, y, width + x, height + y);
+        drawArrowHead(x, y, width, height, painter);
         break;
       case DRAWMODE_ELLIPSE:
-        screenPainter->drawEllipse(x, y, width, height);
+        painter->drawEllipse(x, y, width, height);
         break;
       case DRAWMODE_TEXT:
         {
-          changePenWidthFromPainter(screenPainter, 1);
-          QFont font; font.setPixelSize(_activePen.width() * 4); screenPainter->setFont(font);
-          screenPainter->drawRect(x, y, width, height);
+          changePenWidthFromPainter(painter, 1);
+          QFont font; font.setPixelSize(_activePen.width() * 4); painter->setFont(font);
+          painter->drawRect(x, y, width, height);
           QString defaultText;
           defaultText.append("Sizing... (");
           defaultText.append(QString::number(width));
           defaultText.append("x");
           defaultText.append(QString::number(height));
           defaultText.append(")");
-          screenPainter->drawText(QRect(x, y, width, height), Qt::AlignCenter | Qt::TextWordWrap, defaultText);
+          painter->drawText(QRect(x, y, width, height), Qt::AlignCenter | Qt::TextWordWrap, defaultText);
           break;
         }
       case DRAWMODE_FREEFORM:
@@ -424,21 +426,23 @@ void ZoomWidget::drawActiveForm(QPainter *screenPainter)
         if(!_userFreeForms.last().active)
           break;
 
-        screenPainter->setPen(_userFreeForms.last().pen);
+        painter->setPen(_userFreeForms.last().pen);
         for (int z = 0; z < _userFreeForms.last().points.size()-1; ++z) {
           QPoint current = _userFreeForms.last().points.at(z);
           QPoint next    = _userFreeForms.last().points.at(z+1);
 
-          current = pixmapPointToScreenPos(current);
-          next = pixmapPointToScreenPos(next);
+          if(drawToScreen){
+            current = pixmapPointToScreenPos(current);
+            next = pixmapPointToScreenPos(next);
+          }
 
-          screenPainter->drawLine(current.x(), current.y(), next.x(), next.y());
+          painter->drawLine(current.x(), current.y(), next.x(), next.y());
         }
         break;
       case DRAWMODE_HIGHLIGHT:
-        QColor color = screenPainter->pen().color();
+        QColor color = painter->pen().color();
         color.setAlpha(75); // Transparency
-        screenPainter->fillRect(QRect(x, y, width, height), color);
+        painter->fillRect(QRect(x, y, width, height), color);
         break;
     }
   }
@@ -459,14 +463,24 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   QPainter screen; screen.begin(this);
 
   drawSavedForms(&pixmapPainter);
-  // Draw the drawn pixmap onto the screen
-  screen.drawPixmap(_desktopPixmapPos.x(), _desktopPixmapPos.y(),
-      _desktopPixmapSize.width(), _desktopPixmapSize.height(),
-      _drawnPixmap);
 
-  drawFlashlightEffect(&screen);
+  // By drawing the active form in the pixmap, it gives a better user feedback
+  // (because the user can see how it would really look like when saved), but
+  // when the flashlight effect is on, its better to draw the active form onto
+  // the screen, on top of the flashlight effect, so that the user can see the
+  // active form over the opaque background. This can cause some differences
+  // with the final result (like the width of the pen and the size of the
+  // arrow's head)
+  if(_flashlightMode){
+    drawDrawnPixmap(screen);
+    drawFlashlightEffect(&screen);
+    drawActiveForm(&screen, true);
+  } else{
+    drawActiveForm(&pixmapPainter, false);
+    drawDrawnPixmap(screen);
+  }
 
-  drawActiveForm(&screen);
+  if(_flashlightMode)
 
   if(_showStatus)
     drawStatus(&screen);
