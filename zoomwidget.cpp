@@ -471,6 +471,8 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   // active form over the opaque background. This can cause some differences
   // with the final result (like the width of the pen and the size of the
   // arrow's head)
+  // By the way, ¿Why would you draw when the flashlight effect is enabled? I
+  // don't know why I'm allowing this... You can't even see the cursor!
   if(_flashlightMode){
     drawDrawnPixmap(screen);
     drawFlashlightEffect(&screen);
