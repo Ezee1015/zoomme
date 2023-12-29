@@ -480,8 +480,6 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     drawDrawnPixmap(screen);
   }
 
-  if(_flashlightMode)
-
   if(_showStatus)
     drawStatus(&screen);
 
