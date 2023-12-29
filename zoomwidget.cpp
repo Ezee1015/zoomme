@@ -348,6 +348,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   // Opaque the area outside the circle of the cursor
   if(_flashlightMode) {
     QPoint c = mapFromGlobal(QCursor::pos());
+    c = screenPointToPixmapPos(c);
     int radius = _flashlightRadius;
 
     QRect mouseFlashlightBorder = QRect(c.x()-radius, c.y()-radius, radius*2, radius*2);
