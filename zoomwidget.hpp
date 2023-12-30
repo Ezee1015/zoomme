@@ -31,7 +31,7 @@
 #define switchBoardMode() _boardMode = !_boardMode;
 #define switchOnlyShowDesktop() if(_state==STATE_MOVING) _onlyShowDesktop = !_onlyShowDesktop
 
-#define isInEditTextMode ((_state == STATE_MOVING) && (_drawMode == DRAWMODE_TEXT) && (_shiftPressed))
+#define isInEditTextMode ((_state == STATE_MOVING) && (_drawMode == DRAWMODE_TEXT) && (_shiftPressed) && (!_onlyShowDesktop))
 
 namespace Ui {
   class zoomwidget;
