@@ -154,6 +154,9 @@ void invertColorPainter(QPainter *painter)
 
 void ZoomWidget::drawStatus(QPainter *screenPainter)
 {
+  if(_onlyShowDesktop)
+    return;
+
   const int lineHeight = 25;
   const int padding    = 20;
   const int penWidth   = 5;
@@ -249,6 +252,9 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
 
 void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
 {
+  if(_onlyShowDesktop)
+    return;
+
   // Draw user rectangles.
   int x, y, w, h;
   for (int i = 0; i < _userRects.size(); ++i) {
@@ -363,6 +369,9 @@ void ZoomWidget::drawFlashlightEffect(QPainter *screenPainter)
 
 void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
 {
+  if(_onlyShowDesktop)
+    return;
+
   // If it's writing the text (active text)
   if(_state == STATE_TYPING) {
     UserTextData textObject = _userTexts.last();
@@ -467,8 +476,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   QPainter pixmapPainter(&_drawnPixmap);
   QPainter screen; screen.begin(this);
 
-  if(!_onlyShowDesktop)
-    drawSavedForms(&pixmapPainter);
+  drawSavedForms(&pixmapPainter);
 
   // By drawing the active form in the pixmap, it gives a better user feedback
   // (because the user can see how it would really look like when saved), but
@@ -488,8 +496,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     drawDrawnPixmap(screen);
   }
 
-  if(!_onlyShowDesktop)
-    drawStatus(&screen);
+  drawStatus(&screen);
 
   // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
   // int x, y, w, h;
