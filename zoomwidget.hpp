@@ -34,6 +34,20 @@
 #define isInEditTextMode ((_state == STATE_MOVING) && (_drawMode == DRAWMODE_TEXT) && (_shiftPressed) && (!_onlyShowDesktop))
 #define isTextEditable(cursorPos) ((isInEditTextMode) && (cursorOverForm(cursorPos) != -1))
 
+// From a point in the screen (like the mouse cursor, because its position
+// is relative to the screen, not the pixmap), it returns the position in the
+// pixmap (which can be zoomed in and moved)
+#define screenPointToPixmapPos(qpoint) ((qpoint - _desktopPixmapPos)/_desktopPixmapScale)
+
+// From a point in the pixmap (like the position of the drawings), it
+// returns the position relative to the screen
+#define pixmapPointToScreenPos(qpoint) (_desktopPixmapPos + qpoint * _desktopPixmapScale)
+
+// From the width and height of a form in the pixmap, it returns the correct
+// width and height for the form in the screen applying the scale factor to
+// them.
+#define pixmapSizeToScreenSize(qsize)  (qsize * _desktopPixmapScale)
+
 namespace Ui {
   class zoomwidget;
 }
@@ -165,18 +179,6 @@ class ZoomWidget : public QWidget
     void shiftPixmap(const QPoint delta);
     void scalePixmapAt(const QPointF pos);
     void checkPixmapPos();
-
-    // From a point in the screen (like the mouse cursor, because its position
-    // is relative to the screen, not the pixmap), it returns the position in the
-    // pixmap (which can be zoomed in and moved)
-    QPoint screenPointToPixmapPos(QPoint pos);
-    // From a point in the pixmap (like the position of the drawings), it
-    // returns the position relative to the screen
-    QPoint pixmapPointToScreenPos(QPoint pos);
-    // From the width and height of a form in the pixmap, it returns the correct
-    // width and height for the form in the screen applying the scale factor to
-    // them.
-    QSize pixmapSizeToScreenSize(QSize size);
 
     // Returns the position in the vector of the form (from the current draw
     // mode) that is behind the cursor position. Returns -1 if there's no form

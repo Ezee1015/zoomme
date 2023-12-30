@@ -1112,21 +1112,6 @@ void ZoomWidget::checkPixmapPos()
   }
 }
 
-QPoint ZoomWidget::screenPointToPixmapPos(QPoint pos)
-{
-  return (pos - _desktopPixmapPos)/_desktopPixmapScale;
-}
-
-QPoint ZoomWidget::pixmapPointToScreenPos(QPoint pos)
-{
-  return _desktopPixmapPos + pos * _desktopPixmapScale;
-}
-
-QSize ZoomWidget::pixmapSizeToScreenSize(QSize size)
-{
-  return size * _desktopPixmapScale;
-}
-
 void ZoomWidget::getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h, bool posRelativeToScreen)
 {
   QPoint startPoint = userObj.startPoint;
