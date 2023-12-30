@@ -541,6 +541,8 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
   if(_onlyShowDesktop)
     return;
 
+  _mousePressed = true;
+
   // If it's writing a text and didn't saved it (by pressing Enter or
   // Escape), it removes. To disable this, just comment this if statement below
   if (_state == STATE_TYPING)
@@ -568,7 +570,6 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
     _lastMousePos = event->pos();
 
   _state = STATE_DRAWING;
-  _mousePressed = true;
 
   _startDrawPoint = screenPointToPixmapPos(event->pos());
   _endDrawPoint = _startDrawPoint;
@@ -576,10 +577,10 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
 
 void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
 {
-  _mousePressed = false;
-
   if(_onlyShowDesktop)
     return;
+
+  _mousePressed = false;
 
   if (_state != STATE_DRAWING)
     return;
