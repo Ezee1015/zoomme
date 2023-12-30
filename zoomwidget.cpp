@@ -59,7 +59,7 @@ void drawArrowHead(int x, int y, int width, int height, QPainter *p)
 
   float angle;
   if(adjacent==0) angle=M_PI/2;
-  else angle = atanf(abs(opposite) / abs(adjacent));
+  else angle = atanf(fabs(opposite) / fabs(adjacent));
 
   if( opposite>=0 && adjacent<0 )
     angle = M_PI-angle;
