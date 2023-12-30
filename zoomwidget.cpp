@@ -230,8 +230,13 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   QFont font; font.setPixelSize(fontSize); screenPainter->setFont(font);
   changePenWidthFromPainter(screenPainter, penWidth);
 
+  // Background (highlight) for improve contrast
+  QColor color = (_activePen.color() == QCOLOR_BLACK) ? QCOLOR_WHITE : QCOLOR_BLACK;
+  color.setAlpha(175); // Transparency
+  screenPainter->fillRect(rect, color);
+
   // Background (highlight)
-  QColor color = _activePen.color();
+  color = _activePen.color();
   color.setAlpha(65); // Transparency
   screenPainter->fillRect(rect, color);
 
