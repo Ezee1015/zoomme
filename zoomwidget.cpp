@@ -40,7 +40,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _mousePressed = false;
   _flashlightMode = false;
   _flashlightRadius = 80;
-  _showStatus = true;
+  _onlyShowDesktop = false;
 
   _activePen.setColor(QCOLOR_RED);
   _activePen.setWidth(4);
@@ -462,7 +462,8 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   QPainter pixmapPainter(&_drawnPixmap);
   QPainter screen; screen.begin(this);
 
-  drawSavedForms(&pixmapPainter);
+  if(!_onlyShowDesktop)
+    drawSavedForms(&pixmapPainter);
 
   // By drawing the active form in the pixmap, it gives a better user feedback
   // (because the user can see how it would really look like when saved), but
@@ -482,7 +483,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     drawDrawnPixmap(screen);
   }
 
-  if(_showStatus)
+  if(!_onlyShowDesktop)
     drawStatus(&screen);
 
   // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
@@ -525,6 +526,9 @@ void ZoomWidget::removeFormBehindCursor(QPoint cursorPos)
 
 void ZoomWidget::mousePressEvent(QMouseEvent *event)
 {
+  if(_onlyShowDesktop)
+    return;
+
   // If it's writing a text and didn't saved it (by pressing Enter or
   // Escape), it removes. To disable this, just comment this if statement below
   if (_state == STATE_TYPING)
@@ -561,6 +565,9 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
 void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
 {
   _mousePressed = false;
+
+  if(_onlyShowDesktop)
+    return;
 
   if (_state != STATE_DRAWING)
     return;
@@ -638,6 +645,11 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
   updateCursorShape();
 
   updateAtMousePos(event->pos());
+
+  if(_onlyShowDesktop){
+    update();
+    return;
+  }
 
   // Register the position of the cursor for the FreeForm
   if(_mousePressed && _drawMode == DRAWMODE_FREEFORM) {
@@ -922,14 +934,14 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     case Qt::Key_F: _drawMode = DRAWMODE_FREEFORM;  break;
     case Qt::Key_H: _drawMode = DRAWMODE_HIGHLIGHT; break;
 
-    case Qt::Key_S:      saveScreenshot();       break;
-    case Qt::Key_U:      undoLastDrawing();      break;
-    case Qt::Key_Q:      clearAllDrawings();     break;
-    case Qt::Key_P:      switchBoardMode();      break;
-    case Qt::Key_Space:  switchStatus();         break;
-    case Qt::Key_Period: switchFlashlightMode(); break;
-    case Qt::Key_Comma:  switchDeleteMode();     break;
-    case Qt::Key_Escape: escapeKeyFunction();    break;
+    case Qt::Key_S:      saveScreenshot();        break;
+    case Qt::Key_U:      undoLastDrawing();       break;
+    case Qt::Key_Q:      clearAllDrawings();      break;
+    case Qt::Key_P:      switchBoardMode();       break;
+    case Qt::Key_Space:  switchOnlyShowDesktop(); break;
+    case Qt::Key_Period: switchFlashlightMode();  break;
+    case Qt::Key_Comma:  switchDeleteMode();      break;
+    case Qt::Key_Escape: escapeKeyFunction();     break;
 
     case Qt::Key_1:
     case Qt::Key_2:
@@ -950,12 +962,18 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 
 void ZoomWidget::switchDeleteMode()
 {
+  if(_onlyShowDesktop)
+    return;
+
   if(_state == STATE_MOVING)        _state = STATE_DELETING;
   else if(_state == STATE_DELETING) _state = STATE_MOVING;
 }
 
 void ZoomWidget::clearAllDrawings()
 {
+  if(_onlyShowDesktop)
+    return;
+
   _userRects.clear();
   _userLines.clear();
   _userArrows.clear();
@@ -969,6 +987,9 @@ void ZoomWidget::clearAllDrawings()
 // Remove last drawing from the current draw mode
 void ZoomWidget::undoLastDrawing()
 {
+  if(_onlyShowDesktop)
+    return;
+
   switch(_drawMode) {
     case DRAWMODE_LINE:      if(!_userLines.isEmpty())      _userLines.removeLast();      break;
     case DRAWMODE_RECT:      if(!_userRects.isEmpty())      _userRects.removeLast();      break;
@@ -986,6 +1007,8 @@ void ZoomWidget::escapeKeyFunction()
     _state = STATE_MOVING;
   } else if(_flashlightMode) {
     _flashlightMode = false;
+  } else if(_onlyShowDesktop) {
+    _onlyShowDesktop = false;
   } else if(_desktopPixmapSize != _desktopPixmapOriginalSize) {
     _desktopPixmapScale = 1.0f;
     scalePixmapAt(QPoint(0,0));

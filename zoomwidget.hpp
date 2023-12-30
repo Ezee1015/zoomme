@@ -29,7 +29,7 @@
 
 #define switchFlashlightMode() _flashlightMode = !_flashlightMode;
 #define switchBoardMode() _boardMode = !_boardMode;
-#define switchStatus() _showStatus = !_showStatus;
+#define switchOnlyShowDesktop() if(_state==STATE_MOVING) _onlyShowDesktop = !_onlyShowDesktop
 
 #define isInEditTextMode ((_state == STATE_MOVING) && (_drawMode == DRAWMODE_TEXT) && (_shiftPressed))
 
@@ -136,10 +136,7 @@ class ZoomWidget : public QWidget
     bool _boardMode;
     bool _liveMode;
     bool _flashlightMode;
-    // The status is design to remember you things that you can forget they are
-    // on or selected, for example, that you have selected some drawing mode,
-    // the size of the pen, etc.
-    bool _showStatus;
+    bool _onlyShowDesktop;
 
     int _flashlightRadius;
 
@@ -156,6 +153,9 @@ class ZoomWidget : public QWidget
     // Opaque the area outside the circle of the cursor
     void drawFlashlightEffect(QPainter *screenPainter);
     void drawActiveForm(QPainter *painter, bool drawToScreen);
+    // The status is design to remember you things that you can forget they are
+    // on or selected, for example, that you have selected some drawing mode,
+    // the size of the pen, etc.
     void drawStatus(QPainter *screenPainter);
 
     void saveScreenshot();
