@@ -127,14 +127,6 @@ bool ZoomWidget::isDrawingHovered(int drawType, int vectorPos)
   return (_drawMode == drawType) && (posFormBehindCursor==vectorPos);
 }
 
-bool ZoomWidget::isTextEditable(QPoint cursorPos)
-{
-  if(!isInEditTextMode || cursorOverForm(cursorPos)==-1)
-    return false;
-
-  return true;
-}
-
 QColor invertColor(QColor color){
   color.setRed(255 - color.red());
   color.setGreen(255 - color.green());

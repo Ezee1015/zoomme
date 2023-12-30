@@ -32,6 +32,7 @@
 #define switchOnlyShowDesktop() if(_state==STATE_MOVING) _onlyShowDesktop = !_onlyShowDesktop
 
 #define isInEditTextMode ((_state == STATE_MOVING) && (_drawMode == DRAWMODE_TEXT) && (_shiftPressed) && (!_onlyShowDesktop))
+#define isTextEditable(cursorPos) ((isInEditTextMode) && (cursorOverForm(cursorPos) != -1))
 
 namespace Ui {
   class zoomwidget;
@@ -185,7 +186,6 @@ class ZoomWidget : public QWidget
     void removeFormBehindCursor(QPoint cursorPos);
     void updateCursorShape();
     bool isDrawingHovered(int drawMode, int i);
-    bool isTextEditable(QPoint cursorPos);
 
     // The X, Y, W and H arguments must be a point in the SCREEN, not in the pixmap
     // If floating is enabled, the form (the width and height) is not affected by zoom/scaling
