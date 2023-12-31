@@ -27,6 +27,11 @@
       _desktopPixmapSize.width(), _desktopPixmapSize.height(),     \
       _drawnPixmap);
 
+#define drawDesktop(painter)                                       \
+  painter.drawPixmap(0, 0,                                         \
+      _desktopPixmap.width(), _desktopPixmap.height(),             \
+      _desktopPixmap);
+
 #define switchFlashlightMode() _flashlightMode = !_flashlightMode;
 #define switchBoardMode() _boardMode = !_boardMode;
 #define switchOnlyShowDesktop() if(_state==STATE_MOVING) _onlyShowDesktop = !_onlyShowDesktop
@@ -72,6 +77,12 @@ struct UserFreeFormData {
   bool active;
 };
 
+enum FitImage {
+  FIT_TO_WIDTH,
+  FIT_TO_HEIGHT,
+  FIT_AUTO,
+};
+
 enum ZoomWidgetState {
   STATE_MOVING,
   STATE_DRAWING,
@@ -98,7 +109,7 @@ class ZoomWidget : public QWidget
     ~ZoomWidget();
 
     void grabDesktop(bool liveMode);
-    bool grabImage(QString path);
+    bool grabImage(QString path, FitImage config);
 
   protected:
     virtual void paintEvent(QPaintEvent *event);

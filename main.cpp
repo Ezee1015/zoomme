@@ -16,9 +16,11 @@ void printHelp(const int exitStatus, const char* errorMsg){
 
   printf("\nUsage: zoomme [options]\n");
   printf("Options:\n");
-  printf("  -h,               Display this help message\n");
-  printf("  -i <image_path>   Specify the path to an image as the background, instead of the desktop\n");
-  printf("  -l                EXPERIMENTAL: Not use a background (live mode/transparent). In this mode there's no zooming, only drawings allowed\n");
+  printf("  --help                    Display this help message\n");
+  printf("  -l                        EXPERIMENTAL: Not use a background (live mode/transparent). In this mode there's no zooming, only drawings allowed\n");
+  printf("  -i <image_path> [-w|-h]   Specify the path to an image as the background, instead of the desktop\n");
+  printf("                    -w            Force to fit to the screen's width\n");
+  printf("                    -h            Force to fit to the screen's height\n");
 
   printf("\n  For more information, visit https://github.com/Ezee1015/zoomme\n");
 
@@ -34,9 +36,10 @@ int main(int argc, char *argv[])
 
   QString img;
   bool liveMode = false;
+  FitImage fitToWidth = FIT_AUTO;
   // Parsing arguments
   for(int i=0; i<argc ; ++i){
-    if(strcmp(argv[i], "-h") == 0)
+    if(strcmp(argv[i], "--help") == 0)
       printHelp(EXIT_SUCCESS, "");
 
     if(strcmp(argv[i], "-l") == 0)
@@ -47,6 +50,20 @@ int main(int argc, char *argv[])
         printHelp(EXIT_FAILURE, "Image path not provided");
 
       img = argv[i+1];
+    }
+
+    if(strcmp(argv[i], "-w") == 0) {
+      if(img.isEmpty())
+        printHelp(EXIT_FAILURE, "Fit width argument was given, but the image not provided");
+
+      fitToWidth = FIT_TO_WIDTH;
+    }
+
+    if(strcmp(argv[i], "-h") == 0) {
+      if(img.isEmpty())
+        printHelp(EXIT_FAILURE, "Fit height argument was given, but the image not provided");
+
+      fitToWidth = FIT_TO_HEIGHT;
     }
   }
 
@@ -61,7 +78,7 @@ int main(int argc, char *argv[])
 
   if(img.isEmpty()) w.grabDesktop(liveMode);
   else {
-    if (w.grabImage(img) == false)
+    if (w.grabImage(img, fitToWidth) == false)
       printHelp(EXIT_FAILURE, "Couldn't open the image");
   }
 

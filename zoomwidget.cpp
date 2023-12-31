@@ -459,15 +459,14 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 {
   (void) event;
 
-  if(_boardMode)
-    _drawnPixmap.fill(BLACKBOARD_COLOR);
-  else if(!_liveMode)
-    _drawnPixmap = _desktopPixmap;
-  else
-    _drawnPixmap.fill(Qt::transparent);
+  _drawnPixmap = QPixmap(_desktopPixmap.size());
+  _drawnPixmap.fill( (_liveMode) ? Qt::transparent : BLACKBOARD_COLOR );
 
   QPainter pixmapPainter(&_drawnPixmap);
   QPainter screen; screen.begin(this);
+
+  if(!_liveMode && !_boardMode)
+    drawDesktop(pixmapPainter);
 
   drawSavedForms(&pixmapPainter);
 
@@ -1046,25 +1045,47 @@ void ZoomWidget::grabDesktop(bool liveMode)
     showFullScreen();
 }
 
-bool ZoomWidget::grabImage(QString path)
+bool ZoomWidget::grabImage(QString path, FitImage config)
 {
-  _desktopPixmap = QPixmap(path);
+  QPixmap img = QPixmap(path);
 
-  if(_desktopPixmap.isNull())
+  if(img.isNull())
     return false;
 
-  // If it has transparency, fill it with some color
-  if (_desktopPixmap.hasAlpha()) {
-    QPixmap background(_desktopPixmap.size());
-    background.fill(BLACKBOARD_COLOR);
-
-    QPainter painter(&background);
-    painter.drawPixmap(0, 0, _desktopPixmap);
-
-    _desktopPixmap = background;
+  // Auto detect the fit config
+  if(config == FIT_AUTO){
+    if(img.width() > img.height()) config = FIT_TO_HEIGHT;
+    else config = FIT_TO_WIDTH;
   }
 
-  _desktopPixmap = _desktopPixmap.scaledToWidth(_screenSize.width(), Qt::SmoothTransformation);
+  // Scale
+  int width, height, x = 0, y = 0;
+  if(config == FIT_TO_WIDTH){
+    width = _screenSize.width();
+    img = img.scaledToWidth(width, Qt::SmoothTransformation);
+
+    // Take the largest height for the pixmap: the image or the screen height
+    height = (_screenSize.height() > img.height()) ? _screenSize.height() : img.height();
+
+    // Center the image in the screen
+    if(_screenSize.height() > img.height()) y = (height - img.height()) / 2;
+  } else { // FIT_TO_HEIGHT
+    height = _screenSize.height();
+    img = img.scaledToHeight(height, Qt::SmoothTransformation);
+
+    // Take the largest width: the image or the screen width
+    width = (_screenSize.width() > img.width()) ? _screenSize.width() : img.width();
+
+    // Center the image in the screen
+    if(_screenSize.width() > img.width()) x = (width - img.width()) / 2;
+  }
+
+  // Draw the image into the pixmap
+  _desktopPixmap = QPixmap(width, height);
+  _desktopPixmap.fill(Qt::transparent);
+  QPainter painter(&_desktopPixmap);
+  painter.drawPixmap(x, y, img);
+  painter.end();
 
   _desktopPixmapSize = _desktopPixmap.size();
   _desktopPixmapOriginalSize = _desktopPixmapSize;
@@ -1075,13 +1096,7 @@ bool ZoomWidget::grabImage(QString path)
 
 void ZoomWidget::shiftPixmap(const QPoint delta)
 {
-  int newY;
-  // For images whose height is larger than the screen
-  if(_desktopPixmapSize.height() > _screenSize.height())
-    newY = _desktopPixmapPos.y() - delta.y() * (_desktopPixmapSize.height() / _screenSize.height());
-  else // For the desktop and images with the same or less hight than the screen
-    newY = _desktopPixmapPos.y() - delta.y() * (_screenSize.height() / _desktopPixmapSize.height());
-
+  int newY = _desktopPixmapPos.y() - delta.y() * (_desktopPixmapSize.height() / _screenSize.height());
   int newX = _desktopPixmapPos.x() - delta.x() * (_desktopPixmapSize.width() / _screenSize.width());
   _desktopPixmapPos.setX(newX);
   _desktopPixmapPos.setY(newY);
