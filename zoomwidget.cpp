@@ -26,6 +26,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _state = STATE_MOVING;
 
   _desktopScreen = QGuiApplication::screenAt(QCursor::pos());
+  _screenSize = _desktopScreen->geometry().size();
   _desktopPixmapPos = QPoint(0, 0);
   _desktopPixmapSize = QApplication::screenAt(QCursor::pos())->geometry().size();
   _desktopPixmapOriginalSize = _desktopPixmapSize;
@@ -204,7 +205,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   // }
 
   // Position
-  const int x = _desktopPixmapOriginalSize.width() - w - padding;
+  const int x = _screenSize.width() - w - padding;
   const int y = padding;
 
   // If the mouse is near the hit box, don't draw it
@@ -1063,14 +1064,25 @@ bool ZoomWidget::grabImage(QString path)
     _desktopPixmap = background;
   }
 
-  _drawnPixmap = _desktopPixmap;
+  _desktopPixmap = _desktopPixmap.scaledToWidth(_screenSize.width(), Qt::SmoothTransformation);
+
+  _desktopPixmapSize = _desktopPixmap.size();
+  _desktopPixmapOriginalSize = _desktopPixmapSize;
+
+  showFullScreen();
   return true;
 }
 
 void ZoomWidget::shiftPixmap(const QPoint delta)
 {
-  int newX = _desktopPixmapPos.x() - delta.x() * (_desktopPixmapSize.width() / _desktopPixmapOriginalSize.width());
-  int newY = _desktopPixmapPos.y() - delta.y() * (_desktopPixmapSize.height() / _desktopPixmapOriginalSize.height());
+  int newY;
+  // For images whose height is larger than the screen
+  if(_desktopPixmapSize.height() > _screenSize.height())
+    newY = _desktopPixmapPos.y() - delta.y() * (_desktopPixmapSize.height() / _screenSize.height());
+  else // For the desktop and images with the same or less hight than the screen
+    newY = _desktopPixmapPos.y() - delta.y() * (_screenSize.height() / _desktopPixmapSize.height());
+
+  int newX = _desktopPixmapPos.x() - delta.x() * (_desktopPixmapSize.width() / _screenSize.width());
   _desktopPixmapPos.setX(newX);
   _desktopPixmapPos.setY(newY);
 }

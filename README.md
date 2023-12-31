@@ -117,7 +117,7 @@ make
 ./zoomme
 ```
 
-- Use an image as the background (instead of the desktop):
+- Use an image as the background (instead of the desktop). Intended for previously saved images of the desktop from ZoomMe (so you can add more drawings after been saved), but you can use it with any image:
 ```bash
 ./zoomme -i path/to/image
 ```

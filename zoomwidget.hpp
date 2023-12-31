@@ -124,6 +124,7 @@ class ZoomWidget : public QWidget
     // When Scaling is enable, this variable saves the correct size of the window
     // When there is no Scaling this variable is the same that _desktopPixmap.size()
     QSize		_desktopPixmapOriginalSize;
+    QSize		_screenSize;
 
     // Pixmap shown in the screen. This can either be the _desktopPixmap, or the
     // blackboard if it's activated the _boardMode
