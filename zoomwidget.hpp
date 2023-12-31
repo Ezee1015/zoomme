@@ -27,11 +27,6 @@
       _desktopPixmapSize.width(), _desktopPixmapSize.height(),     \
       _drawnPixmap);
 
-#define drawDesktop(painter)                                       \
-  painter.drawPixmap(0, 0,                                         \
-      _desktopPixmap.width(), _desktopPixmap.height(),             \
-      _desktopPixmap);
-
 #define switchFlashlightMode() _flashlightMode = !_flashlightMode;
 #define switchBoardMode() _boardMode = !_boardMode;
 #define switchOnlyShowDesktop() if(_state==STATE_MOVING) _onlyShowDesktop = !_onlyShowDesktop

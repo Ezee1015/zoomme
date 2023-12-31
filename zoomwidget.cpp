@@ -459,14 +459,16 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 {
   (void) event;
 
-  _drawnPixmap = QPixmap(_desktopPixmap.size());
-  _drawnPixmap.fill( (_liveMode) ? Qt::transparent : BLACKBOARD_COLOR );
+  _drawnPixmap = _desktopPixmap;
+
+  if(_liveMode)
+    _drawnPixmap.fill(Qt::transparent);
+
+  if(_boardMode)
+    _drawnPixmap.fill(BLACKBOARD_COLOR);
 
   QPainter pixmapPainter(&_drawnPixmap);
   QPainter screen; screen.begin(this);
-
-  if(!_liveMode && !_boardMode)
-    drawDesktop(pixmapPainter);
 
   drawSavedForms(&pixmapPainter);
 
@@ -1039,7 +1041,6 @@ void ZoomWidget::grabDesktop(bool liveMode)
   _liveMode = liveMode;
 
   _desktopPixmap = _desktopScreen->grabWindow(0);
-  _drawnPixmap = _desktopPixmap;
 
   if(!liveMode)
     showFullScreen();
@@ -1082,7 +1083,7 @@ bool ZoomWidget::grabImage(QString path, FitImage config)
 
   // Draw the image into the pixmap
   _desktopPixmap = QPixmap(width, height);
-  _desktopPixmap.fill(Qt::transparent);
+  _desktopPixmap.fill(BLACKBOARD_COLOR);
   QPainter painter(&_desktopPixmap);
   painter.drawPixmap(x, y, img);
   painter.end();
