@@ -118,9 +118,12 @@ make
 ```
 
 - Use an image as the background (instead of the desktop). Intended for previously saved images of the desktop from ZoomMe (so you can add more drawings after been saved), but you can use it with any image:
+
 ```bash
 ./zoomme -i path/to/image
 ```
+
+> You can force the image to fit the screen's width or hight with `-w` or `-h` after providing the image path, like this: `./zoomme -i path/to/image -w`, if you do not providing anything, it automatically detect the best option.
 
 - ***Experimental*** -- Use a transparent background. No zooming allowed, only drawing
 ```bash
@@ -129,7 +132,7 @@ make
 
 - Show the help message:
 ```bash
-./zoomme -h
+./zoomme --help
 ```
 
 ## Credit

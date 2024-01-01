@@ -18,7 +18,7 @@ void printHelp(const int exitStatus, const char* errorMsg){
   printf("Options:\n");
   printf("  --help                    Display this help message\n");
   printf("  -l                        EXPERIMENTAL: Not use a background (live mode/transparent). In this mode there's no zooming, only drawings allowed\n");
-  printf("  -i <image_path> [-w|-h]   Specify the path to an image as the background, instead of the desktop\n");
+  printf("  -i <image_path> [-w|-h]   Specify the path to an image as the background, instead of the desktop. It will automatically fit it to the screen\n");
   printf("                    -w            Force to fit to the screen's width\n");
   printf("                    -h            Force to fit to the screen's height\n");
 
