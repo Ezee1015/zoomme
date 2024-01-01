@@ -208,6 +208,20 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   const int x = _screenSize.width() - w - padding;
   const int y = padding;
 
+  // Image
+  // const int marginLeftImage = 10;
+  // const int sizeImage = h;
+  // const int xImage = x - marginLeftImage - sizeImage;
+  // const int yImage = y;
+  //
+  // If the mouse is near the hit box, don't draw it
+  // QRect hitBox = QRect(
+  //                       xImage - padding,
+  //                       yImage - padding,
+  //                       w + sizeImage + marginLeftImage + padding*2,
+  //                       h + padding*2
+  //                     );
+
   // If the mouse is near the hit box, don't draw it
   QRect hitBox = QRect(x-padding, y-padding, w+padding*2, h+padding*2);
   if( isCursorInsideHitBox( hitBox.x(),
@@ -220,6 +234,15 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   }
 
   const QRect rect = QRect(x, y, w, h);
+
+  // Draw Image
+  // const QImage img = QImage("./resources/Icon.png");
+  // screenPainter->drawImage(
+  //                           QRect(xImage, yImage, sizeImage, sizeImage),
+  //                           img,
+  //                           img.rect(),
+  //                           Qt::AutoColor
+  //                         );
 
   // Settings
   screenPainter->setPen(_activePen);
