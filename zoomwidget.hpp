@@ -7,6 +7,7 @@
 #include <QPen>
 #include <QDir>
 
+// CUSTOMIZATION
 #define QCOLOR_RED       QColor(224,  49,  49)
 #define QCOLOR_GREEN     QColor( 47, 158,  68)
 #define QCOLOR_BLUE      QColor( 25, 113, 194)
@@ -20,6 +21,8 @@
 #define BLACKBOARD_COLOR QColor( 33,  37,  41)
 
 #define DATE_FORMAT_SAVED_IMAGE "dd-MM-yyyy hh.mm.ss"
+
+// CODE
 
 // The painter argument must be a pointer to the painter
 #define changePenWidthFromPainter(painter, width) \
