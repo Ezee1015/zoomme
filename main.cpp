@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 
   if(img.isEmpty()) w.grabDesktop(liveMode);
   else {
-    if (w.grabImage(img, fitToWidth) == false)
+    if (!w.grabImage(img, fitToWidth))
       printHelp(EXIT_FAILURE, "Couldn't open the image");
   }
 
