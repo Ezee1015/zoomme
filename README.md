@@ -112,17 +112,17 @@ make
 ```
 
 ### Running
-- Running the application as normal:
+#### --> Running the application as normal:
 ```bash
 ./zoomme
 ```
 
-- Show the help message:
+#### --> Show the help message:
 ```bash
 ./zoomme --help
 ```
 
-- Set the path where is going to be saved the exported image (when pressing the 's' key)
+#### --> Set the path where is going to be saved the exported image (when pressing the 's' key)
 
 > It can be an absolute or relative path
 
@@ -132,7 +132,7 @@ make
 
 > By default, ZoomMe saves it to the `Pictures` folder
 
-- Set the name of the exported image (when pressing the 's' key)
+#### --> Set the name of the exported image (when pressing the 's' key)
 ```bash
 ./zoomme -n name_of_the_image
 ```
@@ -141,7 +141,7 @@ make
 >
 > The format of the date can be customized in the `zoomwidget.hpp` file
 
-- Set the extension of the exported image (when pressing the 's' key)
+#### --> Set the extension of the exported image (when pressing the 's' key)
 
 ```bash
 ./zoomme -e jpg
@@ -149,12 +149,12 @@ make
 
 > By default, the extension will be: `png`
 
-- ***Experimental*** -- Use a transparent background. No zooming allowed, only drawing
+#### --> ***Experimental*** -- Use a transparent background. No zooming allowed, only drawing
 ```bash
 ./zoomme -l
 ```
 
-- Use an image as the background (instead of the desktop). Intended for previously saved images of the desktop from ZoomMe (so you can add more drawings after been saved), but you can use it with any image:
+#### --> Use an image as the background (instead of the desktop). Intended for previously saved images of the desktop from ZoomMe (so you can add more drawings after been saved), but you can use it with any image:
 
 ```bash
 ./zoomme -i path/to/image
