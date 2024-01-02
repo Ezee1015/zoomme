@@ -17,6 +17,9 @@ void printHelp(const int exitStatus, const char* errorMsg){
   printf("\nUsage: zoomme [options]\n");
   printf("Options:\n");
   printf("  --help                    Display this help message\n");
+  printf("  -p [path/to/folder]       Specify the path where to save the exported (saved) image (default: Pictures folder)\n");
+  printf("  -n [file_name]            Specify the name of the exported (saved) image (default: Zoomme {date})\n");
+  printf("  -e [extension]            Specify the extension of the exported (saved) image (default: png)\n");
   printf("  -l                        EXPERIMENTAL: Not use a background (live mode/transparent). In this mode there's no zooming, only drawings allowed\n");
   printf("  -i <image_path> [-w|-h]   Specify the path to an image as the background, instead of the desktop. It will automatically fit it to the screen\n");
   printf("                    -w            Force to fit to the screen's width\n");
@@ -35,6 +38,9 @@ int main(int argc, char *argv[])
   tray.show();
 
   QString img;
+  QString savePath;
+  QString saveName;
+  QString saveExtension;
   bool liveMode = false;
   FitImage fitToWidth = FIT_AUTO;
   // Parsing arguments
@@ -65,6 +71,27 @@ int main(int argc, char *argv[])
 
       fitToWidth = FIT_TO_HEIGHT;
     }
+
+    if(strcmp(argv[i], "-p") == 0) {
+      if((i+1) == argc)
+        printHelp(EXIT_FAILURE, "Saving path not provided");
+
+      savePath = argv[++i];
+    }
+
+    if(strcmp(argv[i], "-n") == 0) {
+      if((i+1) == argc)
+        printHelp(EXIT_FAILURE, "Saving name not provided");
+
+      saveName = argv[++i];
+    }
+
+    if(strcmp(argv[i], "-e") == 0) {
+      if((i+1) == argc)
+        printHelp(EXIT_FAILURE, "Saving extension not provided");
+
+      saveExtension = argv[++i];
+    }
   }
 
   ZoomWidget w;
@@ -75,6 +102,10 @@ int main(int argc, char *argv[])
   // Set transparency
   w.setAttribute(Qt::WA_TranslucentBackground, true);
   w.show();
+
+  // Set the path, name and extension for saving the file
+  QString saveFileError = w.initializeSaveFile(savePath, saveName, saveExtension);
+  if(!saveFileError.isEmpty()) printHelp(EXIT_FAILURE, qPrintable(saveFileError));
 
   if(img.isEmpty()) w.grabDesktop(liveMode);
   else {

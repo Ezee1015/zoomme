@@ -5,6 +5,7 @@
 #include <QString>
 #include <QScreen>
 #include <QPen>
+#include <QDir>
 
 #define QCOLOR_RED       QColor(224,  49,  49)
 #define QCOLOR_GREEN     QColor( 47, 158,  68)
@@ -18,6 +19,8 @@
 
 #define BLACKBOARD_COLOR QColor( 33,  37,  41)
 
+#define DATE_FORMAT_SAVED_IMAGE "dd-MM-yyyy hh.mm.ss"
+
 // The painter argument must be a pointer to the painter
 #define changePenWidthFromPainter(painter, width) \
   QPen tempPen = painter->pen(); tempPen.setWidth(width); painter->setPen(tempPen);
@@ -26,6 +29,8 @@
   painter.drawPixmap(_desktopPixmapPos.x(), _desktopPixmapPos.y(), \
       _desktopPixmapSize.width(), _desktopPixmapSize.height(),     \
       _drawnPixmap);
+
+#define savePixmap() if(_drawnPixmap.save(savePath)) QApplication::beep();
 
 #define switchFlashlightMode() _flashlightMode = !_flashlightMode;
 #define switchBoardMode() _boardMode = !_boardMode;
@@ -106,6 +111,9 @@ class ZoomWidget : public QWidget
     void grabDesktop(bool liveMode);
     bool grabImage(QString path, FitImage config);
 
+    // By passing an empty QString, sets the argument to the default
+    QString initializeSaveFile(QString path, QString name, QString ext);
+
   protected:
     virtual void paintEvent(QPaintEvent *event);
 
@@ -135,6 +143,8 @@ class ZoomWidget : public QWidget
     // Pixmap shown in the screen. This can either be the _desktopPixmap, or the
     // blackboard if it's activated the _boardMode
     QPixmap		_drawnPixmap;
+
+    QString    savePath;
 
     // User objects.
     QVector<UserObjectData>    _userRects;
@@ -179,8 +189,6 @@ class ZoomWidget : public QWidget
     // on or selected, for example, that you have selected some drawing mode,
     // the size of the pen, etc.
     void drawStatus(QPainter *screenPainter);
-
-    void saveScreenshot();
 
     void updateAtMousePos(QPoint mousePos);
     void shiftPixmap(const QPoint delta);

@@ -117,6 +117,43 @@ make
 ./zoomme
 ```
 
+- Show the help message:
+```bash
+./zoomme --help
+```
+
+- Set the path where is going to be saved the exported image (when pressing the 's' key)
+
+> It can be an absolute or relative path
+
+```bash
+./zoomme -p ./path/to/folder
+```
+
+> By default, ZoomMe saves it to the `Pictures` folder
+
+- Set the name of the exported image (when pressing the 's' key)
+```bash
+./zoomme -n name_of_the_image
+```
+
+> By default, the name will be: `Zoomme dd-mm-yyyy hh.mm.ss`
+>
+> The format of the date can be customized in the `zoomwidget.hpp` file
+
+- Set the extension of the exported image (when pressing the 's' key)
+
+```bash
+./zoomme -e jpg
+```
+
+> By default, the extension will be: `png`
+
+- ***Experimental*** -- Use a transparent background. No zooming allowed, only drawing
+```bash
+./zoomme -l
+```
+
 - Use an image as the background (instead of the desktop). Intended for previously saved images of the desktop from ZoomMe (so you can add more drawings after been saved), but you can use it with any image:
 
 ```bash
@@ -124,16 +161,6 @@ make
 ```
 
 > You can force the image to fit the screen's width or hight with `-w` or `-h` after providing the image path, like this: `./zoomme -i path/to/image -w`, if you do not providing anything, it automatically detect the best option.
-
-- ***Experimental*** -- Use a transparent background. No zooming allowed, only drawing
-```bash
-./zoomme -l
-```
-
-- Show the help message:
-```bash
-./zoomme --help
-```
 
 ## Credit
 - Magnifying glass icon: Research or Magnifying Glass Flat Icon Vector.svg from Wikimedia Commons by Videoplasty.com, CC-BY-SA 4.0

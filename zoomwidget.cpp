@@ -17,6 +17,8 @@
 #include <QDateTime>
 #include <QColor>
 #include <QPainterPath>
+#include <QList>
+#include <QImageWriter>
 
 ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget)
 {
@@ -752,28 +754,37 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
   update();
 }
 
-void ZoomWidget::saveScreenshot()
+QString ZoomWidget::initializeSaveFile(QString path, QString name, QString ext)
 {
-  // Screenshot
-  QPixmap screenshot = _drawnPixmap;
-
   // Path
-  QString pathFile = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
-  if (pathFile.isEmpty())
-    pathFile = QDir::currentPath();
+  QDir folderPath;
+  if(path.isEmpty()){
+    QString picturesFolder = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
+    folderPath = (picturesFolder.isEmpty()) ? QDir::currentPath() : picturesFolder;
+  } else {
+    folderPath = QDir(path);
+    if(!folderPath.exists())
+      return "The given path doesn't exits or it's a file";
+  }
 
-  // File
-  const QString date = QDateTime::currentDateTime().toString("dd-MM-yyyy hh.mm.ss");
-  const QString format = "png";
-  pathFile.append("/ZoomMe ");
-  pathFile.append(date);
-  pathFile.append("." + format);
+  // Check if extension is supported
+  QList supportedExtensions = QImageWriter::supportedImageFormats();
+  if( (!ext.isEmpty()) && (!supportedExtensions.contains(ext)) )
+    return "Extension not supported";
 
-  // Save screenshot
-  screenshot.save(pathFile);
+  // Name
+  QString fileName;
+  const QString date = QDateTime::currentDateTime().toString(DATE_FORMAT_SAVED_IMAGE);
+  fileName = (name.isEmpty()) ? ("ZoomMe " + date) : name;
 
-  // Beep for fun :)
-  QApplication::beep();
+  // Extension
+  const char* defaultExtension = "png";
+  fileName += ".";
+  fileName += (ext.isEmpty()) ? defaultExtension : ext;
+
+  savePath = folderPath.absoluteFilePath(fileName);
+
+  return "";
 }
 
 bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos, bool isFloating)
@@ -964,7 +975,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     case Qt::Key_F: _drawMode = DRAWMODE_FREEFORM;  break;
     case Qt::Key_H: _drawMode = DRAWMODE_HIGHLIGHT; break;
 
-    case Qt::Key_S:      saveScreenshot();        break;
+    case Qt::Key_S:      savePixmap();            break;
     case Qt::Key_U:      undoLastDrawing();       break;
     case Qt::Key_Q:      clearAllDrawings();      break;
     case Qt::Key_P:      switchBoardMode();       break;
