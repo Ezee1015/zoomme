@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
       if((i+1) == argc)
         printHelp(EXIT_FAILURE, "Image path not provided");
 
-      img = argv[i+1];
+      img = argv[++i];
     }
 
     if(strcmp(argv[i], "-w") == 0) {
