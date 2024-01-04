@@ -6,6 +6,7 @@
 #include <QScreen>
 #include <QPen>
 #include <QDir>
+#include <QClipboard>
 
 // CUSTOMIZATION
 #define QCOLOR_RED       QColor(224,  49,  49)
@@ -33,7 +34,12 @@
       _desktopPixmapSize.width(), _desktopPixmapSize.height(),     \
       _drawnPixmap);
 
-#define savePixmap() if(_drawnPixmap.save(savePath)) QApplication::beep();
+#define saveToImage() if(_drawnPixmap.save(savePath)) QApplication::beep();
+#define saveToClipboard()                        \
+  do {                                           \
+    clipboard->setImage(_drawnPixmap.toImage()); \
+    QApplication::beep();                        \
+  } while(0)
 
 #define switchFlashlightMode() _flashlightMode = !_flashlightMode;
 #define switchBoardMode() _boardMode = !_boardMode;
@@ -131,6 +137,8 @@ class ZoomWidget : public QWidget
 
   private:
     Ui::zoomwidget *ui;
+
+    QClipboard *clipboard;
 
     // Desktop pixmap properties.
     QScreen   *_desktopScreen;

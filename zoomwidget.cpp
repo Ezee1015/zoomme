@@ -45,6 +45,8 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _flashlightRadius = 80;
   _onlyShowDesktop = false;
 
+  clipboard = QApplication::clipboard();
+
   _activePen.setColor(QCOLOR_RED);
   _activePen.setWidth(4);
 }
@@ -975,7 +977,13 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     case Qt::Key_F: _drawMode = DRAWMODE_FREEFORM;  break;
     case Qt::Key_H: _drawMode = DRAWMODE_HIGHLIGHT; break;
 
-    case Qt::Key_S:      savePixmap();            break;
+    case Qt::Key_S:
+      if(_shiftPressed)
+        saveToClipboard();
+      else
+        saveToImage();
+      break;
+
     case Qt::Key_U:      undoLastDrawing();       break;
     case Qt::Key_Q:      clearAllDrawings();      break;
     case Qt::Key_P:      switchBoardMode();       break;
