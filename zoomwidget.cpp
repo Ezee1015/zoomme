@@ -154,11 +154,12 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   if(_onlyShowDesktop)
     return;
 
-  const int lineHeight = 25;
-  const int padding    = 20;
-  const int penWidth   = 5;
-  const int fontSize   = 16;
-  const int w          = 140;
+  const int lineHeight        = 25;
+  const int margin            = 20;
+  const int penWidth          = 5;
+  const int fontSize          = 16;
+  const int w                 = 160;
+  const int initialLineHeight = lineHeight + 5; // lineHeight + margin
 
   int h = 0;
 
@@ -166,7 +167,13 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   QString text;
 
   // Line 1
-  h += lineHeight;
+  h += initialLineHeight;
+  if(_desktopPixmapScale != 1.0f){
+    if(_shiftPressed)
+      text.append("🔒 ");
+    else
+      text.append("🔍 ");
+  }
   switch(_drawMode) {
     case DRAWMODE_LINE:      text.append("Line");        break;
     case DRAWMODE_RECT:      text.append("Rectangle");   break;
@@ -209,8 +216,8 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   // }
 
   // Position
-  const int x = _screenSize.width() - w - padding;
-  const int y = padding;
+  const int x = _screenSize.width() - w - margin;
+  const int y = margin;
 
   // Image
   // const int marginLeftImage = 10;
@@ -220,14 +227,14 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   //
   // If the mouse is near the hit box, don't draw it
   // QRect hitBox = QRect(
-  //                       xImage - padding,
-  //                       yImage - padding,
-  //                       w + sizeImage + marginLeftImage + padding*2,
-  //                       h + padding*2
+  //                       xImage - margin,
+  //                       yImage - margin,
+  //                       w + sizeImage + marginLeftImage + margin*2,
+  //                       h + margin*2
   //                     );
 
   // If the mouse is near the hit box, don't draw it
-  QRect hitBox = QRect(x-padding, y-padding, w+padding*2, h+padding*2);
+  QRect hitBox = QRect(x-margin, y-margin, w+margin*2, h+margin*2);
   if( isCursorInsideHitBox( hitBox.x(),
                             hitBox.y(),
                             hitBox.width(),
