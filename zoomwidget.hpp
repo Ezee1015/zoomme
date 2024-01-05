@@ -47,6 +47,7 @@
 
 #define isInEditTextMode ((_state == STATE_MOVING) && (_drawMode == DRAWMODE_TEXT) && (_shiftPressed) && (!_onlyShowDesktop))
 #define isTextEditable(cursorPos) ((isInEditTextMode) && (cursorOverForm(cursorPos) != -1))
+#define disableMouseTracking ((_shiftPressed) || (_state == STATE_TYPING && _freezeDesktopPosWhileWriting))
 
 // From a point in the screen (like the mouse cursor, because its position
 // is relative to the screen, not the pixmap), it returns the position in the
@@ -180,6 +181,9 @@ class ZoomWidget : public QWidget
     bool _liveMode;
     bool _flashlightMode;
     bool _onlyShowDesktop;
+    // IN TEXT MODE: If the user was pressing shift when the mouse released
+    // (finished sizing the text rectangle), disable mouse tracking while writing
+    bool _freezeDesktopPosWhileWriting;
 
     int _flashlightRadius;
 

@@ -168,12 +168,12 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
 
   // Line 1
   h += initialLineHeight;
-  if(_desktopPixmapScale != 1.0f){
-    if(_shiftPressed)
-      text.append("🔒 ");
-    else
+
+  if(disableMouseTracking)
+    text.append("🔒 ");
+  else if(_desktopPixmapScale != 1.0f)
       text.append("🔍 ");
-  }
+
   switch(_drawMode) {
     case DRAWMODE_LINE:      text.append("Line");        break;
     case DRAWMODE_RECT:      text.append("Rectangle");   break;
@@ -183,6 +183,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
     case DRAWMODE_TEXT:      text.append("Text");        break;
     case DRAWMODE_FREEFORM:  text.append("Free Form");   break;
   }
+
   text.append(" (");
   text.append(QString::number(_activePen.width()));
   text.append(")");
@@ -638,6 +639,7 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
         _userTexts.append(textData);
 
         _state = STATE_TYPING;
+        _freezeDesktopPosWhileWriting = _shiftPressed;
         update();
         return;
       }
@@ -717,7 +719,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 
 void ZoomWidget::updateAtMousePos(QPoint mousePos)
 {
-  if (!_shiftPressed) {
+  if(!disableMouseTracking) {
     QPoint delta = mousePos - _lastMousePos;
 
     shiftPixmap(delta);
