@@ -47,7 +47,7 @@
 
 #define isInEditTextMode ((_state == STATE_MOVING) && (_drawMode == DRAWMODE_TEXT) && (_shiftPressed) && (!_onlyShowDesktop))
 #define isTextEditable(cursorPos) ((isInEditTextMode) && (cursorOverForm(cursorPos) != -1))
-#define disableMouseTracking ((_shiftPressed) || (_state == STATE_TYPING && _freezeDesktopPosWhileWriting))
+#define isDisabledMouseTracking ((_shiftPressed) || (_state == STATE_TYPING && _freezeDesktopPosWhileWriting))
 
 // From a point in the screen (like the mouse cursor, because its position
 // is relative to the screen, not the pixmap), it returns the position in the

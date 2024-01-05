@@ -169,7 +169,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   // Line 1
   h += initialLineHeight;
 
-  if(disableMouseTracking)
+  if(isDisabledMouseTracking)
     text.append("🔒 ");
   else if(_desktopPixmapScale != 1.0f)
       text.append("🔍 ");
@@ -719,7 +719,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 
 void ZoomWidget::updateAtMousePos(QPoint mousePos)
 {
-  if(!disableMouseTracking) {
+  if(!isDisabledMouseTracking) {
     QPoint delta = mousePos - _lastMousePos;
 
     shiftPixmap(delta);
