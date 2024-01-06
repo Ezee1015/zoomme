@@ -24,7 +24,7 @@
 #define DATE_FORMAT_SAVED_IMAGE "dd-MM-yyyy hh.mm.ss"
 
 #define BLOCK_ICON   "🔒"
-#define NO_ZOOM_ICON "⛶ "
+#define NO_ZOOM_ICON "⛶"
 #define ZOOM_ICON    "🔍"
 
 // CODE
