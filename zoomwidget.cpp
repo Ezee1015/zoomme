@@ -646,6 +646,12 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
       }
     case DRAWMODE_FREEFORM:
       {
+        // BUG: If the Freeform is empty or the last one is inactive, it is because
+        // the user had pressed the mouse but didn't move it, so the free form was
+        // not created. This if statement fixes the segfault
+        if(_userFreeForms.isEmpty())
+          break;
+
         // The registration of the points of the FreeForms are in mouseMoveEvent()
         // This only indicates that the drawing is no longer being actively drawn
         UserFreeFormData data = _userFreeForms.last();
