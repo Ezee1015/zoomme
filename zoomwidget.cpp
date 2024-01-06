@@ -667,18 +667,21 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
 
 void ZoomWidget::updateCursorShape()
 {
+  QCursor pointHand = QCursor(Qt::PointingHandCursor);
+  QCursor blank     = QCursor(Qt::BlankCursor);
+
   if(_state == STATE_DELETING) {
-    setCursor(QCursor(Qt::PointingHandCursor));
+    setCursor(pointHand);
     return;
   }
 
   if( isTextEditable(getCursorPos()) ) {
-    setCursor(QCursor(Qt::PointingHandCursor));
+    setCursor(pointHand);
     return;
   }
 
   if(_flashlightMode) {
-    setCursor(QCursor(Qt::BlankCursor));
+    setCursor(blank);
     return;
   }
 
