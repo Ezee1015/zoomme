@@ -9,7 +9,7 @@ You can...
 - Draw lines, rectangles, arrows, ellipses and hand draws (free forms)!
 - Insert text
 - Highlight parts of the screen with colors (a highlighter)
-- Use a "Flashlight" function to concentrate attention on the cursor
+- Use a "Flashlight" function to concentrate attention on the cursor position
 - Zoom in and out of the desktop.
 - Switch between your desktop and a blackboard
 - Save it to your Pictures folder
