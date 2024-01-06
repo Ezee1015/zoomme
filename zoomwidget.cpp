@@ -172,7 +172,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   if(isDisabledMouseTracking)
     text.append("🔒 ");
   else if(_desktopPixmapScale != 1.0f)
-      text.append("🔍 ");
+    text.append("🔍 ");
 
   switch(_drawMode) {
     case DRAWMODE_LINE:      text.append("Line");        break;
