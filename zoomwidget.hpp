@@ -4,6 +4,7 @@
 #include <QOpenGLWidget>
 #include <QString>
 #include <QScreen>
+#include <QCursor>
 #include <QPen>
 #include <QDir>
 #include <QClipboard>
@@ -48,6 +49,8 @@
 #define switchFlashlightMode() _flashlightMode = !_flashlightMode;
 #define switchBoardMode() _boardMode = !_boardMode;
 #define switchOnlyShowDesktop() if(_state==STATE_MOVING) _onlyShowDesktop = !_onlyShowDesktop
+
+#define getCursorPos() mapFromGlobal(QCursor::pos())
 
 #define isInEditTextMode ((_state == STATE_MOVING) && (_drawMode == DRAWMODE_TEXT) && (_shiftPressed) && (!_onlyShowDesktop))
 #define isTextEditable(cursorPos) ((isInEditTextMode) && (cursorOverForm(cursorPos) != -1))

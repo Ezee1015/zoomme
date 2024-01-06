@@ -11,7 +11,6 @@
 #include <QPen>
 #include <QGuiApplication>
 #include <QOpenGLWidget>
-#include <QCursor>
 #include <QStandardPaths>
 #include <QDir>
 #include <QDateTime>
@@ -127,7 +126,7 @@ bool ZoomWidget::isDrawingHovered(int drawType, int vectorPos)
 
   // This is the position of the form (in the current draw mode) in the vector,
   // that is behind the cursor.
-  int posFormBehindCursor = cursorOverForm(mapFromGlobal(QCursor::pos()));
+  int posFormBehindCursor = cursorOverForm(getCursorPos());
 
   return (_drawMode == drawType) && (posFormBehindCursor==vectorPos);
 }
@@ -241,7 +240,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
                             hitBox.y(),
                             hitBox.width(),
                             hitBox.height(),
-                            mapFromGlobal(QCursor::pos()),
+                            getCursorPos(),
                             true) ) {
     return;
   }
@@ -379,7 +378,7 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
 
 void ZoomWidget::drawFlashlightEffect(QPainter *screenPainter)
 {
-  QPoint c = mapFromGlobal(QCursor::pos());
+  QPoint c = getCursorPos();
   int radius = _flashlightRadius;
 
   QRect mouseFlashlightBorder = QRect(c.x()-radius, c.y()-radius, radius*2, radius*2);
@@ -673,7 +672,7 @@ void ZoomWidget::updateCursorShape()
     return;
   }
 
-  if( isTextEditable(mapFromGlobal(QCursor::pos())) ) {
+  if( isTextEditable(getCursorPos()) ) {
     setCursor(QCursor(Qt::PointingHandCursor));
     return;
   }
@@ -1089,7 +1088,7 @@ void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
   if(event->key() == Qt::Key_Shift) {
     _shiftPressed = false;
     updateCursorShape();
-    updateAtMousePos(mapFromGlobal(QCursor::pos()));
+    updateAtMousePos(getCursorPos());
     update();
   }
 }
