@@ -258,7 +258,9 @@ struct Button {
   QRect rect;
 };
 
-struct ToolBarProperties {
+struct ToolBar {
+  QVector<Button> buttons;
+
   int lineHeight;
   int margin;
   int numberOfLines;
@@ -349,6 +351,10 @@ class ZoomWidget : public QWidget
     QVector<UserTextData>      _userTexts;
     QVector<UserFreeFormData>  _userFreeForms;
 
+    // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
+    // QVector<UserObjectData>    _userTests;
+    /////////////////////////
+
     // Undo/Delete history
     QVector<UserObjectData>    _deletedRects;
     QVector<UserObjectData>    _deletedLines;
@@ -357,12 +363,7 @@ class ZoomWidget : public QWidget
     QVector<UserTextData>      _deletedTexts;
     QVector<UserFreeFormData>  _deletedFreeForms;
 
-    QVector<Button> _toolBar;
-    ToolBarProperties _toolBarOpts;
-
-    // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
-    // QVector<UserObjectData>    _userTests;
-    /////////////////////////
+    ToolBar _toolBar;
 
     // States
     bool _mousePressed;

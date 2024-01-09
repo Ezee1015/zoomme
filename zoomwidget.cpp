@@ -306,65 +306,65 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
 
 void ZoomWidget::loadButtons()
 {
-  _toolBar.clear();
+  _toolBar.buttons.clear();
 
   QRect nullRect(0, 0, 0, 0);
 
-  _toolBar.append(Button{ACTION_WIDTH_1,           "1",                   0, nullRect});
-  _toolBar.append(Button{ACTION_WIDTH_2,           "2",                   0, nullRect});
-  _toolBar.append(Button{ACTION_WIDTH_3,           "3",                   0, nullRect});
-  _toolBar.append(Button{ACTION_WIDTH_4,           "4",                   0, nullRect});
-  _toolBar.append(Button{ACTION_WIDTH_5,           "5",                   0, nullRect});
-  _toolBar.append(Button{ACTION_WIDTH_6,           "6",                   0, nullRect});
-  _toolBar.append(Button{ACTION_WIDTH_7,           "7",                   0, nullRect});
-  _toolBar.append(Button{ACTION_WIDTH_8,           "8",                   0, nullRect});
-  _toolBar.append(Button{ACTION_WIDTH_9,           "9",                   0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_WIDTH_1,           "1",                   0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_WIDTH_2,           "2",                   0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_WIDTH_3,           "3",                   0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_WIDTH_4,           "4",                   0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_WIDTH_5,           "5",                   0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_WIDTH_6,           "6",                   0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_WIDTH_7,           "7",                   0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_WIDTH_8,           "8",                   0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_WIDTH_9,           "9",                   0, nullRect});
 
-  _toolBar.append(Button{ACTION_SPACER,            "",                    0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SPACER,            "",                    0, nullRect});
 
-  _toolBar.append(Button{ACTION_COLOR_RED,         "Red",                 0, nullRect});
-  _toolBar.append(Button{ACTION_COLOR_GREEN,       "Green",               0, nullRect});
-  _toolBar.append(Button{ACTION_COLOR_BLUE,        "Blue",                0, nullRect});
-  _toolBar.append(Button{ACTION_COLOR_YELLOW,      "Yellow",              0, nullRect});
-  _toolBar.append(Button{ACTION_COLOR_ORANGE,      "Orange",              0, nullRect});
-  _toolBar.append(Button{ACTION_COLOR_MAGENTA,     "Magenta",             0, nullRect});
-  _toolBar.append(Button{ACTION_COLOR_CYAN,        "Cyan",                0, nullRect});
-  _toolBar.append(Button{ACTION_COLOR_WHITE,       "White",               0, nullRect});
-  _toolBar.append(Button{ACTION_COLOR_BLACK,       "Black",               0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_COLOR_RED,         "Red",                 0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_COLOR_GREEN,       "Green",               0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_COLOR_BLUE,        "Blue",                0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_COLOR_YELLOW,      "Yellow",              0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_COLOR_ORANGE,      "Orange",              0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_COLOR_MAGENTA,     "Magenta",             0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_COLOR_CYAN,        "Cyan",                0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_COLOR_WHITE,       "White",               0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_COLOR_BLACK,       "Black",               0, nullRect});
 
-  _toolBar.append(Button{ACTION_LINE,              "Line",                1, nullRect});
-  _toolBar.append(Button{ACTION_RECTANGLE,         "Rectangle",           1, nullRect});
-  _toolBar.append(Button{ACTION_ARROW,             "Arrow",               1, nullRect});
-  _toolBar.append(Button{ACTION_ELLIPSE,           "Ellipse",             1, nullRect});
-  _toolBar.append(Button{ACTION_FREEFORM,          "Free form",           1, nullRect});
-  _toolBar.append(Button{ACTION_TEXT,              "Text",                1, nullRect});
-  _toolBar.append(Button{ACTION_SPACER,            "",                    1, nullRect});
-  _toolBar.append(Button{ACTION_HIGHLIGHT,         "Highlight",           1, nullRect});
+  _toolBar.buttons.append(Button{ACTION_LINE,              "Line",                1, nullRect});
+  _toolBar.buttons.append(Button{ACTION_RECTANGLE,         "Rectangle",           1, nullRect});
+  _toolBar.buttons.append(Button{ACTION_ARROW,             "Arrow",               1, nullRect});
+  _toolBar.buttons.append(Button{ACTION_ELLIPSE,           "Ellipse",             1, nullRect});
+  _toolBar.buttons.append(Button{ACTION_FREEFORM,          "Free form",           1, nullRect});
+  _toolBar.buttons.append(Button{ACTION_TEXT,              "Text",                1, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SPACER,            "",                    1, nullRect});
+  _toolBar.buttons.append(Button{ACTION_HIGHLIGHT,         "Highlight",           1, nullRect});
 
 
-  _toolBar.append(Button{ACTION_FLASHLIGHT,        "Flashlight",          2, nullRect});
-  _toolBar.append(Button{ACTION_BLACKBOARD,        "Blackboard",          2, nullRect});
-  _toolBar.append(Button{ACTION_PICK_COLOR,        "Pick color",          2, nullRect});
-  _toolBar.append(Button{ACTION_SCREEN_OPTS,       "Hide elements",       2, nullRect});
-  _toolBar.append(Button{ACTION_CLEAR,             "Clear",               2, nullRect});
-  _toolBar.append(Button{ACTION_DELETE,            "Delete",              2, nullRect});
-  _toolBar.append(Button{ACTION_UNDO,              "Undo",                2, nullRect});
-  _toolBar.append(Button{ACTION_REDO,              "Redo",                2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_FLASHLIGHT,        "Flashlight",          2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_BLACKBOARD,        "Blackboard",          2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_PICK_COLOR,        "Pick color",          2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SCREEN_OPTS,       "Hide elements",       2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_CLEAR,             "Clear",               2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_DELETE,            "Delete",              2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_UNDO,              "Undo",                2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_REDO,              "Redo",                2, nullRect});
 
-  _toolBar.append(Button{ACTION_SPACER,            "",                    2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SPACER,            "",                    2, nullRect});
 
   if(_exitConfirm) {
-    _toolBar.append(Button{ACTION_ESCAPE        ,    "Confirm Exit",        2, nullRect});
-    _toolBar.append(Button{ACTION_ESCAPE_CANCEL,     "Cancel Exit",         2, nullRect});
+    _toolBar.buttons.append(Button{ACTION_ESCAPE        ,    "Confirm Exit",        2, nullRect});
+    _toolBar.buttons.append(Button{ACTION_ESCAPE_CANCEL,     "Cancel Exit",         2, nullRect});
   } else
-    _toolBar.append(Button{ACTION_ESCAPE,            "Escape",              2, nullRect});
+    _toolBar.buttons.append(Button{ACTION_ESCAPE,            "Escape",              2, nullRect});
 
-  _toolBar.append(Button{ACTION_SAVE_TO_FILE,      "Export image",        3, nullRect});
-  _toolBar.append(Button{ACTION_SAVE_TO_CLIPBOARD, "Export to clipboard", 3, nullRect});
-  _toolBar.append(Button{ACTION_SAVE_TRIMMED_TO_IMAGE,     "Export trimmed image",        3, nullRect});
-  _toolBar.append(Button{ACTION_SAVE_TRIMMED_TO_CLIPBOARD, "Export trimmed to clipboard", 3, nullRect});
-  _toolBar.append(Button{ACTION_SAVE_PROJECT,      "Save project",        3, nullRect});
-  _toolBar.append(Button{ACTION_RECORDING,         "Record",              3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SAVE_TO_FILE,      "Export image",        3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SAVE_TO_CLIPBOARD, "Export to clipboard", 3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SAVE_TRIMMED_TO_IMAGE,     "Export trimmed image",        3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SAVE_TRIMMED_TO_CLIPBOARD, "Export trimmed to clipboard", 3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SAVE_PROJECT,      "Save project",        3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_RECORDING,         "Record",              3, nullRect});
 }
 
 bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
@@ -576,9 +576,9 @@ void ZoomWidget::generateToolBar()
 
   // Get the number of lines
   int numberOfLines = 0;
-  for(int i=0; i<_toolBar.size(); i++) {
-    if(_toolBar.at(i).line > numberOfLines)
-      numberOfLines = _toolBar.at(i).line;
+  for(int i=0; i<_toolBar.buttons.size(); i++) {
+    if(_toolBar.buttons.at(i).line > numberOfLines)
+      numberOfLines = _toolBar.buttons.at(i).line;
   }
 
   const QRect background = QRect (
@@ -588,21 +588,21 @@ void ZoomWidget::generateToolBar()
                                    lineHeight * (numberOfLines+1) - margin
                                  );
 
-  _toolBarOpts.lineHeight = lineHeight;
-  _toolBarOpts.margin = margin;
-  _toolBarOpts.numberOfLines = numberOfLines;
-  _toolBarOpts.rect = background;
+  _toolBar.lineHeight = lineHeight;
+  _toolBar.margin = margin;
+  _toolBar.numberOfLines = numberOfLines;
+  _toolBar.rect = background;
 
   // Get the buttons per line
   int buttonsPerLine[numberOfLines+1];
   for(int i=0; i<=numberOfLines; i++) buttonsPerLine[i] = 0;
-  for(int i=0; i<_toolBar.size(); i++)
-    buttonsPerLine[ _toolBar.at(i).line ]++;
+  for(int i=0; i<_toolBar.buttons.size(); i++)
+    buttonsPerLine[ _toolBar.buttons.at(i).line ]++;
 
   // Clear the tool list
   QVector<Button> buttons;
-  buttons.append(_toolBar);
-  _toolBar.clear();
+  buttons.append(_toolBar.buttons);
+  _toolBar.buttons.clear();
 
   // Size the buttons
   const int buttonPadding = 2;
@@ -628,7 +628,7 @@ void ZoomWidget::generateToolBar()
 
     QRect rect(x, y, width, height);
 
-    _toolBar.append(Button{
+    _toolBar.buttons.append(Button{
         buttons.at(i).action,
         buttons.at(i).name,
         line,
@@ -643,8 +643,8 @@ int ZoomWidget::buttonBehindCursor(QPoint cursor)
   if(!_showToolBar)
     logUser(LOG_ERROR, "cursorOverButton() was called, but the tool box is not visible");
 
-  for(int i=0; i<_toolBar.size(); i++) {
-    if(_toolBar.at(i).rect.contains(cursor))
+  for(int i=0; i<_toolBar.buttons.size(); i++) {
+    if(_toolBar.buttons.at(i).rect.contains(cursor))
       return i;
   }
 
@@ -659,8 +659,8 @@ bool ZoomWidget::isCursorOverButton(QPoint cursorPos)
 
   const int button = buttonBehindCursor(cursorPos);
 
-  const bool isOverAButton = button != -1;
-  const bool isNotASpacer  = _toolBar.at(button).action != ACTION_SPACER;
+  const bool isOverAButton = (button != -1);
+  const bool isNotASpacer  = (_toolBar.buttons.at(button).action != ACTION_SPACER);
 
   return isOverAButton && isNotASpacer;
 }
@@ -1158,11 +1158,11 @@ void ZoomWidget::drawToolBar(QPainter *screenPainter)
 
   // Increase a little bit the background of the tool bar for painting it (like
   // a padding)
-  QRect bgRect = _toolBarOpts.rect;
-  bgRect.setX(bgRect.x() - _toolBarOpts.margin/2);
-  bgRect.setY(bgRect.y() - _toolBarOpts.margin/2);
-  bgRect.setWidth(bgRect.width() + _toolBarOpts.margin/2);
-  bgRect.setHeight(bgRect.height() + _toolBarOpts.margin/2);
+  QRect bgRect = _toolBar.rect;
+  bgRect.setX(bgRect.x() - _toolBar.margin/2);
+  bgRect.setY(bgRect.y() - _toolBar.margin/2);
+  bgRect.setWidth(bgRect.width() + _toolBar.margin/2);
+  bgRect.setHeight(bgRect.height() + _toolBar.margin/2);
 
   // Paint
   QPainterPath background;
@@ -1170,8 +1170,8 @@ void ZoomWidget::drawToolBar(QPainter *screenPainter)
   screenPainter->fillPath(background, color);
 
   // Draw buttons
-  for(int i=0; i<_toolBar.size(); i++) {
-    const Button btn = _toolBar.at(i);
+  for(int i=0; i<_toolBar.buttons.size(); i++) {
+    const Button btn = _toolBar.buttons.at(i);
 
     if(btn.action != ACTION_SPACER)
       drawButton(screenPainter, btn);
@@ -1775,7 +1775,7 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
     if(buttonPos==-1)
       return;
 
-    toggleAction(_toolBar.at(buttonPos).action);
+    toggleAction(_toolBar.buttons.at(buttonPos).action);
     update();
     updateCursorShape();
     return;
@@ -2048,7 +2048,7 @@ void ZoomWidget::updateCursorShape()
     setCursor(waiting);
 
   else if(isCursorOverButton(cursorPos)) {
-    const Button button = _toolBar.at(buttonBehindCursor(cursorPos));
+    const Button button = _toolBar.buttons.at(buttonBehindCursor(cursorPos));
     if(isActionDisabled(button.action))
       setCursor(denied);
     else
