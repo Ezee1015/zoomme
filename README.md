@@ -200,7 +200,10 @@ make
 ./zoomme -i path/to/image
 ```
 
-> You can force the image to fit the screen's width or hight with `-w` or `-h` after providing the image path, like this: `./zoomme -i path/to/image -w`, if you do not providing anything, it automatically detect the best option.
+#### Additional arguments:
+- You can force the image to fit the screen's width or hight with `-w` or `-h` after providing the image path, like this: `./zoomme -i path/to/image -w`, if you do not providing anything, it automatically detect the best option.
+
+- You can overwrite the image provided when saving by doing this: `./zoomme -i path/to/image --replace-on-save`. This will autocomplete the `-p`, `-n` and `-e` arguments for you. How kind :)
 
 </p></details>
 <!-- End 7 -->

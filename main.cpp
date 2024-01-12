@@ -7,6 +7,7 @@
 #include <QSystemTrayIcon>
 #include <stdio.h>
 #include <stdlib.h>
+#include <QFileInfo>
 
 void printHelp(const int exitStatus, const char* errorMsg){
   if(strlen(errorMsg) != 0)
@@ -22,8 +23,9 @@ void printHelp(const int exitStatus, const char* errorMsg){
   printf("  -e [extension]            Specify the extension of the exported (saved) image (default: png)\n");
   printf("  -l                        EXPERIMENTAL: Not use a background (live mode/transparent). In this mode there's no zooming, only drawings allowed\n");
   printf("  -i <image_path> [-w|-h]   Specify the path to an image as the background, instead of the desktop. It will automatically fit it to the screen\n");
-  printf("                    -w            Force to fit to the screen's width\n");
-  printf("                    -h            Force to fit to the screen's height\n");
+  printf("                    -w                  Force to fit to the screen's width\n");
+  printf("                    -h                  Force to fit to the screen's height\n");
+  printf("                    --replace-on-save   This will replace the source image (overrides -p, -e and -n flags).\n");
 
   printf("\n  For more information, visit https://github.com/Ezee1015/zoomme\n");
 
@@ -83,6 +85,24 @@ int main(int argc, char *argv[])
         printHelp(EXIT_FAILURE, "Fit setting already provided");
 
       fitToWidth = FIT_TO_HEIGHT;
+    }
+
+    else if(strcmp(argv[i], "--replace-on-save") == 0) {
+      if(img.isEmpty())
+        printHelp(EXIT_FAILURE, "Override source image was indicated, but the source image is not provided");
+
+      if(savePath != "")
+        printHelp(EXIT_FAILURE, "Saving path already provided");
+      if(saveName != "")
+        printHelp(EXIT_FAILURE, "Saving name already provided");
+      if(saveExtension != "")
+        printHelp(EXIT_FAILURE, "Saving extension already provided");
+
+      QFileInfo imgInfo = QFileInfo(img);
+
+      savePath      = imgInfo.path();
+      saveName      = imgInfo.completeBaseName();
+      saveExtension = imgInfo.suffix();
     }
 
     else if(strcmp(argv[i], "-p") == 0) {
