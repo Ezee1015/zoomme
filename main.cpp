@@ -114,6 +114,13 @@ int main(int argc, char *argv[])
 
       saveExtension = argv[++i];
     }
+
+    else {
+      QString textError;
+      textError.append("Unknown flag: ");
+      textError.append(argv[i]);
+      printHelp(EXIT_FAILURE, textError.toStdString().c_str());
+    }
   }
 
   ZoomWidget w;
