@@ -48,12 +48,19 @@ int main(int argc, char *argv[])
     if(strcmp(argv[i], "--help") == 0)
       printHelp(EXIT_SUCCESS, "");
 
-    else if(strcmp(argv[i], "-l") == 0)
+    else if(strcmp(argv[i], "-l") == 0){
+      if(liveMode == true)
+        printHelp(EXIT_FAILURE, "Live mode already specified");
+
       liveMode=true;
+    }
 
     else if(strcmp(argv[i], "-i") == 0) {
       if((i+1) == argc)
         printHelp(EXIT_FAILURE, "Image path not provided");
+
+      if(img != "")
+        printHelp(EXIT_FAILURE, "Image already provided");
 
       img = argv[++i];
     }
@@ -62,12 +69,18 @@ int main(int argc, char *argv[])
       if(img.isEmpty())
         printHelp(EXIT_FAILURE, "Fit width argument was given, but the image not provided");
 
+      if(fitToWidth != FIT_AUTO)
+        printHelp(EXIT_FAILURE, "Fit setting already provided");
+
       fitToWidth = FIT_TO_WIDTH;
     }
 
     else if(strcmp(argv[i], "-h") == 0) {
       if(img.isEmpty())
         printHelp(EXIT_FAILURE, "Fit height argument was given, but the image not provided");
+
+      if(fitToWidth != FIT_AUTO)
+        printHelp(EXIT_FAILURE, "Fit setting already provided");
 
       fitToWidth = FIT_TO_HEIGHT;
     }
@@ -76,6 +89,9 @@ int main(int argc, char *argv[])
       if((i+1) == argc)
         printHelp(EXIT_FAILURE, "Saving path not provided");
 
+      if(savePath != "")
+        printHelp(EXIT_FAILURE, "Saving path already provided");
+
       savePath = argv[++i];
     }
 
@@ -83,12 +99,18 @@ int main(int argc, char *argv[])
       if((i+1) == argc)
         printHelp(EXIT_FAILURE, "Saving name not provided");
 
+      if(saveName != "")
+        printHelp(EXIT_FAILURE, "Saving name already provided");
+
       saveName = argv[++i];
     }
 
     else if(strcmp(argv[i], "-e") == 0) {
       if((i+1) == argc)
         printHelp(EXIT_FAILURE, "Saving extension not provided");
+
+      if(saveExtension != "")
+        printHelp(EXIT_FAILURE, "Saving extension already provided");
 
       saveExtension = argv[++i];
     }
