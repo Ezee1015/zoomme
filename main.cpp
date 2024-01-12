@@ -22,10 +22,10 @@ void printHelp(const int exitStatus, const char* errorMsg){
   printf("  -n [file_name]            Specify the name of the exported (saved) image (default: Zoomme {date})\n");
   printf("  -e [extension]            Specify the extension of the exported (saved) image (default: png)\n");
   printf("  -l                        EXPERIMENTAL: Not use a background (live mode/transparent). In this mode there's no zooming, only drawings allowed\n");
-  printf("  -i <image_path> [-w|-h]   Specify the path to an image as the background, instead of the desktop. It will automatically fit it to the screen\n");
+  printf("  -i <image_path> [opts]    Specify the path to an image as the background, instead of the desktop. It will automatically fit it to the screen\n");
   printf("                    -w                  Force to fit to the screen's width\n");
   printf("                    -h                  Force to fit to the screen's height\n");
-  printf("                    --replace-on-save   This will replace the source image (overrides -p, -e and -n flags).\n");
+  printf("                    --replace-on-save   This will replace the source image (autocompletes -p, -e and -n flags).\n");
 
   printf("\n  For more information, visit https://github.com/Ezee1015/zoomme\n");
 
