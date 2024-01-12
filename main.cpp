@@ -48,45 +48,45 @@ int main(int argc, char *argv[])
     if(strcmp(argv[i], "--help") == 0)
       printHelp(EXIT_SUCCESS, "");
 
-    if(strcmp(argv[i], "-l") == 0)
+    else if(strcmp(argv[i], "-l") == 0)
       liveMode=true;
 
-    if(strcmp(argv[i], "-i") == 0) {
+    else if(strcmp(argv[i], "-i") == 0) {
       if((i+1) == argc)
         printHelp(EXIT_FAILURE, "Image path not provided");
 
       img = argv[++i];
     }
 
-    if(strcmp(argv[i], "-w") == 0) {
+    else if(strcmp(argv[i], "-w") == 0) {
       if(img.isEmpty())
         printHelp(EXIT_FAILURE, "Fit width argument was given, but the image not provided");
 
       fitToWidth = FIT_TO_WIDTH;
     }
 
-    if(strcmp(argv[i], "-h") == 0) {
+    else if(strcmp(argv[i], "-h") == 0) {
       if(img.isEmpty())
         printHelp(EXIT_FAILURE, "Fit height argument was given, but the image not provided");
 
       fitToWidth = FIT_TO_HEIGHT;
     }
 
-    if(strcmp(argv[i], "-p") == 0) {
+    else if(strcmp(argv[i], "-p") == 0) {
       if((i+1) == argc)
         printHelp(EXIT_FAILURE, "Saving path not provided");
 
       savePath = argv[++i];
     }
 
-    if(strcmp(argv[i], "-n") == 0) {
+    else if(strcmp(argv[i], "-n") == 0) {
       if((i+1) == argc)
         printHelp(EXIT_FAILURE, "Saving name not provided");
 
       saveName = argv[++i];
     }
 
-    if(strcmp(argv[i], "-e") == 0) {
+    else if(strcmp(argv[i], "-e") == 0) {
       if((i+1) == argc)
         printHelp(EXIT_FAILURE, "Saving extension not provided");
 
