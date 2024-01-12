@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
   bool liveMode = false;
   FitImage fitToWidth = FIT_AUTO;
   // Parsing arguments
-  for(int i=0; i<argc ; ++i){
+  for(int i=1; i<argc ; ++i){
     if(strcmp(argv[i], "--help") == 0)
       printHelp(EXIT_SUCCESS, "");
 
