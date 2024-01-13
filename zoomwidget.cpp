@@ -572,9 +572,7 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
 
   _mousePressed = true;
 
-  // If it's writing a text and didn't saved it (by pressing Enter or
-  // Escape), it removes. To disable this, just comment this if statement below
-  if (_state == STATE_TYPING)
+  if (_state == STATE_TYPING && _userTexts.last().text.isEmpty())
     _userTexts.removeLast();
 
   if(_state == STATE_DELETING)
