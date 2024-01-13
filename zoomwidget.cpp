@@ -43,6 +43,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _flashlightMode = false;
   _flashlightRadius = 80;
   _onlyShowDesktop = false;
+  _showStatus = true;
 
   clipboard = QApplication::clipboard();
 
@@ -150,7 +151,7 @@ void invertColorPainter(QPainter *painter)
 
 void ZoomWidget::drawStatus(QPainter *screenPainter)
 {
-  if(_onlyShowDesktop)
+  if(_onlyShowDesktop || !_showStatus)
     return;
 
   const int lineHeight        = 25;
@@ -1005,6 +1006,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     case Qt::Key_P:      switchBoardMode();       break;
     case Qt::Key_Space:  switchOnlyShowDesktop(); break;
     case Qt::Key_Period: switchFlashlightMode();  break;
+    case Qt::Key_Minus:  switchShowStatus();      break;
     case Qt::Key_Comma:  switchDeleteMode();      break;
     case Qt::Key_Escape: escapeKeyFunction();     break;
 

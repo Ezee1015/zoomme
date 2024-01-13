@@ -49,6 +49,7 @@
 #define switchFlashlightMode() _flashlightMode = !_flashlightMode;
 #define switchBoardMode() _boardMode = !_boardMode;
 #define switchOnlyShowDesktop() if(_state==STATE_MOVING) _onlyShowDesktop = !_onlyShowDesktop
+#define switchShowStatus() _showStatus = !_showStatus;
 
 #define getCursorPos() mapFromGlobal(QCursor::pos())
 
@@ -190,6 +191,7 @@ class ZoomWidget : public QWidget
     bool _liveMode;
     bool _flashlightMode;
     bool _onlyShowDesktop;
+    bool _showStatus;
     // IN TEXT MODE: If the user was pressing shift when the mouse released
     // (finished sizing the text rectangle), disable mouse tracking while writing
     bool _freezeDesktopPosWhileWriting;
