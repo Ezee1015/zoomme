@@ -466,9 +466,9 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
           painter->drawRect(x, y, width, height);
           QString defaultText;
           defaultText.append("Sizing... (");
-          defaultText.append(QString::number(width));
+          defaultText.append(QString::number(abs(width)));
           defaultText.append("x");
-          defaultText.append(QString::number(height));
+          defaultText.append(QString::number(abs(height)));
           defaultText.append(")");
           painter->drawText(fixQRectForText(x, y, width, height), Qt::AlignCenter | Qt::TextWordWrap, defaultText);
           break;
