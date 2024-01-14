@@ -56,6 +56,16 @@ ZoomWidget::~ZoomWidget()
   delete ui;
 }
 
+QRect fixQRectForText(int x, int y, int width, int height)
+{
+  // The width and height of the text must be positive, otherwise strange
+  // things happen, like only showing the first word of the text
+  if(width < 0)  { x+=width;  width=abs(width);   }
+  if(height < 0) { y+=height; height=abs(height); }
+
+  return QRect(x, y, width, height);
+}
+
 void drawArrowHead(int x, int y, int width, int height, QPainter *p)
 {
   float opposite=-1 * height;
@@ -373,7 +383,7 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
       invertColorPainter(pixmapPainter);
 
     QString text = _userTexts.at(i).text;
-    pixmapPainter->drawText(QRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
+    pixmapPainter->drawText(fixQRectForText(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
   }
 }
 
@@ -412,7 +422,7 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
     QString text = textObject.text;
     if(text.isEmpty()) text="Type some text... \nThen press Enter to finish...";
     else text.insert(textObject.caretPos, '|');
-    painter->drawText(QRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
+    painter->drawText(fixQRectForText(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
 
     changePenWidthFromPainter(painter, 1);
     painter->drawRect(x, y, w, h);
@@ -460,7 +470,7 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
           defaultText.append("x");
           defaultText.append(QString::number(height));
           defaultText.append(")");
-          painter->drawText(QRect(x, y, width, height), Qt::AlignCenter | Qt::TextWordWrap, defaultText);
+          painter->drawText(fixQRectForText(x, y, width, height), Qt::AlignCenter | Qt::TextWordWrap, defaultText);
           break;
         }
       case DRAWMODE_FREEFORM:
