@@ -42,8 +42,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _mousePressed = false;
   _flashlightMode = false;
   _flashlightRadius = 80;
-  _onlyShowDesktop = false;
-  _showStatus = true;
+  _screenOpts = SCREENOPTS_SHOW_ALL;
 
   clipboard = QApplication::clipboard();
 
@@ -161,7 +160,7 @@ void invertColorPainter(QPainter *painter)
 
 void ZoomWidget::drawStatus(QPainter *screenPainter)
 {
-  if(_onlyShowDesktop || !_showStatus)
+  if(_screenOpts == SCREENOPTS_HIDE_ALL || _screenOpts == SCREENOPTS_HIDE_STATUS)
     return;
 
   const int lineHeight        = 25;
@@ -291,7 +290,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
 
 void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
 {
-  if(_onlyShowDesktop)
+  if(_screenOpts == SCREENOPTS_HIDE_ALL)
     return;
 
   // Draw user rectangles.
@@ -408,7 +407,7 @@ void ZoomWidget::drawFlashlightEffect(QPainter *screenPainter)
 
 void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
 {
-  if(_onlyShowDesktop)
+  if(_screenOpts == SCREENOPTS_HIDE_ALL)
     return;
 
   // If it's writing the text (active text)
@@ -578,7 +577,7 @@ void ZoomWidget::removeFormBehindCursor(QPoint cursorPos)
 
 void ZoomWidget::mousePressEvent(QMouseEvent *event)
 {
-  if(_onlyShowDesktop)
+  if(_screenOpts == SCREENOPTS_HIDE_ALL)
     return;
 
   _mousePressed = true;
@@ -615,7 +614,7 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
 
 void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
 {
-  if(_onlyShowDesktop)
+  if(_screenOpts == SCREENOPTS_HIDE_ALL)
     return;
 
   _mousePressed = false;
@@ -707,7 +706,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 
   updateAtMousePos(event->pos());
 
-  if(_onlyShowDesktop){
+  if(_screenOpts == SCREENOPTS_HIDE_ALL){
     update();
     return;
   }
@@ -1014,11 +1013,11 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     case Qt::Key_U:      undoLastDrawing();       break;
     case Qt::Key_Q:      clearAllDrawings();      break;
     case Qt::Key_P:      switchBoardMode();       break;
-    case Qt::Key_Space:  switchOnlyShowDesktop(); break;
+    case Qt::Key_Space:  cycleScreenOpts();       break;
     case Qt::Key_Period: switchFlashlightMode();  break;
-    case Qt::Key_Minus:  switchShowStatus();      break;
     case Qt::Key_Comma:  switchDeleteMode();      break;
     case Qt::Key_Escape: escapeKeyFunction();     break;
+    // Qt::Key_Minus is the '-' key
 
     case Qt::Key_1:
     case Qt::Key_2:
@@ -1039,7 +1038,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 
 void ZoomWidget::switchDeleteMode()
 {
-  if(_onlyShowDesktop)
+  if(_screenOpts == SCREENOPTS_HIDE_ALL)
     return;
 
   if(_state == STATE_MOVING)        _state = STATE_DELETING;
@@ -1048,7 +1047,7 @@ void ZoomWidget::switchDeleteMode()
 
 void ZoomWidget::clearAllDrawings()
 {
-  if(_onlyShowDesktop)
+  if(_screenOpts == SCREENOPTS_HIDE_ALL)
     return;
 
   _userRects.clear();
@@ -1064,7 +1063,7 @@ void ZoomWidget::clearAllDrawings()
 // Remove last drawing from the current draw mode
 void ZoomWidget::undoLastDrawing()
 {
-  if(_onlyShowDesktop)
+  if(_screenOpts == SCREENOPTS_HIDE_ALL)
     return;
 
   switch(_drawMode) {
@@ -1084,8 +1083,8 @@ void ZoomWidget::escapeKeyFunction()
     _state = STATE_MOVING;
   } else if(_flashlightMode) {
     _flashlightMode = false;
-  } else if(_onlyShowDesktop) {
-    _onlyShowDesktop = false;
+  } else if(_screenOpts == SCREENOPTS_HIDE_ALL) {
+    cycleScreenOpts();
   } else if(_desktopPixmapSize != _desktopPixmapOriginalSize) {
     _desktopPixmapScale = 1.0f;
     scalePixmapAt(QPoint(0,0));

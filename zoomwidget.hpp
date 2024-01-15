@@ -48,16 +48,28 @@
 
 #define switchFlashlightMode() _flashlightMode = !_flashlightMode;
 #define switchBoardMode() _boardMode = !_boardMode;
-#define switchOnlyShowDesktop() if(_state==STATE_MOVING) _onlyShowDesktop = !_onlyShowDesktop
-#define switchShowStatus() _showStatus = !_showStatus;
+
+#define cycleScreenOpts()                                                       \
+  if(_state==STATE_MOVING){                                                     \
+    switch(_screenOpts){                                                        \
+      case SCREENOPTS_HIDE_ALL:    _screenOpts = SCREENOPTS_SHOW_ALL;    break; \
+      case SCREENOPTS_HIDE_STATUS: _screenOpts = SCREENOPTS_HIDE_ALL;    break; \
+      case SCREENOPTS_SHOW_ALL:    _screenOpts = SCREENOPTS_HIDE_STATUS; break; \
+    }                                                                           \
+  }
 
 #define getCursorPos() mapFromGlobal(QCursor::pos())
 
-#define isInEditTextMode ((_state == STATE_MOVING) && (_drawMode == DRAWMODE_TEXT) && (_shiftPressed) && (!_onlyShowDesktop))
 #define isTextEditable(cursorPos) ((isInEditTextMode) && (cursorOverForm(cursorPos) != -1))
 #define isDisabledMouseTracking                                 \
   ( (_state != STATE_TYPING && _shiftPressed) ||                \
     (_state == STATE_TYPING && _freezeDesktopPosWhileWriting) )
+#define isInEditTextMode (               \
+    (_state == STATE_MOVING) &&          \
+    (_drawMode == DRAWMODE_TEXT) &&      \
+    (_shiftPressed) &&                   \
+    (_screenOpts != SCREENOPTS_HIDE_ALL) \
+  )
 
 // From a point in the screen (like the mouse cursor, because its position
 // is relative to the screen, not the pixmap), it returns the position in the
@@ -118,6 +130,14 @@ enum ZoomWidgetDrawMode {
   DRAWMODE_TEXT,
   DRAWMODE_FREEFORM,
   DRAWMODE_HIGHLIGHT,
+};
+
+// When modifying this enum, don't forget to modify the cycleScreenOpts macro
+enum ZoomWidgetScreenOpts {
+  SCREENOPTS_HIDE_ALL, // Only show the background. This disables some functions
+                       // too (like the mouse actions and changing modes)
+  SCREENOPTS_HIDE_STATUS,
+  SCREENOPTS_SHOW_ALL,
 };
 
 class ZoomWidget : public QWidget
@@ -184,19 +204,21 @@ class ZoomWidget : public QWidget
     // Moving properties.
     float		_scaleSensivity;
 
-    // Boolean for states
+    // States
     bool _shiftPressed;
     bool _mousePressed;
+
+    // Modes
     bool _boardMode;
     bool _liveMode;
     bool _flashlightMode;
-    bool _onlyShowDesktop;
-    bool _showStatus;
+    int _flashlightRadius;
+
     // IN TEXT MODE: If the user was pressing shift when the mouse released
     // (finished sizing the text rectangle), disable mouse tracking while writing
     bool _freezeDesktopPosWhileWriting;
 
-    int _flashlightRadius;
+    ZoomWidgetScreenOpts _screenOpts;
 
     ZoomWidgetState	_state;
     QPoint		_lastMousePos;
