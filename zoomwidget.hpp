@@ -47,7 +47,7 @@
   } while(0)
 
 #define switchFlashlightMode() _flashlightMode = !_flashlightMode;
-#define switchBoardMode() _boardMode = !_boardMode;
+#define switchBoardMode()      _boardMode = !_boardMode;
 
 #define cycleScreenOpts()                                                       \
   if(_state==STATE_MOVING){                                                     \
@@ -60,15 +60,19 @@
 
 #define getCursorPos() mapFromGlobal(QCursor::pos())
 
-#define isTextEditable(cursorPos) ((isInEditTextMode) && (cursorOverForm(cursorPos) != -1))
-#define isDisabledMouseTracking                                 \
-  ( (_state != STATE_TYPING && _shiftPressed) ||                \
-    (_state == STATE_TYPING && _freezeDesktopPosWhileWriting) )
 #define isInEditTextMode (               \
     (_state == STATE_MOVING) &&          \
     (_drawMode == DRAWMODE_TEXT) &&      \
     (_shiftPressed) &&                   \
     (_screenOpts != SCREENOPTS_HIDE_ALL) \
+  )
+#define isTextEditable(cursorPos) (      \
+    (isInEditTextMode) &&                \
+    (cursorOverForm(cursorPos) != -1)    \
+  )
+#define isDisabledMouseTracking (                             \
+    (_state != STATE_TYPING && _shiftPressed) ||              \
+    (_state == STATE_TYPING && _freezeDesktopPosWhileWriting) \
   )
 
 // From a point in the screen (like the mouse cursor, because its position
