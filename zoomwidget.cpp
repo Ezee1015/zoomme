@@ -1201,6 +1201,8 @@ void ZoomWidget::escapeKeyFunction()
     _desktopPixmapScale = 1.0f;
     scalePixmapAt(QPoint(0,0));
     checkPixmapPos();
+  } else if(isFFmpegRunning()){
+    toggleRecording();
   } else {
     QApplication::beep();
     QApplication::quit();
