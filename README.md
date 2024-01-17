@@ -13,6 +13,7 @@ You can...
 - Zoom in and out of the desktop.
 - Switch between your desktop and a blackboard
 - Save it to your Pictures folder
+- Record what you do
 
 Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https://github.com/Ezee1015/zoomme/tree/Qt5)) and OpenGL.
 
