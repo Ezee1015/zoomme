@@ -1152,7 +1152,7 @@ void ZoomWidget::toggleRecording()
   if(isFFmpegRunning()){
     recordTimer->stop();
     if(closeFFmpeg()) QApplication::beep();
-    else printf("[ERROR] Couldn't stop ffmpeg.");
+    else printf("[ERROR] Couldn't stop ffmpeg: %s\n", QStringToString(ffmpeg.errorString()));
     _processingFFmpeg = false;
     return;
   }
@@ -1162,7 +1162,8 @@ void ZoomWidget::toggleRecording()
     recordTimer->start(1000/RECORD_FPS);
     QApplication::beep();
   } else {
-    printf("[ERROR] Couldn't start ffmpeg or timeout occurred (10 sec.). Killing the process...");
+    printf("[ERROR] Couldn't start ffmpeg or timeout occurred (10 sec.): %s\n", QStringToString(ffmpeg.errorString()));
+    printf("[ERROR] Killing the ffmpeg process...\n");
     ffmpeg.terminate();
   }
 }

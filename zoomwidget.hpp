@@ -33,7 +33,9 @@
 
 #define RECORD_FPS 60
 #define RECORD_EXTENSION "mp4"
+
 // CODE
+#define QStringToString(string) string.toStdString().c_str()
 
 // The painter argument must be a pointer to the painter
 #define changePenWidthFromPainter(painter, width) \
