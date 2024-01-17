@@ -232,6 +232,7 @@ class ZoomWidget : public QWidget
 
     QProcess ffmpeg;
     QTimer *recordTimer;
+    bool _processingFFmpeg;
 
     ZoomWidgetState	_state;
     QPoint		_lastMousePos;

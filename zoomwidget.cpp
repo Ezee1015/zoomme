@@ -58,6 +58,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   // inconsistency
   // ffmpeg.setStandardErrorFile("ffmpeg_log.txt");
   // ffmpeg.setStandardOutputFile("ffmpeg_output.txt");
+  _processingFFmpeg = false;
 
   _activePen.setColor(QCOLOR_RED);
   _activePen.setWidth(4);
@@ -135,6 +136,8 @@ bool ZoomWidget::closeFFmpeg()
 {
   // Indicates to FFmpeg that it's time to start processing the video
   ffmpeg.closeWriteChannel();
+  _processingFFmpeg = true;
+  updateCursorShape();
 
   // Waits till FFmpeg finishes processing
   if (!ffmpeg.waitForFinished(-1))
@@ -770,6 +773,12 @@ void ZoomWidget::updateCursorShape()
 {
   QCursor pointHand = QCursor(Qt::PointingHandCursor);
   QCursor blank     = QCursor(Qt::BlankCursor);
+  QCursor waiting   = QCursor(Qt::WaitCursor);
+
+  if(_processingFFmpeg) {
+    setCursor(waiting);
+    return;
+  }
 
   if(_state == STATE_DELETING) {
     setCursor(pointHand);
@@ -1144,6 +1153,7 @@ void ZoomWidget::toggleRecording()
     recordTimer->stop();
     if(closeFFmpeg()) QApplication::beep();
     else printf("[ERROR] Couldn't stop ffmpeg.");
+    _processingFFmpeg = false;
     return;
   }
 
