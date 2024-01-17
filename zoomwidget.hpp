@@ -8,6 +8,8 @@
 #include <QPen>
 #include <QDir>
 #include <QClipboard>
+#include <QProcess>
+#include <QTimer>
 
 // CUSTOMIZATION
 #define QCOLOR_RED       QColor(224,  49,  49)
@@ -27,7 +29,10 @@
 #define BLOCK_ICON   "🔒"
 #define NO_ZOOM_ICON "⛶"
 #define ZOOM_ICON    "🔍"
+#define RECORD_ICON  "●"
 
+#define RECORD_FPS 60
+#define RECORD_EXTENSION "mp4"
 // CODE
 
 // The painter argument must be a pointer to the painter
@@ -74,6 +79,7 @@
     (_state != STATE_TYPING && _shiftPressed) ||              \
     (_state == STATE_TYPING && _freezeDesktopPosWhileWriting) \
   )
+#define isFFmpegRunning() (ffmpeg.state() == QProcess::Running)
 
 // From a point in the screen (like the mouse cursor, because its position
 // is relative to the screen, not the pixmap), it returns the position in the
@@ -224,6 +230,9 @@ class ZoomWidget : public QWidget
 
     ZoomWidgetScreenOpts _screenOpts;
 
+    QProcess ffmpeg;
+    QTimer *recordTimer;
+
     ZoomWidgetState	_state;
     QPoint		_lastMousePos;
 
@@ -265,6 +274,12 @@ class ZoomWidget : public QWidget
     void switchDeleteMode();
     void clearAllDrawings();
     void undoLastDrawing();
+    void toggleRecording();
+
+    // Recording
+    bool startFFmpeg();
+    void sendPixmapToFFmpeg(); // Timer function
+    bool closeFFmpeg();
 
     // If posRelativeToScreen is true, it will return the positon be relative to
     // the screen, if it's false, it will return the position relative to the

@@ -18,6 +18,7 @@
 #include <QPainterPath>
 #include <QList>
 #include <QImageWriter>
+#include <cstdio>
 
 ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget)
 {
@@ -46,6 +47,18 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
 
   clipboard = QApplication::clipboard();
 
+  recordTimer = new QTimer(this);
+  connect( recordTimer,
+           &QTimer::timeout,
+           this,
+           &ZoomWidget::sendPixmapToFFmpeg );
+  // Show the ffmpeg output on the screen
+  ffmpeg.setProcessChannelMode(ffmpeg.ForwardedChannels);
+  // Don't create a file if the setProcessChannelMode is set, because it's an
+  // inconsistency
+  // ffmpeg.setStandardErrorFile("ffmpeg_log.txt");
+  // ffmpeg.setStandardOutputFile("ffmpeg_output.txt");
+
   _activePen.setColor(QCOLOR_RED);
   _activePen.setWidth(4);
 }
@@ -53,6 +66,81 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
 ZoomWidget::~ZoomWidget()
 {
   delete ui;
+}
+
+bool ZoomWidget::startFFmpeg()
+{
+  // Arguments for FFmpeg taken from:
+  // https://github.com/tsoding/rendering-video-in-c-with-ffmpeg/blob/master/ffmpeg_linux.c
+  QList<QString> arguments;
+
+  // Path to the output file...
+  // Take the path and name of the screenshot image, and add the extension for
+  // the video
+  QString outputFile;
+  QFileInfo outputScreenshotFile = QFileInfo(savePath);
+  outputFile.append(outputScreenshotFile.path() + "/");
+  outputFile.append(outputScreenshotFile.completeBaseName());
+  outputFile.append(".");
+  outputFile.append(RECORD_EXTENSION);
+
+  QString resolution;
+  resolution.append(QString::number(_drawnPixmap.width()));
+  resolution.append("x");
+  resolution.append(QString::number(_drawnPixmap.height()));
+
+  // GLOBAL ARGS
+  arguments << "-loglevel" << "verbose"
+            << "-y";
+
+  // INPUT ARGS
+  arguments << "-f" << "rawvideo"
+            << "-pix_fmt" << "rgba"
+            << "-s" << resolution
+            << "-r" << QString::number(RECORD_FPS)
+            << "-i" << "-";
+
+  // OUTPUT ARGS
+  arguments << "-c:v" << "libx264"
+            << "-vb" << "2500k"
+            << "-c:a" << "aac"
+            << "-ab" << "200k"
+            << "-pix_fmt" << "yuv420p"
+            << outputFile;
+
+  // Start process
+  ffmpeg.start("ffmpeg", arguments);
+
+  const int timeout = 10000;
+  if (!ffmpeg.waitForStarted(timeout))
+    return false;
+
+  return true;
+}
+
+void ZoomWidget::sendPixmapToFFmpeg()
+{
+  QImage image = _drawnPixmap.toImage();
+  image = image.convertToFormat(QImage::Format_RGBA8888);
+
+  int bytesPerPixel = 4; // RGBA has 4 bytes per pixel
+  int imageSize = image.width() * image.height() * bytesPerPixel;
+
+  QByteArray charScreenshot(reinterpret_cast<const char *>(image.constBits()), imageSize);
+
+  ffmpeg.write(charScreenshot);
+}
+
+bool ZoomWidget::closeFFmpeg()
+{
+  // Indicates to FFmpeg that it's time to start processing the video
+  ffmpeg.closeWriteChannel();
+
+  // Waits till FFmpeg finishes processing
+  if (!ffmpeg.waitForFinished(-1))
+    return false;
+
+  return true;
 }
 
 QRect fixQRectForText(int x, int y, int width, int height)
@@ -178,7 +266,9 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   // Line 1
   h += initialLineHeight;
 
-  if(isDisabledMouseTracking)
+  if(ffmpeg.state() == QProcess::Running)
+    text.append(RECORD_ICON);
+  else if(isDisabledMouseTracking)
     text.append(BLOCK_ICON);
   else
     text.append( (_desktopPixmapScale == 1.0f) ? NO_ZOOM_ICON : ZOOM_ICON );
@@ -1017,7 +1107,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Period: switchFlashlightMode();  break;
     case Qt::Key_Comma:  switchDeleteMode();      break;
     case Qt::Key_Escape: escapeKeyFunction();     break;
-    // Qt::Key_Minus is the '-' key
+    case Qt::Key_Minus:  toggleRecording();       break;
 
     case Qt::Key_1:
     case Qt::Key_2:
@@ -1043,6 +1133,21 @@ void ZoomWidget::switchDeleteMode()
 
   if(_state == STATE_MOVING)        _state = STATE_DELETING;
   else if(_state == STATE_DELETING) _state = STATE_MOVING;
+}
+
+void ZoomWidget::toggleRecording()
+{
+  if(isFFmpegRunning()){
+    recordTimer->stop();
+    if(!closeFFmpeg()) printf("[ERROR] Couldn't stop ffmpeg.");
+  } else {
+    if(startFFmpeg())
+      recordTimer->start(1000/RECORD_FPS);
+    else {
+      printf("[ERROR] Couldn't start ffmpeg or timeout occurred (10 sec.). Killing the process...");
+      ffmpeg.terminate();
+    }
+  }
 }
 
 void ZoomWidget::clearAllDrawings()
