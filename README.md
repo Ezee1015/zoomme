@@ -210,6 +210,19 @@ make
 </p></details>
 <!-- End 7 -->
 
+## :suspect: Secret :suspect:
+> Shhh! Don't tell anybody... :zipper_mouth_face:
+>
+> You can customize certain features in the app :art: by editing the header file (`zoomwidget.hpp`). Within this file, there are macros that determine various program behaviors. You can modify the content of these macros located inside the "Customization" comment section. To apply the changes you've made, simply recompile the program.
+>
+> Some of the customizable elements include:
+>
+> - FPS of the recording
+> - The date format when saving screenshots and recordings
+> - Color codes for the color of the drawings
+> - Icons in the status bar
+
+
 ## Credit
 - Magnifying glass icon: Research or Magnifying Glass Flat Icon Vector.svg from Wikimedia Commons by Videoplasty.com, CC-BY-SA 4.0
 - Pencil: The "Pencil" icon used by MobiText from Wikimedia Commons by Gavinstubbs09, CC-BY-SA-3.0

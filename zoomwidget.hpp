@@ -33,6 +33,7 @@
 
 #define RECORD_FPS 60
 #define RECORD_EXTENSION "mp4"
+// END OF CUSTOMIZATION
 
 // CODE
 #define QStringToString(string) string.toStdString().c_str()
