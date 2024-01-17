@@ -258,17 +258,13 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   const int w                 = 160;
   const int initialLineHeight = lineHeight + 5; // lineHeight + margin
 
-  int h = 0;
+  int h = initialLineHeight;
 
   // Text to display
   QString text;
 
-  // Line 1
-  h += initialLineHeight;
-
-  if(ffmpeg.state() == QProcess::Running)
-    text.append(RECORD_ICON);
-  else if(isDisabledMouseTracking)
+  // Line 1 -ALWAYS DISPLAYING-
+  if(isDisabledMouseTracking)
     text.append(BLOCK_ICON);
   else
     text.append( (_desktopPixmapScale == 1.0f) ? NO_ZOOM_ICON : ZOOM_ICON );
@@ -300,7 +296,15 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
     h += lineHeight;
   }
 
-  // Line 3
+  // Last Line
+  if(ffmpeg.state() == QProcess::Running){
+    text.append("\n");
+    text.append(RECORD_ICON);
+    text.append(" Recording...");
+
+    h += lineHeight;
+  }
+
   // You can't forget that you have enabled the board mode, as you can clearly
   // see that there's no desktop
   // if(_boardMode){
@@ -308,7 +312,6 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   //   h += lineHeight;
   // }
 
-  // Line 4
   // You can't forget that you have enabled the flashlight effect, as you can
   // clearly see it
   // if(_flashlightMode){
