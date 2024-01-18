@@ -138,12 +138,11 @@ void ZoomWidget::saveFrameToFile()
 
   // Save the image as jpeg into a byte array (is not a raw image, it's
   // compressed)
-  QByteArray ba;
-  QBuffer buffer(&ba);
-  buffer.open(QIODevice::WriteOnly);
+  QByteArray imageBytes;
+  QBuffer buffer(&imageBytes); buffer.open(QIODevice::WriteOnly);
   image.save(&buffer, "JPEG", RECORD_QUALITY);
 
-  recordTempFile->write(ba);
+  recordTempFile->write(imageBytes);
 }
 
 QRect fixQRectForText(int x, int y, int width, int height)
