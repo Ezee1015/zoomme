@@ -68,6 +68,7 @@
     }                                                                           \
   }
 
+// This position in relative to the scaled resolution of the monitor
 #define getCursorPos() mapFromGlobal(QCursor::pos())
 
 #define isInEditTextMode (               \
@@ -136,6 +137,7 @@ enum ZoomWidgetState {
   STATE_DRAWING,
   STATE_TYPING,
   STATE_DELETING,
+  STATE_COLOR_PICKER,
 };
 
 enum ZoomWidgetDrawMode {
@@ -187,16 +189,25 @@ class ZoomWidget : public QWidget
 
     QClipboard *clipboard;
 
+    // Be aware that when scaling is enabled, _desktopPixmap works with the REAL
+    // size of the screen, while the other variables work with the SCALED size
+    // of the screen
+
     // Desktop pixmap properties.
     QScreen   *_desktopScreen;
+    QSize		_screenSize; // resolution of the scaled size of the monitor
+    // The size of the pixmap should be the REAL size of the monitor when taking
+    // a picture of the desktop (instead of taking the size of the scaled
+    // monitor)
     QPixmap		_desktopPixmap;
+    // Zoom movement
     QPoint		_desktopPixmapPos;
+    // Pixmap size for zooming (when taking a picture of the desktop, is
+    // referenced with the resolution of the scaled size of the monitor)
     QSize		_desktopPixmapSize;
+    QSize  	_desktopPixmapOriginalSize;
+    // Zooming scale
     float		_desktopPixmapScale;
-    // When Scaling is enable, this variable saves the correct size of the window
-    // When there is no Scaling this variable is the same that _desktopPixmap.size()
-    QSize		_desktopPixmapOriginalSize;
-    QSize		_screenSize;
 
     // Pixmap shown in the screen. This can either be the _desktopPixmap, or the
     // blackboard if it's activated the _boardMode
@@ -282,6 +293,9 @@ class ZoomWidget : public QWidget
     void clearAllDrawings();
     void undoLastDrawing();
     void toggleRecording();
+    void pickColorMode();
+
+    QColor getColorUnderCursor();
 
     // Recording
     void saveFrameToFile(); // Timer function

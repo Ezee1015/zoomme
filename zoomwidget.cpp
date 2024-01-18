@@ -288,10 +288,11 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
 
   // Line 2
   switch(_state) {
-    case STATE_MOVING:   break;
-    case STATE_DRAWING:  break;
-    case STATE_TYPING:   text.append("\n-- TYPING --");   h += lineHeight; break;
-    case STATE_DELETING: text.append("\n-- DELETING --"); h += lineHeight; break;
+    case STATE_MOVING:       break;
+    case STATE_DRAWING:      break;
+    case STATE_TYPING:       text.append("\n-- TYPING --");   h += lineHeight; break;
+    case STATE_DELETING:     text.append("\n-- DELETING --"); h += lineHeight; break;
+    case STATE_COLOR_PICKER: text.append("\n-- PICK COLOR --"); h += lineHeight; break;
   };
   if(isInEditTextMode){
     text += "\n-- SELECT --";
@@ -677,6 +678,13 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
 
   _mousePressed = true;
 
+  if(_state == STATE_COLOR_PICKER){
+    _activePen.setColor(getColorUnderCursor());
+    _state = STATE_MOVING;
+    update();
+    return;
+  }
+
   if (_state == STATE_TYPING && _userTexts.last().text.isEmpty())
     _userTexts.removeLast();
 
@@ -812,6 +820,12 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
     return;
   }
 
+  if(_state == STATE_COLOR_PICKER){
+    _activePen.setColor(getColorUnderCursor());
+    update();
+    return;
+  }
+
   // Register the position of the cursor for the FreeForm
   if(_mousePressed && _drawMode == DRAWMODE_FREEFORM) {
     QPoint curPos = screenPointToPixmapPos(event->pos());
@@ -852,7 +866,7 @@ void ZoomWidget::updateAtMousePos(QPoint mousePos)
 
 void ZoomWidget::wheelEvent(QWheelEvent *event)
 {
-  if (_state != STATE_MOVING && _state != STATE_DELETING)
+  if (_state == STATE_DRAWING || _state == STATE_TYPING)
     return;
 
   int sign = (event->angleDelta().y() > 0) ? 1 : -1;
@@ -1113,12 +1127,13 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 
     case Qt::Key_U:      undoLastDrawing();       break;
     case Qt::Key_Q:      clearAllDrawings();      break;
-    case Qt::Key_P:      switchBoardMode();       break;
+    case Qt::Key_Tab:    switchBoardMode();       break;
     case Qt::Key_Space:  cycleScreenOpts();       break;
     case Qt::Key_Period: switchFlashlightMode();  break;
     case Qt::Key_Comma:  switchDeleteMode();      break;
     case Qt::Key_Escape: escapeKeyFunction();     break;
     case Qt::Key_Minus:  toggleRecording();       break;
+    case Qt::Key_P:      pickColorMode();         break;
 
     case Qt::Key_1:
     case Qt::Key_2:
@@ -1135,6 +1150,16 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 
   updateCursorShape();
   update();
+}
+
+void ZoomWidget::pickColorMode()
+{
+  if(_screenOpts == SCREENOPTS_HIDE_ALL || _state != STATE_MOVING)
+    return;
+
+  _state = STATE_COLOR_PICKER;
+
+  _activePen.setColor(getColorUnderCursor());
 }
 
 void ZoomWidget::switchDeleteMode()
@@ -1210,7 +1235,10 @@ void ZoomWidget::undoLastDrawing()
 
 void ZoomWidget::escapeKeyFunction()
 {
-  if(_state == STATE_DELETING){
+  if(_state == STATE_COLOR_PICKER){
+    _state = STATE_MOVING;
+    _activePen.setColor(QCOLOR_RED);
+  } else if(_state == STATE_DELETING){
     _state = STATE_MOVING;
   } else if(_flashlightMode) {
     _flashlightMode = false;
@@ -1340,6 +1368,25 @@ void ZoomWidget::checkPixmapPos()
   } else if ((_desktopPixmapSize.height() + _desktopPixmapPos.y()) < height()) {
     _desktopPixmapPos.setY(height() - _desktopPixmapSize.height());
   }
+}
+
+QColor ZoomWidget::getColorUnderCursor()
+{
+  QImage image = _drawnPixmap.toImage();
+  QPoint point = screenPointToPixmapPos(getCursorPos());
+
+  // The screen point of the cursor is relative to the resolution of the scaled
+  // monitor, so I need to change it to the REAL position of the cursor (without
+  // scaling) with 'The Rule of Three'...
+  //
+  // scaledScreenResolution -------- mousePos
+  // realScreenResolution   --------    x
+  //
+  // So 'x' = mousePos * (_desktopPixmap.size()/_desktopPixmapOriginalSize)
+  point.setX( point.x() * (_desktopPixmap.size().width()/_desktopPixmapOriginalSize.width()) );
+  point.setY( point.y() * (_desktopPixmap.size().height()/_desktopPixmapOriginalSize.height()) );
+
+  return image.pixel(point);
 }
 
 void ZoomWidget::getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h, bool posRelativeToScreen)

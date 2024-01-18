@@ -35,7 +35,7 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 |          **`S`**          | Save the current work to an image, which will be stored in the standard Pictures folder (or the current path if not found). The computer will *beep* if the image was correctly saved                                                                                                                                                                                      |
 |      **`Shift + S`**      | Save the current work to the clipboard. The computer will *beep* once the mapping is pressed                                                                                                                                                                                                                                                                               |
 |       **`-`** (dash)      | Start/stop recording. A video will be produced, but it may take some time for rendering (You'll know when it finished rendering when the recording indicator of the status bar goes away and you listen a Beep). The video is going to be save in the same path and with the same name that the image of the screenshot. **Requirements**: have `ffmpeg` installed, and use a Unix based system  |
-|          **`P`**          | To toggle between your screen and a blackboard mode. By the way, your drawings will persist between the modes                                                                                                                                                                                                                                                              |
+|          **`Tab`**    | To toggle between your screen and a blackboard mode. By the way, your drawings will persist between the modes                                                                                                                                                                                                                                                              |
 |        **`Space`**        | To toggle the visibility of the elements of the screen: hide the status bar, hide all or show all                                                                                                                                                                                                                                                                          |
 |         **`ESC`**         | To **finish writing text** (if you're writing), **exit the "delete a drawing" mode** (if it's on), **disable the 'hide all' mode** (if it's on), **disable the mouse flashlight** (if it's on), **restore zoom** (if you are zoomed in), **stop recording**, or **quit/exit** (If you are not zoomed in, not writing text, not deleting a drawing, nor in flashlight mode) |
 
@@ -83,6 +83,7 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 | **`O`** | To change color to Orange  |
 | **`W`** | To change color to White   |
 | **`D`** | To change color to Black   |
+| **`P`** | To pick a color from the screen   |
 
 ### Change the size of the lines
 |   Key   | Function                        |
@@ -223,8 +224,7 @@ make
 > - Icons in the status bar
 
 ## TODO
-- [ ] Add a color picker
-- [ ] Add an option to save the current status of the program to a file (`fileName.zoomme` for example). This will contain: the background image (the desktop for example), all the drawings and the current state (current mode, size of the brush, etc). This will allow the user to exit ZoomMe and restore the work after, adding the possibility to: undo, delete drawings and modify texts from the previous work. *A quick workaround is saving/exporting the image for later importing it with the `-i` flag (but the undo, delete and text modification from the previous drawings doesn't work) because now it's an image*
+- Add an option to save the current status of the program to a file (`fileName.zoomme` for example). This will contain: the background image (the desktop for example), all the drawings and the current state (current mode, size of the brush, etc). This will allow the user to exit ZoomMe and restore the work after, adding the possibility to: undo, delete drawings and modify texts from the previous work. *A quick workaround is saving/exporting the image for later importing it with the `-i` flag (but the undo, delete and text modification from the previous drawings doesn't work) because now it's an image*
 
 
 ## Credit
