@@ -2,6 +2,7 @@
 #include "ui_zoomwidget.h"
 
 #include <cmath>
+#include <cstdio>
 #include <QPainter>
 #include <QMouseEvent>
 #include <QScreen>
@@ -18,7 +19,7 @@
 #include <QPainterPath>
 #include <QList>
 #include <QImageWriter>
-#include <cstdio>
+#include <QBuffer>
 
 ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget)
 {
@@ -51,14 +52,14 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   connect( recordTimer,
            &QTimer::timeout,
            this,
-           &ZoomWidget::sendPixmapToFFmpeg );
+           &ZoomWidget::saveFrameToFile );
   // Show the ffmpeg output on the screen
   ffmpeg.setProcessChannelMode(ffmpeg.ForwardedChannels);
   // Don't create a file if the setProcessChannelMode is set, because it's an
   // inconsistency
   // ffmpeg.setStandardErrorFile("ffmpeg_log.txt");
   // ffmpeg.setStandardOutputFile("ffmpeg_output.txt");
-  _processingFFmpeg = false;
+  recordTempFile = new QFile(RECORD_TMP_FILEPATH);
 
   _activePen.setColor(QCOLOR_RED);
   _activePen.setWidth(4);
@@ -69,12 +70,8 @@ ZoomWidget::~ZoomWidget()
   delete ui;
 }
 
-bool ZoomWidget::startFFmpeg()
+bool ZoomWidget::createVideoFFmpeg()
 {
-  // Arguments for FFmpeg taken from:
-  // https://github.com/tsoding/rendering-video-in-c-with-ffmpeg/blob/master/ffmpeg_linux.c
-  QList<QString> arguments;
-
   // Path to the output file...
   // Take the path and name of the screenshot image, and add the extension for
   // the video
@@ -90,60 +87,64 @@ bool ZoomWidget::startFFmpeg()
   resolution.append("x");
   resolution.append(QString::number(_drawnPixmap.height()));
 
+  // Read the video bytes and pipe it to FFmpeg...
+  // Arguments for FFmpeg taken from:
+  // https://github.com/tsoding/rendering-video-in-c-with-ffmpeg/blob/master/ffmpeg_linux.c
+  QString script;
+
+  script.append("cat ");
+    script.append(RECORD_TMP_FILEPATH);
+
+  script.append(" | ");
+
+  script.append("ffmpeg ");
   // GLOBAL ARGS
-  arguments << "-loglevel" << "verbose"
-            << "-y";
-
+    script.append("-loglevel "); script.append("verbose "       );
+    script.append("-y "       );
   // INPUT ARGS
-  arguments << "-f" << "rawvideo"
-            << "-pix_fmt" << "rgba"
-            << "-s" << resolution
-            << "-r" << QString::number(RECORD_FPS)
-            << "-i" << "-";
-
+    // No rawvideo because it's now compressed in jpeg
+    // script.append("-f "      );  script.append("rawvideo ");
+    script.append("-pix_fmt " );  script.append("yuv420p "      );
+    script.append("-s "       );  script.append(resolution + " ");
+    script.append("-r "       );  script.append(QString::number(RECORD_FPS) + " ");
+    script.append("-i "       );  script.append("- "            );
   // OUTPUT ARGS
-  arguments << "-c:v" << "libx264"
-            << "-vb" << "2500k"
-            << "-c:a" << "aac"
-            << "-ab" << "200k"
-            << "-pix_fmt" << "yuv420p"
-            << outputFile;
+    script.append("-c:v "     );  script.append("libx264 "      );
+    script.append("-vb "      );  script.append("2500k "        );
+    script.append("-c:a "     );  script.append("aac "          );
+    script.append("-ab "      );  script.append("200k "         );
+    script.append("-pix_fmt " );  script.append("yuv420p "      );
+    script.append("'" + outputFile + "'");
+
+  QList<QString> arguments;
+  arguments << "-c";
+  arguments << script;
 
   // Start process
-  ffmpeg.start("ffmpeg", arguments);
+  ffmpeg.start("bash", arguments);
 
-  const int timeout = 10000;
-  if (!ffmpeg.waitForStarted(timeout))
-    return false;
-
-  return true;
-}
-
-void ZoomWidget::sendPixmapToFFmpeg()
-{
-  QImage image = _drawnPixmap.toImage();
-  image = image.convertToFormat(QImage::Format_RGBA8888);
-
-  int bytesPerPixel = 4; // RGBA has 4 bytes per pixel
-  int imageSize = image.width() * image.height() * bytesPerPixel;
-
-  QByteArray charScreenshot(reinterpret_cast<const char *>(image.constBits()), imageSize);
-
-  ffmpeg.write(charScreenshot);
-}
-
-bool ZoomWidget::closeFFmpeg()
-{
-  // Indicates to FFmpeg that it's time to start processing the video
-  ffmpeg.closeWriteChannel();
-  _processingFFmpeg = true;
   updateCursorShape();
 
-  // Waits till FFmpeg finishes processing
-  if (!ffmpeg.waitForFinished(-1))
+  const int timeout = 10000;
+  if (!ffmpeg.waitForStarted(timeout) || !ffmpeg.waitForFinished(-1))
     return false;
 
   return true;
+}
+
+void ZoomWidget::saveFrameToFile()
+{
+  QImage image = _drawnPixmap.toImage();
+
+  // Save the image as jpeg into a byte array (is not a raw image, it's
+  // compressed)
+  QByteArray ba;
+  QBuffer buffer(&ba);
+  buffer.open(QIODevice::WriteOnly);
+  image.save(&buffer, "JPEG", RECORD_QUALITY);
+
+  int output = recordTempFile->write(ba);
+
 }
 
 QRect fixQRectForText(int x, int y, int width, int height)
@@ -300,7 +301,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   }
 
   // Last Line
-  if(ffmpeg.state() == QProcess::Running){
+  if(isRecording()){
     text.append("\n");
     text.append(RECORD_ICON);
     text.append(" Recording...");
@@ -775,7 +776,7 @@ void ZoomWidget::updateCursorShape()
   QCursor blank     = QCursor(Qt::BlankCursor);
   QCursor waiting   = QCursor(Qt::WaitCursor);
 
-  if(_processingFFmpeg) {
+  if(isFFmpegRunning()) {
     setCursor(waiting);
     return;
   }
@@ -1149,23 +1150,32 @@ void ZoomWidget::switchDeleteMode()
 
 void ZoomWidget::toggleRecording()
 {
-  if(isFFmpegRunning()){
+  // In theory, ffmpeg blocks the thread, so it shouldn't be possible to toggle
+  // the recording while ffmpeg is running. But, just in case, we check it
+  if(isFFmpegRunning())
+    return;
+
+  if(isRecording()){
     recordTimer->stop();
-    if(closeFFmpeg()) QApplication::beep();
-    else printf("[ERROR] Couldn't stop ffmpeg: %s\n", QStringToString(ffmpeg.errorString()));
-    _processingFFmpeg = false;
+    if(createVideoFFmpeg()) {
+      QApplication::beep();
+    } else {
+      printf("[ERROR] Couldn't start ffmpeg or timeout occurred (10 sec.): %s\n", QStringToString(ffmpeg.errorString()));
+      printf("[ERROR] Killing the ffmpeg process...\n");
+      ffmpeg.terminate();
+    }
+    recordTempFile->remove();
     return;
   }
 
-  // If it's not running, start it
-  if(startFFmpeg()){
-    recordTimer->start(1000/RECORD_FPS);
-    QApplication::beep();
-  } else {
-    printf("[ERROR] Couldn't start ffmpeg or timeout occurred (10 sec.): %s\n", QStringToString(ffmpeg.errorString()));
-    printf("[ERROR] Killing the ffmpeg process...\n");
-    ffmpeg.terminate();
+  // Start recording
+  recordTempFile->remove(); // If already exists
+  if (!recordTempFile->open(QIODevice::ReadWrite)) {
+    printf("[ERROR] Couldn't open the temp file for the bytes output\n");
+    return;
   }
+  recordTimer->start(1000/RECORD_FPS);
+  QApplication::beep();
 }
 
 void ZoomWidget::clearAllDrawings()
@@ -1212,7 +1222,7 @@ void ZoomWidget::escapeKeyFunction()
     _desktopPixmapScale = 1.0f;
     scalePixmapAt(QPoint(0,0));
     checkPixmapPos();
-  } else if(isFFmpegRunning()){
+  } else if(isRecording()){
     toggleRecording();
   } else {
     QApplication::beep();

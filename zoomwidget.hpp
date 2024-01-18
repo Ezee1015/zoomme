@@ -31,8 +31,10 @@
 #define ZOOM_ICON    "🔍"
 #define RECORD_ICON  "●"
 
-#define RECORD_FPS 60
+#define RECORD_FPS 16
 #define RECORD_EXTENSION "mp4"
+#define RECORD_QUALITY 70 // 0-100
+#define RECORD_TMP_FILEPATH "/tmp/ZoomMe_video_bytes"
 // END OF CUSTOMIZATION
 
 // CODE
@@ -82,7 +84,8 @@
     (_state != STATE_TYPING && _shiftPressed) ||              \
     (_state == STATE_TYPING && _freezeDesktopPosWhileWriting) \
   )
-#define isFFmpegRunning() (ffmpeg.state() == QProcess::Running)
+#define isRecording() (recordTimer->isActive())
+#define isFFmpegRunning() (ffmpeg.state() != QProcess::NotRunning)
 
 // From a point in the screen (like the mouse cursor, because its position
 // is relative to the screen, not the pixmap), it returns the position in the
@@ -235,7 +238,7 @@ class ZoomWidget : public QWidget
 
     QProcess ffmpeg;
     QTimer *recordTimer;
-    bool _processingFFmpeg;
+    QFile *recordTempFile;
 
     ZoomWidgetState	_state;
     QPoint		_lastMousePos;
@@ -281,9 +284,8 @@ class ZoomWidget : public QWidget
     void toggleRecording();
 
     // Recording
-    bool startFFmpeg();
-    void sendPixmapToFFmpeg(); // Timer function
-    bool closeFFmpeg();
+    void saveFrameToFile(); // Timer function
+    bool createVideoFFmpeg();
 
     // If posRelativeToScreen is true, it will return the positon be relative to
     // the screen, if it's false, it will return the position relative to the
