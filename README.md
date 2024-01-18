@@ -222,6 +222,10 @@ make
 > - Color codes for the color of the drawings
 > - Icons in the status bar
 
+## TODO
+- [ ] Add a color picker
+- [ ] Add an option to save the current status of the program to a file (`fileName.zoomme` for example). This will contain: the background image (the desktop for example), all the drawings and the current state (current mode, size of the brush, etc). This will allow the user to exit ZoomMe and restore the work after, adding the possibility to: undo, delete drawings and modify texts from the previous work. *A quick workaround is saving/exporting the image for later importing it with the `-i` flag (but the undo, delete and text modification from the previous drawings doesn't work) because now it's an image*
+
 
 ## Credit
 - Magnifying glass icon: Research or Magnifying Glass Flat Icon Vector.svg from Wikimedia Commons by Videoplasty.com, CC-BY-SA 4.0
