@@ -143,8 +143,7 @@ void ZoomWidget::saveFrameToFile()
   buffer.open(QIODevice::WriteOnly);
   image.save(&buffer, "JPEG", RECORD_QUALITY);
 
-  int output = recordTempFile->write(ba);
-
+  recordTempFile->write(ba);
 }
 
 QRect fixQRectForText(int x, int y, int width, int height)
