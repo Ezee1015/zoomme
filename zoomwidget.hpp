@@ -195,7 +195,7 @@ class ZoomWidget : public QWidget
 
     // Desktop pixmap properties.
     QScreen   *_desktopScreen;
-    QSize		_screenSize; // resolution of the scaled size of the monitor
+    QSize     _screenSize; // resolution of the scaled size of the monitor
     // The size of the pixmap should be the REAL size of the monitor when taking
     // a picture of the desktop (instead of taking the size of the scaled
     // monitor)
