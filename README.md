@@ -26,17 +26,17 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 
 ### General functions
 
-|         Key/Event         | Function                                                                                                                                                                                                                                                                                                                                                                   |
-|:-------------------------:|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|     **`Mouse Wheel`**     | To zoom in and zoom out                                                                                                                                                                                                                                                                                                                                                    |
-|        **`Shift`**        | When it's zoomed in, if you press and hold the key, the screen will not follow the mouse, so you can freely move it around in that part of the screen (for drawing, for example). When you release it, it will continue following the mouse                                                                                                                                |
-|      **`.`** (period)     | To toggle the "Flashlight effect" on the cursor.                                                                                                                                                                                                                                                                                                                           |
-| **`Shift + Mouse Wheel`** | **When the flashlight effect is turn on**, this will increase/decrease the size of the "light"                                                                                                                                                                                                                                                                             |
-|          **`S`**          | Save the current work to an image, which will be stored in the standard Pictures folder (or the current path if not found). The computer will *beep* if the image was correctly saved                                                                                                                                                                                      |
-|      **`Shift + S`**      | Save the current work to the clipboard. The computer will *beep* once the mapping is pressed                                                                                                                                                                                                                                                                               |
-|       **`-`** (dash)      | Start/stop recording. A video will be produced, but it may take some time for rendering (You'll know when it finished rendering when the recording indicator of the status bar goes away and you listen a Beep). The video is going to be save in the same path and with the same name that the image of the screenshot. **Requirements**: have `ffmpeg` installed, and use a Unix based system  |
-|          **`Tab`**    | To toggle between your screen and a blackboard mode. By the way, your drawings will persist between the modes                                                                                                                                                                                                                                                              |
-|        **`Space`**        | To toggle the visibility of the elements of the screen: hide the status bar, hide all or show all                                                                                                                                                                                                                                                                          |
+|         Key/Event         | Function                                                                                                                                                                                                                                                                                                                                                                                                     |
+|:-------------------------:|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|     **`Mouse Wheel`**     | To zoom in and zoom out                                                                                                                                                                                                                                                                                                                                                                                      |
+|        **`Shift`**        | When it's zoomed in, if you press and hold the key, the screen will not follow the mouse, so you can freely move it around in that part of the screen (for drawing, for example). When you release it, it will continue following the mouse                                                                                                                                                                  |
+|      **`.`** (period)     | To toggle the "Flashlight effect" on the cursor.                                                                                                                                                                                                                                                                                                                                                             |
+| **`Shift + Mouse Wheel`** | **When the flashlight effect is turn on**, this will increase/decrease the size of the "light"                                                                                                                                                                                                                                                                                                               |
+|          **`S`**          | Save the current work to an image, which will be stored in the standard Pictures folder (or the current path if not found). The computer will *beep* if the image was correctly saved                                                                                                                                                                                                                        |
+|      **`Shift + S`**      | Save the current work to the clipboard. The computer will *beep* once the mapping is pressed                                                                                                                                                                                                                                                                                                                 |
+|       **`-`** (dash)      | Start/stop recording. A video will be produced, but it may take some time for rendering (You'll know when it finished rendering when the recording indicator of the status bar goes away and you listen a Beep). The video is going to be save in the same path and with the same name that the image of the screenshot. **Requirements**: have `ffmpeg` installed, and use a Unix based system              |
+|         **`Tab`**         | To toggle between your screen and a blackboard mode. By the way, your drawings will persist between the modes                                                                                                                                                                                                                                                                                                |
+|        **`Space`**        | To toggle the visibility of the elements of the screen: hide the status bar, hide all or show all                                                                                                                                                                                                                                                                                                            |
 |         **`ESC`**         | To **finish writing text** (if you're writing), **exit the "delete a drawing" mode** (if it's on), **exit the "pick a color" mode**, **disable the 'hide all' mode** (if it's on), **disable the mouse flashlight** (if it's on), **restore zoom** (if you are zoomed in), **stop recording**, or **quit/exit** (If you are not zoomed in, not writing text, not deleting a drawing, nor in flashlight mode) |
 
 ### Available Drawing Modes
@@ -72,18 +72,18 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 
 ### Change the color of the lines
 
-|   Key   | Function                   |
-|:-------:|----------------------------|
-| **`R`** | To change color to Red     |
-| **`G`** | To change color to Green   |
-| **`B`** | To change color to Blue    |
-| **`C`** | To change color to Cyan    |
-| **`M`** | To change color to Magenta |
-| **`Y`** | To change color to Yellow  |
-| **`O`** | To change color to Orange  |
-| **`W`** | To change color to White   |
-| **`D`** | To change color to Black   |
-| **`P`** | To pick a color from the screen   |
+|   Key   | Function                        |
+|:-------:|---------------------------------|
+| **`R`** | To change color to Red          |
+| **`G`** | To change color to Green        |
+| **`B`** | To change color to Blue         |
+| **`C`** | To change color to Cyan         |
+| **`M`** | To change color to Magenta      |
+| **`Y`** | To change color to Yellow       |
+| **`O`** | To change color to Orange       |
+| **`W`** | To change color to White        |
+| **`D`** | To change color to Black        |
+| **`P`** | To pick a color from the screen |
 
 ### Change the size of the lines
 |   Key   | Function                        |
