@@ -247,6 +247,10 @@ class ZoomWidget : public QWidget
 
     ZoomWidgetScreenOpts _screenOpts;
 
+    // Color that was active before the 'pick a color' mode (so that the color
+    // can be reverted after exiting that mode)
+    QColor _colorBeforePickColorMode;
+
     QProcess ffmpeg;
     QTimer *recordTimer;
     QFile *recordTempFile;

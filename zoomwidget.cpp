@@ -1154,6 +1154,14 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 
 void ZoomWidget::pickColorMode()
 {
+  if(_state == STATE_COLOR_PICKER) {
+    _state = STATE_MOVING;
+    _activePen.setColor(_colorBeforePickColorMode);
+    return;
+  }
+
+  _colorBeforePickColorMode = _activePen.color();
+
   if(_screenOpts == SCREENOPTS_HIDE_ALL || _state != STATE_MOVING)
     return;
 
@@ -1237,7 +1245,7 @@ void ZoomWidget::escapeKeyFunction()
 {
   if(_state == STATE_COLOR_PICKER){
     _state = STATE_MOVING;
-    _activePen.setColor(QCOLOR_RED);
+    _activePen.setColor(_colorBeforePickColorMode);
   } else if(_state == STATE_DELETING){
     _state = STATE_MOVING;
   } else if(_flashlightMode) {
