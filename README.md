@@ -231,3 +231,4 @@ make
 - Magnifying glass icon: Research or Magnifying Glass Flat Icon Vector.svg from Wikimedia Commons by Videoplasty.com, CC-BY-SA 4.0
 - Pencil: The "Pencil" icon used by MobiText from Wikimedia Commons by Gavinstubbs09, CC-BY-SA-3.0
 - Color pallet/scheme: [yeun/open-color](https://github.com/yeun/open-color)
+- [Color picker mouse icon](https://github.com/ful1e5/BreezeX_Cursor/blob/main/bitmaps/BreezeX-Dark/color-picker.png)

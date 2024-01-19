@@ -782,8 +782,17 @@ void ZoomWidget::updateCursorShape()
   QCursor blank     = QCursor(Qt::BlankCursor);
   QCursor waiting   = QCursor(Qt::WaitCursor);
 
+  QPixmap pickColorPixmap("./resources/color-picker-32.png");
+  if (pickColorPixmap.isNull()) printf("[ERROR] Failed to load pixmap for custom cursor (color-picker)\n");
+  QCursor pickColor = QCursor(pickColorPixmap, 0, pickColorPixmap.height()-1);
+
   if(isFFmpegRunning()) {
     setCursor(waiting);
+    return;
+  }
+
+  if(_state == STATE_COLOR_PICKER){
+    setCursor(pickColor);
     return;
   }
 
