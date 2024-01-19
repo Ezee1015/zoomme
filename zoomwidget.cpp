@@ -354,7 +354,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   const QRect rect = QRect(x, y, w, h);
 
   // Draw Image
-  // const QImage img = QImage("./resources/Icon.png");
+  // const QImage img = QImage(":/resources/Icon.png");
   // screenPainter->drawImage(
   //                           QRect(xImage, yImage, sizeImage, sizeImage),
   //                           img,
@@ -782,7 +782,7 @@ void ZoomWidget::updateCursorShape()
   QCursor blank     = QCursor(Qt::BlankCursor);
   QCursor waiting   = QCursor(Qt::WaitCursor);
 
-  QPixmap pickColorPixmap("./resources/color-picker-32.png");
+  QPixmap pickColorPixmap(":/resources/color-picker-32.png");
   if (pickColorPixmap.isNull()) printf("[ERROR] Failed to load pixmap for custom cursor (color-picker)\n");
   QCursor pickColor = QCursor(pickColorPixmap, 0, pickColorPixmap.height()-1);
 

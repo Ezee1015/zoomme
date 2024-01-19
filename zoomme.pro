@@ -10,6 +10,8 @@ TARGET = zoomme
 TEMPLATE = app
 
 
+RESOURCES += resources.qrc
+
 SOURCES += main.cpp\
         zoomwidget.cpp
 

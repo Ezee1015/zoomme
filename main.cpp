@@ -35,7 +35,7 @@ void printHelp(const int exitStatus, const char* errorMsg){
 int main(int argc, char *argv[])
 {
   QApplication a(argc, argv);
-  QSystemTrayIcon tray = QSystemTrayIcon(QIcon("./resources/Icon.png"));
+  QSystemTrayIcon tray = QSystemTrayIcon(QIcon(":/resources/Icon.png"));
   tray.setVisible(true);
   tray.show();
 
