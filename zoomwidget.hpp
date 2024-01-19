@@ -189,30 +189,41 @@ class ZoomWidget : public QWidget
 
     QClipboard *clipboard;
 
-    // Be aware that when scaling is enabled, _desktopPixmap works with the REAL
-    // size of the screen, while the other variables work with the SCALED size
-    // of the screen
+    // Note: When scaling is enabled (such as HiDPI with Graphic Server scaling
+    // in X11 or Wayland), _desktopPixmap works with the REAL size of the
+    // screen, while other variables work with the SCALED size.
+
+    // This program operates with the scaled size of the screen. However,
+    // _desktopPixmap, to maintain image quality, is saved with the original
+    // resolution (REAL size of the screen). When painting _desktopPixmap, it
+    // overlays the REAL size image on the SCALED size monitor without losing
+    // quality.
 
     // Desktop pixmap properties.
-    QScreen   *_desktopScreen;
-    QSize     _screenSize; // resolution of the scaled size of the monitor
-    // The size of the pixmap should be the REAL size of the monitor when taking
-    // a picture of the desktop (instead of taking the size of the scaled
-    // monitor)
-    QPixmap		_desktopPixmap;
+    QScreen *_desktopScreen;
+    QSize _screenSize;                // Resolution of the scaled monitor
+
+    // The size of the pixmap should be the REAL size of the monitor when
+    // capturing the desktop image (instead of taking the size of the scaled
+    // monitor).
+    QPixmap _desktopPixmap;
+
     // Zoom movement
-    QPoint		_desktopPixmapPos;
-    // Pixmap size for zooming (when taking a picture of the desktop, is
-    // referenced with the resolution of the scaled size of the monitor)
-    QSize		_desktopPixmapSize;
-    QSize  	_desktopPixmapOriginalSize;
+    QPoint _desktopPixmapPos;
+
+    // Pixmap size for zooming (referenced with the resolution of the scaled
+    // size of the monitor when capturing desktop)
+    QSize _desktopPixmapSize;
+    QSize _desktopPixmapOriginalSize;
+
     // Zooming scale
-    float		_desktopPixmapScale;
+    float _desktopPixmapScale;
 
-    // Pixmap shown in the screen. This can either be the _desktopPixmap, or the
-    // blackboard if it's activated the _boardMode
-    QPixmap		_drawnPixmap;
+    // Pixmap shown on the screen. This can either be _desktopPixmap or the
+    // blackboard if _boardMode is activated, with the drawings on top.
+    QPixmap _drawnPixmap;
 
+    // Save path for exporting the screenshot
     QString    savePath;
 
     // User objects.
@@ -251,6 +262,7 @@ class ZoomWidget : public QWidget
     // can be reverted after exiting that mode)
     QColor _colorBeforePickColorMode;
 
+    // Recording
     QProcess ffmpeg;
     QTimer *recordTimer;
     QFile *recordTempFile;
