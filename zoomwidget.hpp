@@ -166,11 +166,13 @@ class ZoomWidget : public QWidget
     explicit ZoomWidget(QWidget *parent = 0);
     ~ZoomWidget();
 
-    void grabDesktop(bool liveMode);
-    bool grabImage(QString path, FitImage config);
+    bool restoreStateFromFile(QString path);
 
     // By passing an empty QString, sets the argument to the default
     QString initializeSaveFile(QString path, QString name, QString ext);
+
+    void grabDesktop(bool liveMode, bool highDpiScaling);
+    bool grabImage(QString path, FitImage config);
 
   protected:
     virtual void paintEvent(QPaintEvent *event);
@@ -321,6 +323,8 @@ class ZoomWidget : public QWidget
     // the screen, if it's false, it will return the position relative to the
     // pixmap
     void getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h, bool posRelativeToScreen);
+
+    void saveStateToFile();
 };
 
 #endif // ZOOMWIDGET_HPP

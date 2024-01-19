@@ -70,6 +70,171 @@ ZoomWidget::~ZoomWidget()
   delete ui;
 }
 
+void ZoomWidget::saveStateToFile()
+{
+  QString outputFile;
+  QFileInfo outputScreenshotFile = QFileInfo(savePath);
+  outputFile.append(outputScreenshotFile.path() + "/");
+  outputFile.append(outputScreenshotFile.completeBaseName());
+  outputFile.append(".zoomme");
+
+  QFile file(outputFile);
+  if (!file.open(QIODevice::WriteOnly))
+   return;
+
+  QDataStream out(&file);
+  // There should be the same arguments that the restoreStateToFile()
+  out << _screenSize
+      << _desktopPixmap
+      << _desktopPixmapPos
+      << _desktopPixmapSize
+      << _desktopPixmapOriginalSize
+      << _desktopPixmapScale
+      << savePath
+      << _liveMode
+      << _screenOpts
+      << _drawMode
+      << _activePen
+      << _userRects.size()
+      << _userLines.size()
+      << _userArrows.size()
+      << _userEllipses.size()
+      << _userTexts.size()
+      << _userFreeForms.size()
+      << _userHighlights.size();
+
+  // Save the drawings
+  // Rectangles
+  for(int i=0; i<_userRects.size(); i++)
+      out << _userRects.at(i).startPoint << _userRects.at(i).endPoint << _userRects.at(i).pen;
+  // Lines
+  for(int i=0; i<_userLines.size(); i++)
+      out << _userLines.at(i).startPoint << _userLines.at(i).endPoint << _userLines.at(i).pen;
+  // Arrows
+  for(int i=0; i<_userArrows.size(); i++)
+      out << _userArrows.at(i).startPoint << _userArrows.at(i).endPoint << _userArrows.at(i).pen;
+  // Ellipses
+  for(int i=0; i<_userEllipses.size(); i++)
+      out << _userEllipses.at(i).startPoint << _userEllipses.at(i).endPoint << _userEllipses.at(i).pen;
+  // Texts
+  for(int i=0; i<_userTexts.size(); i++){
+    out << _userTexts.at(i).data.startPoint << _userTexts.at(i).data.endPoint << _userTexts.at(i).data.pen;
+    out << _userTexts.at(i).font << _userTexts.at(i).caretPos << _userTexts.at(i).text;
+  }
+  // Free Forms
+  for(int i=0; i<_userFreeForms.size(); i++){
+    out << _userFreeForms.at(i).points.size();
+    for(int x=0; x<_userFreeForms.at(i).points.size(); x++)
+      out << _userFreeForms.at(i).points.at(x);
+    out << _userFreeForms.at(i).pen << _userFreeForms.at(i).active;
+  }
+  // Highlights
+  for(int i=0; i<_userHighlights.size(); i++)
+      out << _userHighlights.at(i).startPoint << _userHighlights.at(i).endPoint << _userHighlights.at(i).pen;
+
+  QApplication::beep();
+}
+
+bool ZoomWidget::restoreStateFromFile(QString path)
+{
+  QFile file(path);
+  if (!file.open(QIODevice::ReadOnly))
+   return false;
+
+  long long userRectsCount      = 0,
+            userLinesCount      = 0,
+            userArrowsCount     = 0,
+            userEllipsesCount   = 0,
+            userTextsCount      = 0,
+            userFreeFormsCount  = 0,
+            userHighlightsCount = 0;
+
+
+  QDataStream in(&file);
+  // There should be the same arguments that the saveStateToFile()
+  in  >> _screenSize
+      >> _desktopPixmap
+      >> _desktopPixmapPos
+      >> _desktopPixmapSize
+      >> _desktopPixmapOriginalSize
+      >> _desktopPixmapScale
+      >> savePath
+      >> _liveMode
+      >> _screenOpts
+      >> _drawMode
+      >> _activePen
+      >> userRectsCount
+      >> userLinesCount
+      >> userArrowsCount
+      >> userEllipsesCount
+      >> userTextsCount
+      >> userFreeFormsCount
+      >> userHighlightsCount;
+
+  // Clear the drawings
+  _userRects.clear();
+  _userLines.clear();
+  _userArrows.clear();
+  _userEllipses.clear();
+  _userTexts.clear();
+  _userFreeForms.clear();
+  _userHighlights.clear();
+
+  // Read the drawings
+  // Rectangles
+  for(int i=0; i<userRectsCount; i++){
+    UserObjectData objectData;
+    in >> objectData.startPoint >> objectData.endPoint >> objectData.pen;
+    _userRects.append(objectData);
+  }
+  // Lines
+  for(int i=0; i<userLinesCount; i++){
+    UserObjectData objectData;
+    in >> objectData.startPoint >> objectData.endPoint >> objectData.pen;
+    _userLines.append(objectData);
+  }
+  // Arrows
+  for(int i=0; i<userArrowsCount; i++){
+    UserObjectData objectData;
+    in >> objectData.startPoint >> objectData.endPoint >> objectData.pen;
+    _userArrows.append(objectData);
+  }
+  // Ellipses
+  for(int i=0; i<userEllipsesCount; i++){
+    UserObjectData objectData;
+    in >> objectData.startPoint >> objectData.endPoint >> objectData.pen;
+    _userEllipses.append(objectData);
+  }
+  // Texts
+  for(int i=0; i<userTextsCount; i++){
+    UserTextData textData;
+    in >> textData.data.startPoint >> textData.data.endPoint >> textData.data.pen;
+    in >> textData.font >> textData.caretPos >> textData.text;
+    _userTexts.append(textData);
+  }
+  // Free forms
+  for(int i=0; i<userFreeFormsCount; i++){
+    UserFreeFormData freeFormData;
+    long long freeFormPointsCount = 0;
+    in >> freeFormPointsCount;
+    for(int x=0; x<freeFormPointsCount; x++){
+      QPoint point;
+      in >> point;
+      freeFormData.points.append(point);
+    }
+    in >> freeFormData.pen >> freeFormData.active;
+    _userFreeForms.append(freeFormData);
+  }
+  // Highlights
+  for(int i=0; i<userHighlightsCount; i++){
+    UserObjectData objectData;
+    in >> objectData.startPoint >> objectData.endPoint >> objectData.pen;
+    _userHighlights.append(objectData);
+  }
+
+  return true;
+}
+
 bool ZoomWidget::createVideoFFmpeg()
 {
   // Path to the output file...
@@ -1122,17 +1287,23 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Z: _drawMode = DRAWMODE_LINE;      break;
     case Qt::Key_X: _drawMode = DRAWMODE_RECT;      break;
     case Qt::Key_A: _drawMode = DRAWMODE_ARROW;     break;
-    case Qt::Key_E: _drawMode = DRAWMODE_ELLIPSE;   break;
     case Qt::Key_T: _drawMode = DRAWMODE_TEXT;      break;
     case Qt::Key_F: _drawMode = DRAWMODE_FREEFORM;  break;
     case Qt::Key_H: _drawMode = DRAWMODE_HIGHLIGHT; break;
 
+    case Qt::Key_E:
+                    if(_shiftPressed)
+                      saveStateToFile();
+                    else
+                      _drawMode = DRAWMODE_ELLIPSE;
+                    break;
+
     case Qt::Key_S:
-      if(_shiftPressed)
-        saveToClipboard();
-      else
-        saveToImage();
-      break;
+                    if(_shiftPressed)
+                      saveToClipboard();
+                    else
+                      saveToImage();
+                    break;
 
     case Qt::Key_U:      undoLastDrawing();       break;
     case Qt::Key_Q:      clearAllDrawings();      break;
@@ -1283,11 +1454,20 @@ void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
   }
 }
 
-void ZoomWidget::grabDesktop(bool liveMode)
+void ZoomWidget::grabDesktop(bool liveMode, bool highDpiScaling)
 {
   _liveMode = liveMode;
 
-  _desktopPixmap = _desktopScreen->grabWindow(0);
+  if(highDpiScaling) {
+    _desktopPixmap = _desktopScreen->grabWindow(0);
+  } else {
+    // When there's scaling, it will take the size of the real monitor, so I
+    // paint it overt a pixmap with the defined sized
+    _desktopPixmap = QPixmap(_screenSize);
+    QPainter painter(&_desktopPixmap);
+    painter.drawPixmap(0, 0, _desktopScreen->grabWindow(0));
+    painter.end();
+  }
 
   if(!liveMode)
     showFullScreen();

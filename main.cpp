@@ -26,6 +26,8 @@ void printHelp(const int exitStatus, const char* errorMsg){
   printf("                    -w                  Force to fit to the screen's width\n");
   printf("                    -h                  Force to fit to the screen's height\n");
   printf("                    --replace-on-save   This will replace the source image (autocompletes -p, -e and -n flags).\n");
+  printf("  -r [path/to/file]         Load/Restore the state of the program saved in that file. It should be a '.zoomme' file\n");
+  printf("  --highDpiScaling          Specify to not scale down the desktop image when there's high Dpi Scaling. This has some bugs and it's not reliable (specially when exporting to a .zoomme file\n");
 
   printf("\n  For more information, visit https://github.com/Ezee1015/zoomme\n");
 
@@ -43,7 +45,9 @@ int main(int argc, char *argv[])
   QString savePath;
   QString saveName;
   QString saveExtension;
+  QString backupFile;
   bool liveMode = false;
+  bool highDpiScaling = false;
   FitImage fitToWidth = FIT_AUTO;
   // Parsing arguments
   for(int i=1; i<argc ; ++i){
@@ -135,6 +139,17 @@ int main(int argc, char *argv[])
       saveExtension = argv[++i];
     }
 
+    else if(strcmp(argv[i], "-r") == 0) {
+      backupFile = argv[++i];
+
+      if(QFileInfo(backupFile).suffix() != "zoomme")
+        printHelp(EXIT_FAILURE, "It's not a '.zoomme' file");
+    }
+
+    else if(strcmp(argv[i], "--highDpiScaling") == 0) {
+      highDpiScaling = true;
+    }
+
     else {
       QString textError;
       textError.append("Unknown flag: ");
@@ -152,14 +167,19 @@ int main(int argc, char *argv[])
   w.setAttribute(Qt::WA_TranslucentBackground, true);
   w.show();
 
-  // Set the path, name and extension for saving the file
-  QString saveFileError = w.initializeSaveFile(savePath, saveName, saveExtension);
-  if(!saveFileError.isEmpty()) printHelp(EXIT_FAILURE, qPrintable(saveFileError));
+  if(!backupFile.isEmpty()) {
+    if(!w.restoreStateFromFile(backupFile))
+      printHelp(EXIT_FAILURE, "Couldn't restore the state from the file");
+  } else {
+    // Set the path, name and extension for saving the file
+    QString saveFileError = w.initializeSaveFile(savePath, saveName, saveExtension);
+    if(!saveFileError.isEmpty()) printHelp(EXIT_FAILURE, qPrintable(saveFileError));
 
-  if(img.isEmpty()) w.grabDesktop(liveMode);
-  else {
-    if (!w.grabImage(img, fitToWidth))
-      printHelp(EXIT_FAILURE, "Couldn't open the image");
+    if(img.isEmpty()) w.grabDesktop(liveMode, highDpiScaling);
+    else {
+      if (!w.grabImage(img, fitToWidth))
+        printHelp(EXIT_FAILURE, "Couldn't open the image");
+    }
   }
 
   QApplication::beep();
