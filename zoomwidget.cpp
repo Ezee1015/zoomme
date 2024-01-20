@@ -842,6 +842,8 @@ void ZoomWidget::removeFormBehindCursor(QPoint cursorPos)
 
 void ZoomWidget::mousePressEvent(QMouseEvent *event)
 {
+  (void) event;
+
   if(_screenOpts == SCREENOPTS_HIDE_ALL)
     return;
 
@@ -886,6 +888,8 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
 
 void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
 {
+  (void) event;
+
   if(_screenOpts == SCREENOPTS_HIDE_ALL)
     return;
 
@@ -985,6 +989,8 @@ void ZoomWidget::updateCursorShape()
 
 void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 {
+  (void) event;
+
   // If the app lost focus, request it again
   if(!QWidget::isActiveWindow())
     QWidget::activateWindow();
