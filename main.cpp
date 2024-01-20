@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
       QString textError;
       textError.append("Unknown flag: ");
       textError.append(argv[i]);
-      printHelp(EXIT_FAILURE, QStringToString(textError));
+      printHelp(EXIT_FAILURE, QSTRING_TO_STRING(textError));
     }
   }
 

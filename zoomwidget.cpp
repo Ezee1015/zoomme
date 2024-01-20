@@ -388,7 +388,7 @@ bool ZoomWidget::isDrawingHovered(int drawType, int vectorPos)
 {
   // Only if it's deleting or if it's trying to modify a text
   bool isDeleting       = (_state == STATE_DELETING);
-  if(!isDeleting && !isInEditTextMode)
+  if(!isDeleting && !IS_IN_EDIT_TEXT_MODE)
     return false;
 
   // This is the position of the form (in the current draw mode) in the vector,
@@ -433,7 +433,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   QString text;
 
   // Line 1 -ALWAYS DISPLAYING-
-  if(isDisabledMouseTracking)
+  if(IS_DISABLED_MOUSE_TRACKING)
     text.append(BLOCK_ICON);
   else
     text.append( (_desktopPixmapScale == 1.0f) ? NO_ZOOM_ICON : ZOOM_ICON );
@@ -461,13 +461,13 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
     case STATE_DELETING:     text.append("\n-- DELETING --"); h += lineHeight; break;
     case STATE_COLOR_PICKER: text.append("\n-- PICK COLOR --"); h += lineHeight; break;
   };
-  if(isInEditTextMode){
+  if(IS_IN_EDIT_TEXT_MODE){
     text += "\n-- SELECT --";
     h += lineHeight;
   }
 
   // Last Line
-  if(isRecording()){
+  if(IS_RECORDING){
     text.append("\n");
     text.append(RECORD_ICON);
     text.append(" Recording...");
@@ -533,7 +533,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   // Settings
   screenPainter->setPen(_activePen);
   QFont font; font.setPixelSize(fontSize); screenPainter->setFont(font);
-  changePenWidthFromPainter(screenPainter, penWidth);
+  CHANGE_PEN_WIDTH_FROM_PAINTER(screenPainter, penWidth);
 
   // Background (highlight) to improve contrast
   QColor color = (_activePen.color() == QCOLOR_BLACK) ? QCOLOR_WHITE : QCOLOR_BLACK;
@@ -687,7 +687,7 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
     else text.insert(textObject.caretPos, '|');
     painter->drawText(fixQRectForText(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
 
-    changePenWidthFromPainter(painter, 1);
+    CHANGE_PEN_WIDTH_FROM_PAINTER(painter, 1);
     painter->drawRect(x, y, w, h);
   }
 
@@ -724,7 +724,7 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
         break;
       case DRAWMODE_TEXT:
         {
-          changePenWidthFromPainter(painter, 1);
+          CHANGE_PEN_WIDTH_FROM_PAINTER(painter, 1);
           QFont font; font.setPixelSize(_activePen.width() * 4); painter->setFont(font);
           painter->drawRect(x, y, width, height);
           QString defaultText;
@@ -791,12 +791,12 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   // By the way, ¿Why would you draw when the flashlight effect is enabled? I
   // don't know why I'm allowing this... You can't even see the cursor!
   if(_flashlightMode){
-    drawDrawnPixmap(screen);
+    DRAW_DRAWN_PIXMAP(screen);
     drawFlashlightEffect(&screen);
     drawActiveForm(&screen, true);
   } else{
     drawActiveForm(&pixmapPainter, false);
-    drawDrawnPixmap(screen);
+    DRAW_DRAWN_PIXMAP(screen);
   }
 
   drawStatus(&screen);
@@ -848,7 +848,7 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
   _mousePressed = true;
 
   if(_state == STATE_COLOR_PICKER){
-    _activePen.setColor(getColorUnderCursor());
+    _activePen.setColor(GET_COLOR_UNDER_CURSOR());
     _state = STATE_MOVING;
     update();
     return;
@@ -955,7 +955,7 @@ void ZoomWidget::updateCursorShape()
   if (pickColorPixmap.isNull()) printf("[ERROR] Failed to load pixmap for custom cursor (color-picker)\n");
   QCursor pickColor = QCursor(pickColorPixmap, 0, pickColorPixmap.height()-1);
 
-  if(isFFmpegRunning()) {
+  if(IS_FFMPEG_RUNNING) {
     setCursor(waiting);
     return;
   }
@@ -999,7 +999,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
   }
 
   if(_state == STATE_COLOR_PICKER){
-    _activePen.setColor(getColorUnderCursor());
+    _activePen.setColor(GET_COLOR_UNDER_CURSOR());
     update();
     return;
   }
@@ -1030,7 +1030,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 // The mouse pos shouldn't be fixed to the hdpi scaling
 void ZoomWidget::updateAtMousePos(QPoint mousePos)
 {
-  if(!isDisabledMouseTracking) {
+  if(!IS_DISABLED_MOUSE_TRACKING) {
     QPoint delta = mousePos - _lastMousePos;
 
     shiftPixmap(delta);
@@ -1313,16 +1313,16 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 
     case Qt::Key_S:
                     if(_shiftPressed)
-                      saveToClipboard();
+                      SAVE_TO_CLIPBOARD();
                     else
-                      saveToImage();
+                      SAVE_TO_IMAGE();
                     break;
 
     case Qt::Key_U:      undoLastDrawing();       break;
     case Qt::Key_Q:      clearAllDrawings();      break;
-    case Qt::Key_Tab:    switchBoardMode();       break;
-    case Qt::Key_Space:  cycleScreenOpts();       break;
-    case Qt::Key_Period: switchFlashlightMode();  break;
+    case Qt::Key_Tab:    SWITCH_BOARD_MODE();       break;
+    case Qt::Key_Space:  CYCLE_SCREEN_OPTS();       break;
+    case Qt::Key_Period: SWITCH_FLASHLIGHT_MODE();  break;
     case Qt::Key_Comma:  switchDeleteMode();      break;
     case Qt::Key_Escape: escapeKeyFunction();     break;
     case Qt::Key_Minus:  toggleRecording();       break;
@@ -1360,7 +1360,7 @@ void ZoomWidget::pickColorMode()
 
   _state = STATE_COLOR_PICKER;
 
-  _activePen.setColor(getColorUnderCursor());
+  _activePen.setColor(GET_COLOR_UNDER_CURSOR());
 }
 
 void ZoomWidget::switchDeleteMode()
@@ -1376,15 +1376,15 @@ void ZoomWidget::toggleRecording()
 {
   // In theory, ffmpeg blocks the thread, so it shouldn't be possible to toggle
   // the recording while ffmpeg is running. But, just in case, we check it
-  if(isFFmpegRunning())
+  if(IS_FFMPEG_RUNNING)
     return;
 
-  if(isRecording()){
+  if(IS_RECORDING){
     recordTimer->stop();
     if(createVideoFFmpeg()) {
       QApplication::beep();
     } else {
-      printf("[ERROR] Couldn't start ffmpeg or timeout occurred (10 sec.): %s\n", QStringToString(ffmpeg.errorString()));
+      printf("[ERROR] Couldn't start ffmpeg or timeout occurred (10 sec.): %s\n", QSTRING_TO_STRING(ffmpeg.errorString()));
       printf("[ERROR] Killing the ffmpeg process...\n");
       ffmpeg.terminate();
     }
@@ -1444,12 +1444,12 @@ void ZoomWidget::escapeKeyFunction()
   } else if(_flashlightMode) {
     _flashlightMode = false;
   } else if(_screenOpts == SCREENOPTS_HIDE_ALL) {
-    cycleScreenOpts();
+    CYCLE_SCREEN_OPTS();
   } else if(_desktopPixmapSize != _desktopPixmapOriginalSize) {
     _desktopPixmapScale = 1.0f;
     scalePixmapAt(QPoint(0,0));
     checkPixmapPos();
-  } else if(isRecording()){
+  } else if(IS_RECORDING){
     toggleRecording();
   } else {
     QApplication::beep();
@@ -1585,8 +1585,8 @@ QPoint ZoomWidget::getCursorPos(bool hdpiScaling) {
   QPoint point = mapFromGlobal(QCursor::pos());
 
   if(hdpiScaling){
-    point.setX(fixXForHDPIScaling(point.x()));
-    point.setY(fixYForHDPIScaling(point.y()));
+    point.setX(FIX_X_FOR_HDPI_SCALING(point.x()));
+    point.setY(FIX_Y_FOR_HDPI_SCALING(point.y()));
   }
 
   return point;
@@ -1595,15 +1595,15 @@ QPoint ZoomWidget::getCursorPos(bool hdpiScaling) {
 QPoint ZoomWidget::screenPointToPixmapPos(QPoint qpoint) {
   QPoint returnPoint = (qpoint - _desktopPixmapPos)/_desktopPixmapScale;
 
-  returnPoint.setX( fixXForHDPIScaling(returnPoint.x()) );
-  returnPoint.setY( fixYForHDPIScaling(returnPoint.y()) );
+  returnPoint.setX( FIX_X_FOR_HDPI_SCALING(returnPoint.x()) );
+  returnPoint.setY( FIX_Y_FOR_HDPI_SCALING(returnPoint.y()) );
 
   return returnPoint;
 }
 
 QPoint ZoomWidget::pixmapPointToScreenPos(QPoint qpoint) {
-  qpoint.setX( getXFromHDPIScaling(qpoint.x()) );
-  qpoint.setY( getYFromHDPIScaling(qpoint.y()) );
+  qpoint.setX( GET_X_FROM_HDPI_SCALING(qpoint.x()) );
+  qpoint.setY( GET_Y_FROM_HDPI_SCALING(qpoint.y()) );
 
   QPoint point = _desktopPixmapPos + qpoint * _desktopPixmapScale;
 
@@ -1611,8 +1611,8 @@ QPoint ZoomWidget::pixmapPointToScreenPos(QPoint qpoint) {
 }
 
 QSize ZoomWidget::pixmapSizeToScreenSize(QSize qsize){
-  qsize.setWidth(  getXFromHDPIScaling(qsize.width() ) );
-  qsize.setHeight( getYFromHDPIScaling(qsize.height()) );
+  qsize.setWidth(  GET_X_FROM_HDPI_SCALING(qsize.width() ) );
+  qsize.setHeight( GET_Y_FROM_HDPI_SCALING(qsize.height()) );
 
   return qsize * _desktopPixmapScale;
 }

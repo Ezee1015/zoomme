@@ -38,28 +38,28 @@
 // END OF CUSTOMIZATION
 
 // CODE
-#define QStringToString(string) string.toStdString().c_str()
+#define QSTRING_TO_STRING(string) string.toStdString().c_str()
 
 // The painter argument must be a pointer to the painter
-#define changePenWidthFromPainter(painter, width) \
+#define CHANGE_PEN_WIDTH_FROM_PAINTER(painter, width) \
   QPen tempPen = painter->pen(); tempPen.setWidth(width); painter->setPen(tempPen);
 
-#define drawDrawnPixmap(painter)                                   \
+#define DRAW_DRAWN_PIXMAP(painter)                                 \
   painter.drawPixmap(_desktopPixmapPos.x(), _desktopPixmapPos.y(), \
       _desktopPixmapSize.width(), _desktopPixmapSize.height(),     \
       _drawnPixmap);
 
-#define saveToImage() if(_drawnPixmap.save(savePath)) QApplication::beep();
-#define saveToClipboard()                        \
+#define SAVE_TO_IMAGE() if(_drawnPixmap.save(savePath)) QApplication::beep();
+#define SAVE_TO_CLIPBOARD()                      \
   do {                                           \
     clipboard->setImage(_drawnPixmap.toImage()); \
     QApplication::beep();                        \
   } while(0)
 
-#define switchFlashlightMode() _flashlightMode = !_flashlightMode;
-#define switchBoardMode()      _boardMode = !_boardMode;
+#define SWITCH_FLASHLIGHT_MODE() _flashlightMode = !_flashlightMode;
+#define SWITCH_BOARD_MODE()      _boardMode = !_boardMode;
 
-#define cycleScreenOpts()                                                       \
+#define CYCLE_SCREEN_OPTS()                                                     \
   if(_state==STATE_MOVING){                                                     \
     switch(_screenOpts){                                                        \
       case SCREENOPTS_HIDE_ALL:    _screenOpts = SCREENOPTS_SHOW_ALL;    break; \
@@ -68,7 +68,7 @@
     }                                                                           \
   }
 
-#define getColorUnderCursor() _drawnPixmap.toImage().pixel( screenPointToPixmapPos(getCursorPos(false)) )
+#define GET_COLOR_UNDER_CURSOR() _drawnPixmap.toImage().pixel( screenPointToPixmapPos(getCursorPos(false)) )
 
 // If there's no HDPI scaling, it will return the same value, because the real
 // and the scale resolution will be de same.
@@ -80,30 +80,31 @@
 // realScreenResolution   --------    x
 //
 // So 'x' = mousePos * (_desktopPixmap.size()/_desktopPixmapOriginalSize)
-#define fixXForHDPIScaling(point) (point * (_desktopPixmap.width()  / _desktopPixmapOriginalSize.width()) )
-#define fixYForHDPIScaling(point) (point * (_desktopPixmap.height() / _desktopPixmapOriginalSize.height()))
-// These macros revert the conversion that does fixYForHDPIScaling and
-// fixXForHDPIScaling.
-#define getXFromHDPIScaling(point) (point * (_desktopPixmapOriginalSize.width())  / _desktopPixmap.width() )
-#define getYFromHDPIScaling(point) (point * (_desktopPixmapOriginalSize.height()) / _desktopPixmap.height())
+#define FIX_X_FOR_HDPI_SCALING(point) (point * (_desktopPixmap.width()  / _desktopPixmapOriginalSize.width()) )
+#define FIX_Y_FOR_HDPI_SCALING(point) (point * (_desktopPixmap.height() / _desktopPixmapOriginalSize.height()))
+// These macros revert the conversion that does FIX_Y_FOR_HDPI_SCALING and
+// FIX_X_FOR_HDPI_SCALING.
+#define GET_X_FROM_HDPI_SCALING(point) (point * (_desktopPixmapOriginalSize.width())  / _desktopPixmap.width() )
+#define GET_Y_FROM_HDPI_SCALING(point) (point * (_desktopPixmapOriginalSize.height()) / _desktopPixmap.height())
 
-#define isInEditTextMode (               \
+#define IS_IN_EDIT_TEXT_MODE (           \
     (_state == STATE_MOVING) &&          \
     (_drawMode == DRAWMODE_TEXT) &&      \
     (_shiftPressed) &&                   \
     (_screenOpts != SCREENOPTS_HIDE_ALL) \
   )
-// The cursor pos shouln't be fixed to hdpi scaling
-#define isTextEditable(cursorPos) (      \
-    (isInEditTextMode) &&                \
-    (cursorOverForm(cursorPos) != -1)    \
-  )
-#define isDisabledMouseTracking (                             \
+#define IS_DISABLED_MOUSE_TRACKING (                          \
     (_state != STATE_TYPING && _shiftPressed) ||              \
     (_state == STATE_TYPING && _freezeDesktopPosWhileWriting) \
   )
-#define isRecording() (recordTimer->isActive())
-#define isFFmpegRunning() (ffmpeg.state() != QProcess::NotRunning)
+// The cursor pos shouln't be fixed to hdpi scaling
+#define isTextEditable(cursorPos) (      \
+    (IS_IN_EDIT_TEXT_MODE) &&            \
+    (cursorOverForm(cursorPos) != -1)    \
+  )
+
+#define IS_RECORDING (recordTimer->isActive())
+#define IS_FFMPEG_RUNNING (ffmpeg.state() != QProcess::NotRunning)
 
 namespace Ui {
   class zoomwidget;
@@ -153,7 +154,7 @@ enum ZoomWidgetDrawMode {
   DRAWMODE_HIGHLIGHT,
 };
 
-// When modifying this enum, don't forget to modify the cycleScreenOpts macro
+// When modifying this enum, don't forget to modify the CYCLE_SCREEN_OPTS macro
 enum ZoomWidgetScreenOpts {
   SCREENOPTS_HIDE_ALL, // Only show the background. This disables some functions
                        // too (like the mouse actions and changing modes)
