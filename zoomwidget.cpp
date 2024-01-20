@@ -1076,7 +1076,7 @@ QString ZoomWidget::initializeSaveFile(QString path, QString name, QString ext)
   // Path
   QDir folderPath;
   if(path.isEmpty()){
-    QString picturesFolder = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
+    QString picturesFolder = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
     folderPath = (picturesFolder.isEmpty()) ? QDir::currentPath() : picturesFolder;
   } else {
     folderPath = QDir(path);
