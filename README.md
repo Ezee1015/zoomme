@@ -175,7 +175,7 @@ make
 <summary><b>Set the extension of the exported image (when pressing the 's' key)</b></summary><p>
 
 ```bash
-./zoomme -e jpg
+./zoomme -e:i jpg
 ```
 
 > By default, the extension will be: `png`
@@ -185,6 +185,19 @@ make
 
 <!-- Start 6 -->
 <details>
+<summary><b>Set the extension of the recorded video (when pressing the '-' key)</b></summary><p>
+
+```bash
+./zoomme -e:v mkv
+```
+
+> By default, the extension will be: `mp4`
+
+</p></details>
+<!-- End 6 -->
+
+<!-- Start 7 -->
+<details>
 <summary><b>***Experimental*** -- Use a transparent background. No zooming allowed, only drawing</b></summary><p>
 
 ```bash
@@ -192,9 +205,9 @@ make
 ```
 
 </p></details>
-<!-- End 6 -->
+<!-- End 7 -->
 
-<!-- Start 7 -->
+<!-- Start 8 -->
 <details>
 <summary><b>Use an image as the background (instead of the desktop)</b></summary><p>
 
@@ -203,11 +216,12 @@ make
 ```bash
 ./zoomme -i path/to/image
 ```
+<!-- End 8 -->
 
 #### Additional arguments:
 - You can force the image to fit the screen's width or hight with `-w` or `-h` after providing the image path, like this: `./zoomme -i path/to/image -w`, if you do not providing anything, it automatically detect the best option.
 
-- You can overwrite the image provided when saving by doing this: `./zoomme -i path/to/image --replace-on-save`. This will autocomplete the `-p`, `-n` and `-e` arguments for you. How kind :)
+- You can overwrite the image provided when saving by doing this: `./zoomme -i path/to/image --replace-on-save`. This will autocomplete the `-p`, `-n` and `-e:i` arguments for you. How kind :)
 
 </p></details>
 <!-- End 7 -->

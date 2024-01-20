@@ -20,7 +20,8 @@ void printHelp(const int exitStatus, const char* errorMsg){
   printf("  --help                    Display this help message\n");
   printf("  -p [path/to/folder]       Specify the path where to save the exported (saved) image (default: Pictures folder)\n");
   printf("  -n [file_name]            Specify the name of the exported (saved) image (default: Zoomme {date})\n");
-  printf("  -e [extension]            Specify the extension of the exported (saved) image (default: png)\n");
+  printf("  -e:i [extension]          Specify the extension of the exported (saved) image (default: png)\n");
+  printf("  -e:v [extension]          Specify the extension of the exported (saved) video file (default: mp4)\n");
   printf("  -l                        EXPERIMENTAL: Not use a background (live mode/transparent). In this mode there's no zooming, only drawings allowed\n");
   printf("  -i <image_path> [opts]    Specify the path to an image as the background, instead of the desktop. It will automatically fit it to the screen\n");
   printf("                    -w                  Force to fit to the screen's width\n");
@@ -43,7 +44,8 @@ int main(int argc, char *argv[])
   QString img;
   QString savePath;
   QString saveName;
-  QString saveExtension;
+  QString saveImgExt;
+  QString saveVidExt;
   QString backupFile;
   bool liveMode = false;
   FitImage fitToWidth = FIT_AUTO;
@@ -97,14 +99,14 @@ int main(int argc, char *argv[])
         printHelp(EXIT_FAILURE, "Saving path already provided");
       if(saveName != "")
         printHelp(EXIT_FAILURE, "Saving name already provided");
-      if(saveExtension != "")
+      if(saveImgExt != "")
         printHelp(EXIT_FAILURE, "Saving extension already provided");
 
       QFileInfo imgInfo = QFileInfo(img);
 
       savePath      = imgInfo.path();
       saveName      = imgInfo.completeBaseName();
-      saveExtension = imgInfo.suffix();
+      saveImgExt    = imgInfo.suffix();
     }
 
     else if(strcmp(argv[i], "-p") == 0) {
@@ -127,14 +129,24 @@ int main(int argc, char *argv[])
       saveName = argv[++i];
     }
 
-    else if(strcmp(argv[i], "-e") == 0) {
+    else if(strcmp(argv[i], "-e:i") == 0) {
       if((i+1) == argc)
-        printHelp(EXIT_FAILURE, "Saving extension not provided");
+        printHelp(EXIT_FAILURE, "Saving extension for the image not provided");
 
-      if(saveExtension != "")
+      if(saveImgExt != "")
         printHelp(EXIT_FAILURE, "Saving extension already provided");
 
-      saveExtension = argv[++i];
+      saveImgExt = argv[++i];
+    }
+
+    else if(strcmp(argv[i], "-e:v") == 0) {
+      if((i+1) == argc)
+        printHelp(EXIT_FAILURE, "Saving extension for the video file not provided");
+
+      if(saveVidExt != "")
+        printHelp(EXIT_FAILURE, "Saving extension fot the video file already provided");
+
+      saveVidExt = argv[++i];
     }
 
     else if(strcmp(argv[i], "-r") == 0) {
@@ -166,7 +178,7 @@ int main(int argc, char *argv[])
       printHelp(EXIT_FAILURE, "Couldn't restore the state from the file");
   } else {
     // Set the path, name and extension for saving the file
-    QString saveFileError = w.initializeSaveFile(savePath, saveName, saveExtension);
+    QString saveFileError = w.initFileConfig(savePath, saveName, saveImgExt, saveVidExt);
     if(!saveFileError.isEmpty()) printHelp(EXIT_FAILURE, qPrintable(saveFileError));
 
     if(img.isEmpty()) w.grabDesktop(liveMode);

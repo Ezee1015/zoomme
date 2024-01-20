@@ -24,7 +24,7 @@
 
 #define BLACKBOARD_COLOR QColor( 33,  37,  41)
 
-#define DATE_FORMAT_SAVED_IMAGE "dd-MM-yyyy hh.mm.ss"
+#define DATE_FORMAT_FOR_FILE "dd-MM-yyyy hh.mm.ss"
 
 #define BLOCK_ICON   "🔒"
 #define NO_ZOOM_ICON "⛶"
@@ -32,7 +32,6 @@
 #define RECORD_ICON  "●"
 
 #define RECORD_FPS 16
-#define RECORD_EXTENSION "mp4"
 #define RECORD_QUALITY 70 // 0-100
 #define RECORD_TMP_FILEPATH "/tmp/ZoomMe_video_bytes"
 // END OF CUSTOMIZATION
@@ -49,7 +48,7 @@
       _desktopPixmapSize.width(), _desktopPixmapSize.height(),     \
       _drawnPixmap);
 
-#define SAVE_TO_IMAGE() if(_drawnPixmap.save(savePath)) QApplication::beep();
+#define SAVE_TO_IMAGE() if(_drawnPixmap.save(_saveFilePath + "." + _imageExtension)) QApplication::beep();
 #define SAVE_TO_CLIPBOARD()                      \
   do {                                           \
     clipboard->setImage(_drawnPixmap.toImage()); \
@@ -173,7 +172,7 @@ class ZoomWidget : public QWidget
     bool restoreStateFromFile(QString path);
 
     // By passing an empty QString, sets the argument to the default
-    QString initializeSaveFile(QString path, QString name, QString ext);
+    QString initFileConfig(QString path, QString name, QString imgExt, QString vidExt);
 
     void grabDesktop(bool liveMode);
     bool grabImage(QString path, FitImage config);
@@ -229,8 +228,10 @@ class ZoomWidget : public QWidget
     // blackboard if _boardMode is activated, with the drawings on top.
     QPixmap _drawnPixmap;
 
-    // Save path for exporting the screenshot
-    QString    savePath;
+    // Save path for exporting the project
+    QString    _saveFilePath;
+    QString    _imageExtension;
+    QString    _videoExtension;
 
     // User objects.
     QVector<UserObjectData>    _userRects;

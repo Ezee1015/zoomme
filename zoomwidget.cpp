@@ -72,13 +72,7 @@ ZoomWidget::~ZoomWidget()
 
 void ZoomWidget::saveStateToFile()
 {
-  QString outputFile;
-  QFileInfo outputScreenshotFile = QFileInfo(savePath);
-  outputFile.append(outputScreenshotFile.path() + "/");
-  outputFile.append(outputScreenshotFile.completeBaseName());
-  outputFile.append(".zoomme");
-
-  QFile file(outputFile);
+  QFile file(_saveFilePath + ".zoomme");
   if (!file.open(QIODevice::WriteOnly))
    return;
 
@@ -91,7 +85,9 @@ void ZoomWidget::saveStateToFile()
       // << _desktopPixmapSize
       // << _desktopPixmapScale
       << _desktopPixmapOriginalSize
-      << savePath
+      << _saveFilePath
+      << _imageExtension
+      << _videoExtension
       << _liveMode
       << _screenOpts
       << _drawMode
@@ -160,7 +156,9 @@ bool ZoomWidget::restoreStateFromFile(QString path)
       // >> _desktopPixmapSize
       // >> _desktopPixmapScale
       >> _desktopPixmapOriginalSize
-      >> savePath
+      >> _saveFilePath
+      >> _imageExtension
+      >> _videoExtension
       >> _liveMode
       >> _screenOpts
       >> _drawMode
@@ -243,16 +241,6 @@ bool ZoomWidget::restoreStateFromFile(QString path)
 
 bool ZoomWidget::createVideoFFmpeg()
 {
-  // Path to the output file...
-  // Take the path and name of the screenshot image, and add the extension for
-  // the video
-  QString outputFile;
-  QFileInfo outputScreenshotFile = QFileInfo(savePath);
-  outputFile.append(outputScreenshotFile.path() + "/");
-  outputFile.append(outputScreenshotFile.completeBaseName());
-  outputFile.append(".");
-  outputFile.append(RECORD_EXTENSION);
-
   QString resolution;
   resolution.append(QString::number(_drawnPixmap.width()));
   resolution.append("x");
@@ -285,7 +273,7 @@ bool ZoomWidget::createVideoFFmpeg()
     script.append("-c:a "     );  script.append("aac "          );
     script.append("-ab "      );  script.append("200k "         );
     script.append("-pix_fmt " );  script.append("yuv420p "      );
-    script.append("'" + outputFile + "'");
+    script.append("'" + _saveFilePath + "." + _videoExtension + "'");
 
   QList<QString> arguments;
   arguments << "-c";
@@ -1086,7 +1074,7 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
   update();
 }
 
-QString ZoomWidget::initializeSaveFile(QString path, QString name, QString ext)
+QString ZoomWidget::initFileConfig(QString path, QString name, QString imgExt, QString vidExt)
 {
   // Path
   QDir folderPath;
@@ -1101,20 +1089,21 @@ QString ZoomWidget::initializeSaveFile(QString path, QString name, QString ext)
 
   // Check if extension is supported
   QList supportedExtensions = QImageWriter::supportedImageFormats();
-  if( (!ext.isEmpty()) && (!supportedExtensions.contains(ext)) )
-    return "Extension not supported";
+  if( (!imgExt.isEmpty()) && (!supportedExtensions.contains(imgExt)) )
+    return "Image extension not supported";
 
   // Name
   QString fileName;
-  const QString date = QDateTime::currentDateTime().toString(DATE_FORMAT_SAVED_IMAGE);
+  const QString date = QDateTime::currentDateTime().toString(DATE_FORMAT_FOR_FILE);
   fileName = (name.isEmpty()) ? ("ZoomMe " + date) : name;
 
   // Extension
-  const char* defaultExtension = "png";
-  fileName += ".";
-  fileName += (ext.isEmpty()) ? defaultExtension : ext;
+  const char* defaultImgExt = "png";
+  _imageExtension += (imgExt.isEmpty()) ? defaultImgExt : imgExt;
+  const char* defaultVidExt = "mp4";
+  _videoExtension += (vidExt.isEmpty()) ? defaultVidExt : vidExt;
 
-  savePath = folderPath.absoluteFilePath(fileName);
+  _saveFilePath = folderPath.absoluteFilePath(fileName);
 
   return "";
 }
