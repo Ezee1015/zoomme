@@ -86,10 +86,11 @@ void ZoomWidget::saveStateToFile()
   // There should be the same arguments that the restoreStateToFile()
   out << _screenSize
       << _desktopPixmap
-      << _desktopPixmapPos
-      << _desktopPixmapSize
+      // I don't want to be zoomed in when restoring
+      // << _desktopPixmapPos
+      // << _desktopPixmapSize
+      // << _desktopPixmapScale
       << _desktopPixmapOriginalSize
-      << _desktopPixmapScale
       << savePath
       << _liveMode
       << _screenOpts
@@ -154,10 +155,11 @@ bool ZoomWidget::restoreStateFromFile(QString path)
   // There should be the same arguments that the saveStateToFile()
   in  >> _screenSize
       >> _desktopPixmap
-      >> _desktopPixmapPos
-      >> _desktopPixmapSize
+      // I don't want to be zoomed in when restoring
+      // >> _desktopPixmapPos
+      // >> _desktopPixmapSize
+      // >> _desktopPixmapScale
       >> _desktopPixmapOriginalSize
-      >> _desktopPixmapScale
       >> savePath
       >> _liveMode
       >> _screenOpts
@@ -170,6 +172,8 @@ bool ZoomWidget::restoreStateFromFile(QString path)
       >> userTextsCount
       >> userFreeFormsCount
       >> userHighlightsCount;
+
+  _desktopPixmapSize = _desktopPixmapOriginalSize;
 
   // Clear the drawings
   _userRects.clear();
