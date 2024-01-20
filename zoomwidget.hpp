@@ -68,8 +68,24 @@
     }                                                                           \
   }
 
-// This position in relative to the scaled resolution of the monitor
-#define getCursorPos() mapFromGlobal(QCursor::pos())
+#define getColorUnderCursor() _drawnPixmap.toImage().pixel( screenPointToPixmapPos(getCursorPos(false)) )
+
+// If there's no HDPI scaling, it will return the same value, because the real
+// and the scale resolution will be de same.
+// For example, the screen point of the cursor is relative to the resolution of
+// the scaled monitor, so I need to change it to the REAL position of the cursor
+// (without hdpi scaling) with 'The Rule of Three'...
+//
+// scaledScreenResolution -------- mousePos
+// realScreenResolution   --------    x
+//
+// So 'x' = mousePos * (_desktopPixmap.size()/_desktopPixmapOriginalSize)
+#define fixXForHDPIScaling(point) (point * (_desktopPixmap.width()  / _desktopPixmapOriginalSize.width()) )
+#define fixYForHDPIScaling(point) (point * (_desktopPixmap.height() / _desktopPixmapOriginalSize.height()))
+// These macros revert the conversion that does fixYForHDPIScaling and
+// fixXForHDPIScaling.
+#define getXFromHDPIScaling(point) (point * (_desktopPixmapOriginalSize.width())  / _desktopPixmap.width() )
+#define getYFromHDPIScaling(point) (point * (_desktopPixmapOriginalSize.height()) / _desktopPixmap.height())
 
 #define isInEditTextMode (               \
     (_state == STATE_MOVING) &&          \
@@ -77,6 +93,7 @@
     (_shiftPressed) &&                   \
     (_screenOpts != SCREENOPTS_HIDE_ALL) \
   )
+// The cursor pos shouln't be fixed to hdpi scaling
 #define isTextEditable(cursorPos) (      \
     (isInEditTextMode) &&                \
     (cursorOverForm(cursorPos) != -1)    \
@@ -87,20 +104,6 @@
   )
 #define isRecording() (recordTimer->isActive())
 #define isFFmpegRunning() (ffmpeg.state() != QProcess::NotRunning)
-
-// From a point in the screen (like the mouse cursor, because its position
-// is relative to the screen, not the pixmap), it returns the position in the
-// pixmap (which can be zoomed in and moved)
-#define screenPointToPixmapPos(qpoint) ((qpoint - _desktopPixmapPos)/_desktopPixmapScale)
-
-// From a point in the pixmap (like the position of the drawings), it
-// returns the position relative to the screen
-#define pixmapPointToScreenPos(qpoint) (_desktopPixmapPos + qpoint * _desktopPixmapScale)
-
-// From the width and height of a form in the pixmap, it returns the correct
-// width and height for the form in the screen applying the scale factor to
-// them.
-#define pixmapSizeToScreenSize(qsize)  (qsize * _desktopPixmapScale)
 
 namespace Ui {
   class zoomwidget;
@@ -171,7 +174,7 @@ class ZoomWidget : public QWidget
     // By passing an empty QString, sets the argument to the default
     QString initializeSaveFile(QString path, QString name, QString ext);
 
-    void grabDesktop(bool liveMode, bool highDpiScaling);
+    void grabDesktop(bool liveMode);
     bool grabImage(QString path, FitImage config);
 
   protected:
@@ -274,9 +277,10 @@ class ZoomWidget : public QWidget
 
     // Drawing properties.
     ZoomWidgetDrawMode	_drawMode;
+    QPen	_activePen;
+    // These two points should be fixed to hdpi scaling
     QPoint	_startDrawPoint;
     QPoint	_endDrawPoint;
-    QPen	_activePen;
 
     void drawSavedForms(QPainter *pixmapPainter);
     // Opaque the area outside the circle of the cursor
@@ -291,6 +295,29 @@ class ZoomWidget : public QWidget
     void shiftPixmap(const QPoint delta);
     void scalePixmapAt(const QPointF pos);
     void checkPixmapPos();
+    // If hdpiScaling is true, it will give the mouse position relative to the REAL
+    // screen resolution
+    // If hdpiScaling is false, it will give the mouse position relative to the
+    // scaled screen resolution
+    QPoint getCursorPos(bool hdpiScaling);
+
+    // From a point in the screen (like the mouse cursor, because its position
+    // is relative to the screen, not the pixmap), it returns the position in the
+    // pixmap (which can be zoomed in and moved).
+    // The point should NOT be fixed to HDPI scaling.
+    // Returns the pixmap point that IS fixed to HDPI scaling.
+    QPoint screenPointToPixmapPos(QPoint qpoint);
+    // From a point in the pixmap (like the position of the drawings), it
+    // returns the position relative to the screen.
+    // The point should be fixed to HDPI scaling.
+    // Returns the screen point that is NOT fixed to HDPI scaling.
+    QPoint pixmapPointToScreenPos(QPoint qpoint);
+    // From the width and height of a form in the pixmap, it returns the correct
+    // width and height for the form in the screen applying the scale factor to
+    // them.
+    // The size should be fixed to HDPI scaling
+    // Returns the size that is NOT fixed to HDPI scaling
+    QSize pixmapSizeToScreenSize(QSize qsize);
 
     // Returns the position in the vector of the form (from the current draw
     // mode) that is behind the cursor position. Returns -1 if there's no form
@@ -312,8 +339,6 @@ class ZoomWidget : public QWidget
     void undoLastDrawing();
     void toggleRecording();
     void pickColorMode();
-
-    QColor getColorUnderCursor();
 
     // Recording
     void saveFrameToFile(); // Timer function

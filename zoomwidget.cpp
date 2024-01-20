@@ -393,7 +393,7 @@ bool ZoomWidget::isDrawingHovered(int drawType, int vectorPos)
 
   // This is the position of the form (in the current draw mode) in the vector,
   // that is behind the cursor.
-  int posFormBehindCursor = cursorOverForm(getCursorPos());
+  int posFormBehindCursor = cursorOverForm(getCursorPos(false));
 
   return (_drawMode == drawType) && (posFormBehindCursor==vectorPos);
 }
@@ -513,7 +513,8 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
                             hitBox.y(),
                             hitBox.width(),
                             hitBox.height(),
-                            getCursorPos(),
+                            // The getCursorPos is not fixed to hdpi because the hitbox is not either relative to hdpi
+                            getCursorPos(false),
                             true) ) {
     return;
   }
@@ -651,7 +652,7 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
 
 void ZoomWidget::drawFlashlightEffect(QPainter *screenPainter)
 {
-  QPoint c = getCursorPos();
+  QPoint c = getCursorPos(false);
   int radius = _flashlightRadius;
 
   QRect mouseFlashlightBorder = QRect(c.x()-radius, c.y()-radius, radius*2, radius*2);
@@ -814,6 +815,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   pixmapPainter.end();
 }
 
+// The cursor pos shouln't be fixed to hdpi scaling
 void ZoomWidget::removeFormBehindCursor(QPoint cursorPos)
 {
   // This is the position of the form (in the current draw mode) in the vector,
@@ -856,15 +858,15 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
     _userTexts.removeLast();
 
   if(_state == STATE_DELETING)
-    return removeFormBehindCursor(event->pos());
+    return removeFormBehindCursor(getCursorPos(false));
 
   // If you're in text mode (without drawing nor writing) and you press a text
   // with shift pressed, you access it and you can modify it
-  if(isTextEditable(event->pos())) {
+  if(isTextEditable(getCursorPos(false))) {
     _state = STATE_TYPING;
     updateCursorShape();
 
-    int formPosBehindCursor = cursorOverForm(event->pos());
+    int formPosBehindCursor = cursorOverForm(getCursorPos(false));
     UserTextData textData = _userTexts.at(formPosBehindCursor);
     _userTexts.remove(formPosBehindCursor);
     _userTexts.append(textData);
@@ -874,11 +876,11 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
   }
 
   if(!_shiftPressed)
-    _lastMousePos = event->pos();
+    _lastMousePos = getCursorPos(false);
 
   _state = STATE_DRAWING;
 
-  _startDrawPoint = screenPointToPixmapPos(event->pos());
+  _startDrawPoint = screenPointToPixmapPos(getCursorPos(false));
   _endDrawPoint = _startDrawPoint;
 }
 
@@ -892,7 +894,7 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
   if (_state != STATE_DRAWING)
     return;
 
-  _endDrawPoint = screenPointToPixmapPos(event->pos());
+  _endDrawPoint = screenPointToPixmapPos(getCursorPos(false));
 
   UserObjectData data;
   data.pen = _activePen;
@@ -968,7 +970,7 @@ void ZoomWidget::updateCursorShape()
     return;
   }
 
-  if( isTextEditable(getCursorPos()) ) {
+  if( isTextEditable(getCursorPos(false)) ) {
     setCursor(pointHand);
     return;
   }
@@ -989,7 +991,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 
   updateCursorShape();
 
-  updateAtMousePos(event->pos());
+  updateAtMousePos(getCursorPos(false));
 
   if(_screenOpts == SCREENOPTS_HIDE_ALL){
     update();
@@ -1004,7 +1006,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 
   // Register the position of the cursor for the FreeForm
   if(_mousePressed && _drawMode == DRAWMODE_FREEFORM) {
-    QPoint curPos = screenPointToPixmapPos(event->pos());
+    QPoint curPos = screenPointToPixmapPos(getCursorPos(false));
 
     if( _userFreeForms.isEmpty() || (!_userFreeForms.isEmpty() && !_userFreeForms.last().active) ) {
       UserFreeFormData data;
@@ -1025,6 +1027,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
   update();
 }
 
+// The mouse pos shouldn't be fixed to the hdpi scaling
 void ZoomWidget::updateAtMousePos(QPoint mousePos)
 {
   if(!isDisabledMouseTracking) {
@@ -1067,7 +1070,7 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
   if (_desktopPixmapScale < 1.0f)
     _desktopPixmapScale = 1.0f;
 
-  scalePixmapAt(event->position());
+  scalePixmapAt(getCursorPos(false));
   checkPixmapPos();
 
   update();
@@ -1106,6 +1109,10 @@ QString ZoomWidget::initializeSaveFile(QString path, QString name, QString ext)
   return "";
 }
 
+// The cursor pos should be fixed to the hdpi scaling if the x, y, width and
+// height is relative to the REAL screen size, the hdpi one (for example, if
+// it's from the pixmap). Otherwise, it should'nt be fixed to the hdpi scaling
+// (for exmaple, if it's from the status bar, that is drawn onto the screen).
 bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos, bool isFloating)
 {
   // Minimum size of the hit box
@@ -1136,6 +1143,10 @@ bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorP
   return hitBox.contains(cursorPos);
 }
 
+// The cursor pos shouln't be fixed to hdpi scaling, because in
+// getRealUserObjectPos() they are scaled to the screen 'scaled' (no hdpi)
+// resolution (and the cursor has to be relative to the same resolution that the
+// drawings)
 int ZoomWidget::cursorOverForm(QPoint cursorPos)
 {
   // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
@@ -1451,25 +1462,24 @@ void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
   if(event->key() == Qt::Key_Shift) {
     _shiftPressed = false;
     updateCursorShape();
-    updateAtMousePos(getCursorPos());
+    updateAtMousePos(getCursorPos(false));
     update();
   }
 }
 
-void ZoomWidget::grabDesktop(bool liveMode, bool highDpiScaling)
+void ZoomWidget::grabDesktop(bool liveMode)
 {
   _liveMode = liveMode;
 
-  if(highDpiScaling) {
-    _desktopPixmap = _desktopScreen->grabWindow(0);
-  } else {
-    // When there's scaling, it will take the size of the real monitor, so I
-    // paint it overt a pixmap with the defined sized
-    _desktopPixmap = QPixmap(_screenSize);
-    QPainter painter(&_desktopPixmap);
-    painter.drawPixmap(0, 0, _desktopScreen->grabWindow(0));
-    painter.end();
-  }
+  QPixmap desktop = _desktopScreen->grabWindow(0);
+
+  // Paint the desktop over _desktopPixmap
+  // Fixes the issue with hdpi scaling (now the size of the image is the real
+  // resolution of the screen)
+  _desktopPixmap = QPixmap(desktop.size());
+  QPainter painter(&_desktopPixmap);
+  painter.drawPixmap(0, 0, desktop.width(), desktop.height(), desktop);
+  painter.end();
 
   if(!liveMode)
     showFullScreen();
@@ -1527,7 +1537,7 @@ bool ZoomWidget::grabImage(QString path, FitImage config)
 void ZoomWidget::shiftPixmap(const QPoint delta)
 {
   int newY = _desktopPixmapPos.y() - delta.y() * (_desktopPixmapSize.height() / _screenSize.height());
-  int newX = _desktopPixmapPos.x() - delta.x() * (_desktopPixmapSize.width() / _screenSize.width());
+  int newX = _desktopPixmapPos.x() - delta.x() * (_desktopPixmapSize.width()  / _screenSize.width() );
   _desktopPixmapPos.setX(newX);
   _desktopPixmapPos.setY(newY);
 }
@@ -1569,23 +1579,42 @@ void ZoomWidget::checkPixmapPos()
   }
 }
 
-QColor ZoomWidget::getColorUnderCursor()
-{
-  QImage image = _drawnPixmap.toImage();
-  QPoint point = screenPointToPixmapPos(getCursorPos());
-
+QPoint ZoomWidget::getCursorPos(bool hdpiScaling) {
   // The screen point of the cursor is relative to the resolution of the scaled
-  // monitor, so I need to change it to the REAL position of the cursor (without
-  // scaling) with 'The Rule of Three'...
-  //
-  // scaledScreenResolution -------- mousePos
-  // realScreenResolution   --------    x
-  //
-  // So 'x' = mousePos * (_desktopPixmap.size()/_desktopPixmapOriginalSize)
-  point.setX( point.x() * (_desktopPixmap.size().width()/_desktopPixmapOriginalSize.width()) );
-  point.setY( point.y() * (_desktopPixmap.size().height()/_desktopPixmapOriginalSize.height()) );
+  // monitor
+  QPoint point = mapFromGlobal(QCursor::pos());
 
-  return image.pixel(point);
+  if(hdpiScaling){
+    point.setX(fixXForHDPIScaling(point.x()));
+    point.setY(fixYForHDPIScaling(point.y()));
+  }
+
+  return point;
+}
+
+QPoint ZoomWidget::screenPointToPixmapPos(QPoint qpoint) {
+  QPoint returnPoint = (qpoint - _desktopPixmapPos)/_desktopPixmapScale;
+
+  returnPoint.setX( fixXForHDPIScaling(returnPoint.x()) );
+  returnPoint.setY( fixYForHDPIScaling(returnPoint.y()) );
+
+  return returnPoint;
+}
+
+QPoint ZoomWidget::pixmapPointToScreenPos(QPoint qpoint) {
+  qpoint.setX( getXFromHDPIScaling(qpoint.x()) );
+  qpoint.setY( getYFromHDPIScaling(qpoint.y()) );
+
+  QPoint point = _desktopPixmapPos + qpoint * _desktopPixmapScale;
+
+  return point;
+}
+
+QSize ZoomWidget::pixmapSizeToScreenSize(QSize qsize){
+  qsize.setWidth(  getXFromHDPIScaling(qsize.width() ) );
+  qsize.setHeight( getYFromHDPIScaling(qsize.height()) );
+
+  return qsize * _desktopPixmapScale;
 }
 
 void ZoomWidget::getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h, bool posRelativeToScreen)
