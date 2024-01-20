@@ -232,6 +232,8 @@ bool ZoomWidget::restoreStateFromFile(QString path)
     _userHighlights.append(objectData);
   }
 
+  if(!_liveMode)
+    showFullScreen();
   return true;
 }
 
