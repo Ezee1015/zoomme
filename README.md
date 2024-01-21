@@ -156,12 +156,12 @@ make
 
 <!-- Start 3 -->
 <details>
-<summary><b>Set the path where is going to be saved the exported image (when pressing the 's' key)</b></summary><p>
+<summary><b>Set the path where the produced files will be saved</b></summary><p>
 
 > It can be an absolute or relative path
 
 ```bash
-./zoomme -p ./path/to/folder
+./zoomme -p path/to/folder
 ```
 
 > By default, ZoomMe saves it to the `Desktop` folder
@@ -171,10 +171,10 @@ make
 
 <!-- Start 4 -->
 <details>
-<summary><b>Set the name of the exported image (when pressing the 's' key)</b></summary><p>
+<summary><b>Set the name of the produced files</b></summary><p>
 
 ```bash
-./zoomme -n name_of_the_image
+./zoomme -n name_of_the_file
 ```
 
 > By default, the name will be: `Zoomme dd-mm-yyyy hh.mm.ss`
@@ -225,7 +225,7 @@ make
 <details>
 <summary><b>Use an image as the background (instead of the desktop)</b></summary><p>
 
- Intended for previously saved images of the desktop from ZoomMe (so you can add more drawings after been saved), but you can use it with any image
+ You can modifying any image (including previously saved images from ZoomMe)
 
 ```bash
 ./zoomme -i path/to/image
@@ -245,7 +245,7 @@ make
 
 Load/Restore the state of the program saved in that file. It should be a '.zoomme' file.
 
-Ensure that you execute the file on the same monitor where it was previously run to avoid resolution issues, or at least, make sure that the two monitors have the same resolution.
+Ensure that you execute the file on the same monitor where it was previously run (to avoid resolution issues), or at least, make sure that the two monitors have the same resolution.
 
 ```bash
 ./zoomme -r path/to/file.zoomme
@@ -259,12 +259,13 @@ Ensure that you execute the file on the same monitor where it was previously run
 >
 > You can customize certain features in the app :art: by editing the header file (`zoomwidget.hpp`). Within this file, there are macros that determine various program behaviors. You can modify the content of these macros located inside the "Customization" comment section. To apply the changes you've made, simply recompile the program.
 >
-> Some of the customizable elements include:
+> The customizable elements are:
 >
-> - FPS of the recording
-> - The date format when saving screenshots and recordings
 > - Color codes for the color of the drawings
+> - The date format when saving screenshots, recordings and `.zoomme` files
 > - Icons in the status bar
+> - FPS and quality of the recording
+> - Default folder for exporting files
 
 
 ## Credit
