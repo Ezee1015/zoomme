@@ -12,7 +12,7 @@ You can...
 - Use a "Flashlight" function to concentrate attention on the cursor position
 - Zoom in and out of the desktop.
 - Switch between your desktop and a blackboard
-- Save it to your Pictures folder
+- Save it to your Desktop folder
 - Record what you do
 - Save the current work in a `.zoomme` file and [recover from it later](#restore-from-file)
 
@@ -33,7 +33,7 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 |        **`Shift`**        | When it's zoomed in, if you press and hold the key, the screen will not follow the mouse, so you can freely move it around in that part of the screen (for drawing, for example). When you release it, it will continue following the mouse                                                                                                                                                                  |
 |      **`.`** (period)     | To toggle the "Flashlight effect" on the cursor.                                                                                                                                                                                                                                                                                                                                                             |
 | **`Shift + Mouse Wheel`** | **When the flashlight effect is turn on**, this will increase/decrease the size of the "light"                                                                                                                                                                                                                                                                                                               |
-|          **`S`**          | Save the current work to an image, which will be stored in the standard Pictures folder (or the current path if not found). The computer will *beep* if the image was correctly saved                                                                                                                                                                                                                        |
+|          **`S`**          | Save the current work to an image, which will be stored in the Desktop folder (or the current path if not found). The computer will *beep* if the image was correctly saved                                                                                                                                                                                                                                  |
 |      **`Shift + S`**      | Save the current work to the clipboard. The computer will *beep* once the mapping is pressed                                                                                                                                                                                                                                                                                                                 |
 |      **`Shift + E`**      | Save the current work a '.zoomme' file, so you can later restore the state of the program. It is going to be save in the same path and with the same name that the image of the screenshot                                                                                                                                                                                                                   |
 |       **`-`** (dash)      | Start/stop recording. A video will be produced, but it may take some time for rendering (You'll know when it finished rendering when the recording indicator of the status bar goes away and you listen a Beep). The video is going to be save in the same path and with the same name that the image of the screenshot. **Requirements**: have `ffmpeg` installed, and use a Unix based system              |
@@ -151,7 +151,7 @@ make
 ./zoomme -p ./path/to/folder
 ```
 
-> By default, ZoomMe saves it to the `Pictures` folder
+> By default, ZoomMe saves it to the `Desktop` folder
 
 </p></details>
 <!-- End 3 -->
