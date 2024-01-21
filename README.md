@@ -39,7 +39,20 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 |       **`-`** (dash)      | Start/stop recording. A video will be produced, but it may take some time for rendering (You'll know when it finished rendering when the recording indicator of the status bar goes away and you listen a Beep). The video is going to be save in the same path and with the same name that the image of the screenshot. **Requirements**: have `ffmpeg` installed, and use a Unix based system              |
 |         **`Tab`**         | To toggle between your screen and a blackboard mode. By the way, your drawings will persist between the modes                                                                                                                                                                                                                                                                                                |
 |        **`Space`**        | To toggle the visibility of the elements of the screen: hide the status bar, hide all or show all                                                                                                                                                                                                                                                                                                            |
-|         **`ESC`**         | To **finish writing text** (if you're writing), **exit the "delete a drawing" mode** (if it's on), **exit the "pick a color" mode**, **disable the 'hide all' mode** (if it's on), **disable the mouse flashlight** (if it's on), **restore zoom** (if you are zoomed in), **stop recording**, or **quit/exit** (If you are not zoomed in, not writing text, not deleting a drawing, nor in flashlight mode) |
+|         **`ESC`**         | The function of the Escape key is described [in here](#escape-key-functions)... |
+
+#### Escape key functions
+
+The Escape key performs the following actions in a sequential order. If one condition applies, it executes only that function.
+
+1. If you are writing text, it **finishes writing text**.
+2. If you are in **"pick a color" mode**, it exits that mode
+3. If you are in **"delete a drawing" mode**, it exits that mode
+4. If you have the **mouse flashlight effect** on, it turns it off
+5. If you are in **'hide all' mode**, it restores to 'show all'
+6. If you are zoomed in, it **restores the zoom**
+7. If you are recording, it **stops recording**
+8. Otherwise, it **quits/exits**
 
 ### Available Drawing Modes
 
