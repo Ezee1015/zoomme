@@ -7,3 +7,5 @@
 /ui_zoomwidget.h
 /zoomme
 /zoomwidget.o
+/qrc_resources.cpp
+/qrc_resources.o
