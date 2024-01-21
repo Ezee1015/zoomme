@@ -4,12 +4,11 @@
 #include <QOpenGLWidget>
 #include <QString>
 #include <QScreen>
-#include <QCursor>
 #include <QPen>
-#include <QDir>
 #include <QClipboard>
 #include <QProcess>
 #include <QTimer>
+#include <QFile>
 
 // CUSTOMIZATION
 #define QCOLOR_RED       QColor(224,  49,  49)

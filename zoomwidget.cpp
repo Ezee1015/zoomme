@@ -5,15 +5,13 @@
 #include <cstdio>
 #include <QPainter>
 #include <QMouseEvent>
-#include <QScreen>
 #include <QRect>
-#include <QString>
 #include <QFont>
-#include <QPen>
 #include <QGuiApplication>
 #include <QOpenGLWidget>
 #include <QStandardPaths>
 #include <QDir>
+#include <QCursor>
 #include <QDateTime>
 #include <QColor>
 #include <QPainterPath>
