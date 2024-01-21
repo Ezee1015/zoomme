@@ -14,6 +14,7 @@ You can...
 - Switch between your desktop and a blackboard
 - Save it to your Pictures folder
 - Record what you do
+- Save the current work in a `.zoomme` file and [recover from it later](#restore-from-file)
 
 Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https://github.com/Ezee1015/zoomme/tree/Qt5)) and OpenGL.
 
@@ -216,7 +217,24 @@ make
 ```bash
 ./zoomme -i path/to/image
 ```
+
+</p></details>
 <!-- End 8 -->
+
+<!-- Start 9 -->
+<details>
+<summary id="restore-from-file"><b>Restore the state of the program from a `.zoomme` file</b></summary><p>
+
+Load/Restore the state of the program saved in that file. It should be a '.zoomme' file.
+
+Ensure that you execute the file on the same monitor where it was previously run to avoid resolution issues, or at least, make sure that the two monitors have the same resolution.
+
+```bash
+./zoomme -r path/to/file.zoomme
+```
+
+</p></details>
+<!-- End 9 -->
 
 #### Additional arguments:
 - You can force the image to fit the screen's width or hight with `-w` or `-h` after providing the image path, like this: `./zoomme -i path/to/image -w`, if you do not providing anything, it automatically detect the best option.
