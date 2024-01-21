@@ -9,7 +9,6 @@
 #include <QFont>
 #include <QGuiApplication>
 #include <QOpenGLWidget>
-#include <QStandardPaths>
 #include <QDir>
 #include <QCursor>
 #include <QDateTime>
@@ -1077,7 +1076,7 @@ QString ZoomWidget::initFileConfig(QString path, QString name, QString imgExt, Q
   // Path
   QDir folderPath;
   if(path.isEmpty()){
-    QString picturesFolder = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
+    QString picturesFolder = QStandardPaths::writableLocation(DEFAULT_FOLDER);
     folderPath = (picturesFolder.isEmpty()) ? QDir::currentPath() : picturesFolder;
   } else {
     folderPath = QDir(path);

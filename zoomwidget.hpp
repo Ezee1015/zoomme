@@ -2,6 +2,7 @@
 #define ZOOMWIDGET_HPP
 
 #include <QOpenGLWidget>
+#include <QStandardPaths>
 #include <QString>
 #include <QScreen>
 #include <QPen>
@@ -23,6 +24,7 @@
 
 #define BLACKBOARD_COLOR QColor( 33,  37,  41)
 
+#define DEFAULT_FOLDER QStandardPaths::DesktopLocation // QStandardPaths::PicturesLocation
 #define DATE_FORMAT_FOR_FILE "dd-MM-yyyy hh.mm.ss"
 
 #define BLOCK_ICON   "🔒"
