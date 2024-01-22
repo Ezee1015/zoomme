@@ -203,13 +203,18 @@ bool ZoomWidget::restoreStateFromFile(QString path, FitImage config)
     printf("[INFO]   - Scaled (actual) image size: %dx%d\n", scaledPixmap.width(), scaledPixmap.height());
 
     // With 'The Rule of Three'...
-    // savedPixmapSize --> pointOfDrawing
+    // oldPixmapSize --> pointOfDrawing
     // newPixmapSize   -->     x (new -scaled- point of the drawing)
     // so...
-    // x = ( newPixmapSize * pointOfDrawing ) / savedPixmapSize
-    // x = pointOfDrawing * ( newPixmapSize / savedPixmapSize )
-    scaleFactorX = (float)(scaledPixmap.width() ) / (float)(savedPixmapSize.width());
-    scaleFactorY = (float)(scaledPixmap.height()) / (float)(savedPixmapSize.height());
+    // x = ( newPixmapSize * pointOfDrawing ) / oldPixmapSize
+    // x = pointOfDrawing * ( newPixmapSize / oldPixmapSize )
+    //
+    // Don't use the savedPixmapSize variable as the oldPimapSize because it
+    // doesn't take in count the REAL monitor resolution when grabbing the
+    // desktop (with hdpi scaling enabled), and the drawings will be misplaced.
+    // Use instead savePixmap.size() that has the REAL monitor resolution
+    scaleFactorX = (float)(scaledPixmap.width() ) / (float)(savedPixmap.width());
+    scaleFactorY = (float)(scaledPixmap.height()) / (float)(savedPixmap.height());
 
     // Adjust the drawings to the margin of the image after scaling
     if(_screenSize.height() > scaledPixmap.height())
