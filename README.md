@@ -245,11 +245,13 @@ make
 
 Load/Restore the state of the program saved in that file. It should be a '.zoomme' file.
 
-Ensure that you execute the file on the same monitor where it was previously run (to avoid resolution issues), or at least, make sure that the two monitors have the same resolution.
+Ensure that you execute the file on the same monitor where it was previously run, or ensure that both monitors have the same resolution for optimum results. Otherwise, if the resolutions differ, the image (including the drawings) will be scaled, and while it will still work, the image may lose quality
 
 ```bash
 ./zoomme -r path/to/file.zoomme
 ```
+#### Additional arguments:
+- If the resolutions differ, you can force the image to fit the screen's width or height with `-w` or `-h` after providing the image path, like this: `./zoomme -r path/to/file.zoomme -w`, if you do not providing anything, it automatically detect the best option.
 
 </p></details>
 <!-- End 9 -->

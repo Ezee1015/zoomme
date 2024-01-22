@@ -24,10 +24,12 @@ void printHelp(const int exitStatus, const char* errorMsg){
   printf("  -e:v [extension]          Specify the extension of the exported (saved) video file (default: mp4)\n");
   printf("  -l                        EXPERIMENTAL: Not use a background (live mode/transparent). In this mode there's no zooming, only drawings allowed\n");
   printf("  -i <image_path> [opts]    Specify the path to an image as the background, instead of the desktop. It will automatically fit it to the screen\n");
-  printf("                    -w                  Force to fit to the screen's width\n");
-  printf("                    -h                  Force to fit to the screen's height\n");
-  printf("                    --replace-on-save   This will replace the source image (autocompletes -p, -e and -n flags).\n");
-  printf("  -r [path/to/file]         Load/Restore the state of the program saved in that file. It should be a '.zoomme' file\n");
+  printf("       -w                        Force to fit to the screen's width\n");
+  printf("       -h                        Force to fit to the screen's height\n");
+  printf("       --replace-on-save         This will replace the source image (autocompletes -p, -e and -n flags).\n");
+  printf("  -r [path/to/file] [opts]  Load/Restore the state of the program saved in that file. It should be a '.zoomme' file\n");
+  printf("       -w                        Force to fit to the screen's width if the recovered file doesn't have the same resolution\n");
+  printf("       -h                        Force to fit to the screen's height if the recovered file doesn't have the same resolution\n");
 
   printf("\n  For more information, visit https://github.com/Ezee1015/zoomme\n");
 
@@ -48,7 +50,7 @@ int main(int argc, char *argv[])
   QString saveVidExt;
   QString backupFile;
   bool liveMode = false;
-  FitImage fitToWidth = FIT_AUTO;
+  FitImage fitOption = FIT_AUTO;
   // Parsing arguments
   for(int i=1; i<argc ; ++i){
     if(strcmp(argv[i], "--help") == 0)
@@ -72,23 +74,23 @@ int main(int argc, char *argv[])
     }
 
     else if(strcmp(argv[i], "-w") == 0) {
-      if(img.isEmpty())
-        printHelp(EXIT_FAILURE, "Fit width argument was given, but the image not provided");
+      if(img.isEmpty() && backupFile.isEmpty())
+        printHelp(EXIT_FAILURE, "Fit width argument was given, but either the image or the recovery file was not provided");
 
-      if(fitToWidth != FIT_AUTO)
+      if(fitOption != FIT_AUTO)
         printHelp(EXIT_FAILURE, "Fit setting already provided");
 
-      fitToWidth = FIT_TO_WIDTH;
+      fitOption = FIT_TO_WIDTH;
     }
 
     else if(strcmp(argv[i], "-h") == 0) {
-      if(img.isEmpty())
-        printHelp(EXIT_FAILURE, "Fit height argument was given, but the image not provided");
+      if(img.isEmpty() && backupFile.isEmpty())
+        printHelp(EXIT_FAILURE, "Fit height argument was given, but either the image or the recovery file was not provided");
 
-      if(fitToWidth != FIT_AUTO)
+      if(fitOption != FIT_AUTO)
         printHelp(EXIT_FAILURE, "Fit setting already provided");
 
-      fitToWidth = FIT_TO_HEIGHT;
+      fitOption = FIT_TO_HEIGHT;
     }
 
     else if(strcmp(argv[i], "--replace-on-save") == 0) {
@@ -173,19 +175,24 @@ int main(int argc, char *argv[])
   w.setAttribute(Qt::WA_TranslucentBackground, true);
   w.show();
 
-  if(!backupFile.isEmpty()) {
-    if(!w.restoreStateFromFile(backupFile))
-      printHelp(EXIT_FAILURE, "Couldn't restore the state from the file");
-  } else {
-    // Set the path, name and extension for saving the file
-    QString saveFileError = w.initFileConfig(savePath, saveName, saveImgExt, saveVidExt);
-    if(!saveFileError.isEmpty()) printHelp(EXIT_FAILURE, qPrintable(saveFileError));
+  // Set the path, name and extension for saving the file
+  QString saveFileError = w.initFileConfig(savePath, saveName, saveImgExt, saveVidExt);
+  if(!saveFileError.isEmpty())
+    printHelp(EXIT_FAILURE, qPrintable(saveFileError));
 
-    if(img.isEmpty()) w.grabDesktop(liveMode);
-    else {
-      if (!w.grabImage(img, fitToWidth))
-        printHelp(EXIT_FAILURE, "Couldn't open the image");
-    }
+  // Configure the app source
+  if(!backupFile.isEmpty()) {
+    bool restoreCorrect = w.restoreStateFromFile(backupFile, fitOption);
+    if(!restoreCorrect)
+      printHelp(EXIT_FAILURE, "Couldn't restore the state from the file");
+
+  } else if(!img.isEmpty()) {
+    bool getImageCorrect = w.grabImage(QPixmap(img), fitOption);
+    if (!getImageCorrect)
+      printHelp(EXIT_FAILURE, "Couldn't open the image");
+
+  } else {
+    w.grabDesktop(liveMode);
   }
 
   QApplication::beep();

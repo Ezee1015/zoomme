@@ -10,6 +10,7 @@
 #include <QProcess>
 #include <QTimer>
 #include <QFile>
+#include <QFont>
 
 // CUSTOMIZATION
 #define QCOLOR_RED       QColor(224,  49,  49)
@@ -23,6 +24,9 @@
 #define QCOLOR_WHITE     QColor(248, 249, 250)
 
 #define BLACKBOARD_COLOR QColor( 33,  37,  41)
+
+// Font size = (1 to 9) * FONT_SIZE_FACTOR
+#define FONT_SIZE_FACTOR 4
 
 #define DEFAULT_FOLDER QStandardPaths::DesktopLocation // QStandardPaths::PicturesLocation
 #define DATE_FORMAT_FOR_FILE "dd-MM-yyyy hh.mm.ss"
@@ -41,8 +45,20 @@
 #define QSTRING_TO_STRING(string) string.toStdString().c_str()
 
 // The painter argument must be a pointer to the painter
+#define UPDATE_FONT_SIZE(painter)                                 \
+  do {                                                            \
+    QFont font;                                                   \
+    font.setPixelSize(painter->pen().width() * FONT_SIZE_FACTOR); \
+    painter->setFont(font);                                       \
+  } while(0)
+
+// The painter argument must be a pointer to the painter
 #define CHANGE_PEN_WIDTH_FROM_PAINTER(painter, width) \
-  QPen tempPen = painter->pen(); tempPen.setWidth(width); painter->setPen(tempPen);
+  do {                                                \
+    QPen pen = painter->pen();                        \
+    pen.setWidth(width);                              \
+    painter->setPen(pen);                             \
+  } while(0)
 
 #define DRAW_DRAWN_PIXMAP(painter)                                 \
   painter.drawPixmap(_desktopPixmapPos.x(), _desktopPixmapPos.y(), \
@@ -119,7 +135,6 @@ struct UserObjectData {
 
 struct UserTextData {
   UserObjectData data;
-  QFont font;
   int caretPos;
   QString text;
 };
@@ -170,13 +185,13 @@ class ZoomWidget : public QWidget
     explicit ZoomWidget(QWidget *parent = 0);
     ~ZoomWidget();
 
-    bool restoreStateFromFile(QString path);
+    bool restoreStateFromFile(QString path, FitImage config);
 
     // By passing an empty QString, sets the argument to the default
     QString initFileConfig(QString path, QString name, QString imgExt, QString vidExt);
 
     void grabDesktop(bool liveMode);
-    bool grabImage(QString path, FitImage config);
+    bool grabImage(QPixmap img, FitImage config);
 
   protected:
     virtual void paintEvent(QPaintEvent *event);

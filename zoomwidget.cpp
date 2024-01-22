@@ -6,7 +6,6 @@
 #include <QPainter>
 #include <QMouseEvent>
 #include <QRect>
-#include <QFont>
 #include <QGuiApplication>
 #include <QOpenGLWidget>
 #include <QDir>
@@ -82,11 +81,15 @@ void ZoomWidget::saveStateToFile()
       // << _desktopPixmapSize
       // << _desktopPixmapScale
       << _desktopPixmapOriginalSize
-      << _saveFilePath
+      // The save path is absolute, so it is bound to the PC, so it shouldn't
+      // be saved
+      // << _saveFilePath
       << _imageExtension
       << _videoExtension
       << _liveMode
-      << _screenOpts
+      // I don't think is good to save if the status bar and/or the
+      // drawings are hiden
+      // << _screenOpts
       << _drawMode
       << _activePen
       << _userRects.size()
@@ -113,7 +116,7 @@ void ZoomWidget::saveStateToFile()
   // Texts
   for(int i=0; i<_userTexts.size(); i++){
     out << _userTexts.at(i).data.startPoint << _userTexts.at(i).data.endPoint << _userTexts.at(i).data.pen;
-    out << _userTexts.at(i).font << _userTexts.at(i).caretPos << _userTexts.at(i).text;
+    out << _userTexts.at(i).caretPos << _userTexts.at(i).text;
   }
   // Free Forms
   for(int i=0; i<_userFreeForms.size(); i++){
@@ -129,7 +132,7 @@ void ZoomWidget::saveStateToFile()
   QApplication::beep();
 }
 
-bool ZoomWidget::restoreStateFromFile(QString path)
+bool ZoomWidget::restoreStateFromFile(QString path, FitImage config)
 {
   QFile file(path);
   if (!file.open(QIODevice::ReadOnly))
@@ -143,21 +146,28 @@ bool ZoomWidget::restoreStateFromFile(QString path)
             userFreeFormsCount  = 0,
             userHighlightsCount = 0;
 
+  QSize savedScreenSize;
+  QPixmap savedPixmap;
+  QSize savedPixmapSize;
 
-  QDataStream in(&file);
   // There should be the same arguments that the saveStateToFile()
-  in  >> _screenSize
-      >> _desktopPixmap
+  QDataStream in(&file);
+  in  >> savedScreenSize
+      >> savedPixmap
       // I don't want to be zoomed in when restoring
       // >> _desktopPixmapPos
       // >> _desktopPixmapSize
       // >> _desktopPixmapScale
-      >> _desktopPixmapOriginalSize
-      >> _saveFilePath
+      >> savedPixmapSize
+      // The save path is absolute, so it is bound to the PC, so it shouldn't
+      // be saved
+      // >> _saveFilePath
       >> _imageExtension
       >> _videoExtension
       >> _liveMode
-      >> _screenOpts
+      // I don't think is good to save if the status bar and/or the
+      // drawings are hiden
+      // >> _screenOpts
       >> _drawMode
       >> _activePen
       >> userRectsCount
@@ -168,47 +178,108 @@ bool ZoomWidget::restoreStateFromFile(QString path)
       >> userFreeFormsCount
       >> userHighlightsCount;
 
-  _desktopPixmapSize = _desktopPixmapOriginalSize;
+  // VARIABLES FOR SCALING THE DRAWINGS
+  float scaleFactorX = 1.0, scaleFactorY = 1.0;
+  int marginTop = 0, marginLeft = 0;
 
-  // Clear the drawings
-  _userRects.clear();
-  _userLines.clear();
-  _userArrows.clear();
-  _userEllipses.clear();
-  _userTexts.clear();
-  _userFreeForms.clear();
-  _userHighlights.clear();
+  if(savedScreenSize == _screenSize) {
+    _desktopPixmapOriginalSize = savedPixmapSize;
+    _desktopPixmapSize = savedPixmapSize;
+    _desktopPixmap = savedPixmap;
+  } else {
+    if(config == FIT_AUTO)
+      config = (savedPixmap.width() > savedPixmap.height()) ? FIT_TO_HEIGHT : FIT_TO_WIDTH;
+
+    QImage scaledPixmap = savedPixmap.toImage();
+    if(config == FIT_TO_WIDTH)
+      scaledPixmap = scaledPixmap.scaledToWidth(_screenSize.width());
+    else
+      scaledPixmap = scaledPixmap.scaledToHeight(_screenSize.height());
+
+    printf("[INFO] Scaling ZoomMe recover file...\n");
+    printf("[INFO]   - Recovered screen size: %dx%d\n", savedScreenSize.width(), savedScreenSize.height());
+    printf("[INFO]   - Actual screen size: %dx%d\n", _screenSize.width(), _screenSize.height());
+    printf("[INFO]   - Recovered image size: %dx%d\n", savedPixmapSize.width(), savedPixmapSize.height());
+    printf("[INFO]   - Scaled (actual) image size: %dx%d\n", scaledPixmap.width(), scaledPixmap.height());
+
+    // With 'The Rule of Three'...
+    // savedPixmapSize --> pointOfDrawing
+    // newPixmapSize   -->     x (new -scaled- point of the drawing)
+    // so...
+    // x = ( newPixmapSize * pointOfDrawing ) / savedPixmapSize
+    // x = pointOfDrawing * ( newPixmapSize / savedPixmapSize )
+    scaleFactorX = (float)(scaledPixmap.width() ) / (float)(savedPixmapSize.width());
+    scaleFactorY = (float)(scaledPixmap.height()) / (float)(savedPixmapSize.height());
+
+    // Adjust the drawings to the margin of the image after scaling
+    if(_screenSize.height() > scaledPixmap.height())
+      marginTop = (_screenSize.height() - scaledPixmap.height()) / 2;
+    if(_screenSize.width() > scaledPixmap.width())
+      marginLeft = (_screenSize.width() - scaledPixmap.width()) / 2;
+
+    grabImage(savedPixmap, config);
+  }
 
   // Read the drawings
   // Rectangles
   for(int i=0; i<userRectsCount; i++){
     UserObjectData objectData;
     in >> objectData.startPoint >> objectData.endPoint >> objectData.pen;
+
+    objectData.startPoint.setX( marginLeft + objectData.startPoint.x() * scaleFactorX );
+    objectData.startPoint.setY( marginTop  + objectData.startPoint.y() * scaleFactorY );
+    objectData.endPoint.setX( marginLeft + objectData.endPoint.x() * scaleFactorX );
+    objectData.endPoint.setY( marginTop  + objectData.endPoint.y() * scaleFactorY );
+
     _userRects.append(objectData);
   }
   // Lines
   for(int i=0; i<userLinesCount; i++){
     UserObjectData objectData;
     in >> objectData.startPoint >> objectData.endPoint >> objectData.pen;
+
+    objectData.startPoint.setX( marginLeft + objectData.startPoint.x() * scaleFactorX );
+    objectData.startPoint.setY( marginTop  + objectData.startPoint.y() * scaleFactorY );
+    objectData.endPoint.setX( marginLeft + objectData.endPoint.x() * scaleFactorX );
+    objectData.endPoint.setY( marginTop  + objectData.endPoint.y() * scaleFactorY );
+
     _userLines.append(objectData);
   }
   // Arrows
   for(int i=0; i<userArrowsCount; i++){
     UserObjectData objectData;
     in >> objectData.startPoint >> objectData.endPoint >> objectData.pen;
+
+    objectData.startPoint.setX( marginLeft + objectData.startPoint.x() * scaleFactorX );
+    objectData.startPoint.setY( marginTop  + objectData.startPoint.y() * scaleFactorY );
+    objectData.endPoint.setX( marginLeft + objectData.endPoint.x() * scaleFactorX );
+    objectData.endPoint.setY( marginTop  + objectData.endPoint.y() * scaleFactorY );
+
     _userArrows.append(objectData);
   }
   // Ellipses
   for(int i=0; i<userEllipsesCount; i++){
     UserObjectData objectData;
     in >> objectData.startPoint >> objectData.endPoint >> objectData.pen;
+
+    objectData.startPoint.setX( marginLeft + objectData.startPoint.x() * scaleFactorX );
+    objectData.startPoint.setY( marginTop  + objectData.startPoint.y() * scaleFactorY );
+    objectData.endPoint.setX( marginLeft + objectData.endPoint.x() * scaleFactorX );
+    objectData.endPoint.setY( marginTop  + objectData.endPoint.y() * scaleFactorY );
+
     _userEllipses.append(objectData);
   }
   // Texts
   for(int i=0; i<userTextsCount; i++){
     UserTextData textData;
     in >> textData.data.startPoint >> textData.data.endPoint >> textData.data.pen;
-    in >> textData.font >> textData.caretPos >> textData.text;
+    in >> textData.caretPos >> textData.text;
+
+    textData.data.startPoint.setX( marginLeft + textData.data.startPoint.x() * scaleFactorX );
+    textData.data.startPoint.setY( marginTop  + textData.data.startPoint.y() * scaleFactorY );
+    textData.data.endPoint.setX( marginLeft + textData.data.endPoint.x() * scaleFactorX );
+    textData.data.endPoint.setY( marginTop  + textData.data.endPoint.y() * scaleFactorY );
+
     _userTexts.append(textData);
   }
   // Free forms
@@ -219,6 +290,10 @@ bool ZoomWidget::restoreStateFromFile(QString path)
     for(int x=0; x<freeFormPointsCount; x++){
       QPoint point;
       in >> point;
+
+      point.setX( marginLeft + point.x() * scaleFactorX );
+      point.setY( marginTop  + point.y() * scaleFactorY );
+
       freeFormData.points.append(point);
     }
     in >> freeFormData.pen >> freeFormData.active;
@@ -228,6 +303,12 @@ bool ZoomWidget::restoreStateFromFile(QString path)
   for(int i=0; i<userHighlightsCount; i++){
     UserObjectData objectData;
     in >> objectData.startPoint >> objectData.endPoint >> objectData.pen;
+
+    objectData.startPoint.setX( marginLeft + objectData.startPoint.x() * scaleFactorX );
+    objectData.startPoint.setY( marginTop  + objectData.startPoint.y() * scaleFactorY );
+    objectData.endPoint.setX( marginLeft + objectData.endPoint.x() * scaleFactorX );
+    objectData.endPoint.setY( marginTop  + objectData.endPoint.y() * scaleFactorY );
+
     _userHighlights.append(objectData);
   }
 
@@ -628,7 +709,7 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
   int textsCount = _state == STATE_TYPING ? _userTexts.size()-1 : _userTexts.size();
   for (int i = 0; i < textsCount; ++i) {
     pixmapPainter->setPen(_userTexts.at(i).data.pen);
-    pixmapPainter->setFont(_userTexts.at(i).font);
+    UPDATE_FONT_SIZE(pixmapPainter);
     getRealUserObjectPos(_userTexts.at(i).data, &x, &y, &w, &h, false);
 
     if(isDrawingHovered(DRAWMODE_TEXT, i))
@@ -668,7 +749,7 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
     UserTextData textObject = _userTexts.last();
     int x, y, w, h;
     painter->setPen(textObject.data.pen);
-    painter->setFont(textObject.font);
+    UPDATE_FONT_SIZE(painter);
     getRealUserObjectPos(textObject.data, &x, &y, &w, &h, drawToScreen);
 
     QString text = textObject.text;
@@ -713,8 +794,8 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
         break;
       case DRAWMODE_TEXT:
         {
+          UPDATE_FONT_SIZE(painter);
           CHANGE_PEN_WIDTH_FROM_PAINTER(painter, 1);
-          QFont font; font.setPixelSize(_activePen.width() * 4); painter->setFont(font);
           painter->drawRect(x, y, width, height);
           QString defaultText;
           defaultText.append("Sizing... (");
@@ -901,13 +982,9 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
     case DRAWMODE_ELLIPSE:   _userEllipses.append(data);   break;
     case DRAWMODE_TEXT:
       {
-        QFont font;
-        font.setPixelSize(_activePen.width() * 4);
-
         UserTextData textData;
         textData.data = data;
         textData.text = "";
-        textData.font = font;
         textData.caretPos = 0;
         _userTexts.append(textData);
 
@@ -1481,10 +1558,8 @@ void ZoomWidget::grabDesktop(bool liveMode)
     showFullScreen();
 }
 
-bool ZoomWidget::grabImage(QString path, FitImage config)
+bool ZoomWidget::grabImage(QPixmap img, FitImage config)
 {
-  QPixmap img = QPixmap(path);
-
   if(img.isNull())
     return false;
 
