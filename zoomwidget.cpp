@@ -1025,32 +1025,23 @@ void ZoomWidget::updateCursorShape()
   if (pickColorPixmap.isNull()) printf("[ERROR] Failed to load pixmap for custom cursor (color-picker)\n");
   QCursor pickColor = QCursor(pickColorPixmap, 0, pickColorPixmap.height()-1);
 
-  if(IS_FFMPEG_RUNNING) {
+  if(IS_FFMPEG_RUNNING)
     setCursor(waiting);
-    return;
-  }
 
-  if(_state == STATE_COLOR_PICKER){
+  else if(_state == STATE_COLOR_PICKER)
     setCursor(pickColor);
-    return;
-  }
 
-  if(_state == STATE_DELETING) {
+  else if(_state == STATE_DELETING)
     setCursor(pointHand);
-    return;
-  }
 
-  if( isTextEditable(getCursorPos(false)) ) {
+  else if( isTextEditable(getCursorPos(false)) )
     setCursor(pointHand);
-    return;
-  }
 
-  if(_flashlightMode) {
+  else if(_flashlightMode)
     setCursor(blank);
-    return;
-  }
 
-  setCursor(QCursor(Qt::CrossCursor));
+  else
+    setCursor(QCursor(Qt::CrossCursor));
 }
 
 void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
