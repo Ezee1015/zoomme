@@ -1,9 +1,10 @@
-#include <QtWidgets/QApplication>
 #include "zoomwidget.hpp"
+#include <QtWidgets/QApplication>
 #include <QCursor>
 #include <QScreen>
 #include <QImage>
 #include <string.h>
+#include <QString>
 #include <QSystemTrayIcon>
 #include <stdio.h>
 #include <stdlib.h>

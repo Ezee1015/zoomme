@@ -59,8 +59,6 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
 
   _activePen.setColor(QCOLOR_RED);
   _activePen.setWidth(4);
-
-  logUser(LOG_ERROR, "Failed to load pixmap for custom cursor (color-picker)");
 }
 
 ZoomWidget::~ZoomWidget()
