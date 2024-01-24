@@ -861,7 +861,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 
   // Exit if the _desktopPixmap is not initialized (not ready)
   if(_desktopPixmap.isNull())
-    return;
+    logUser(LOG_ERROR_AND_EXIT, "The desktop pixmap is null. Can't paint over a null pixmap");
 
   _drawnPixmap = _desktopPixmap;
 
@@ -1549,8 +1549,6 @@ void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
 void ZoomWidget::setLiveMode(bool liveMode)
 {
   _liveMode = liveMode;
-
-  if(!_liveMode) showFullScreen();
 }
 
 void ZoomWidget::grabDesktop()
@@ -1577,6 +1575,8 @@ void ZoomWidget::grabDesktop()
   QPainter painter(&_desktopPixmap);
   painter.drawPixmap(0, 0, desktop.width(), desktop.height(), desktop);
   painter.end();
+
+  if(!_liveMode) showFullScreen();
 }
 
 void ZoomWidget::grabImage(QPixmap img, FitImage config)
@@ -1621,6 +1621,8 @@ void ZoomWidget::grabImage(QPixmap img, FitImage config)
 
   _desktopPixmapSize = _desktopPixmap.size();
   _desktopPixmapOriginalSize = _desktopPixmapSize;
+
+  if(!_liveMode) showFullScreen();
 }
 
 void ZoomWidget::shiftPixmap(const QPoint delta)
