@@ -324,7 +324,7 @@ class ZoomWidget : public QWidget
 
     // Recording
     void saveFrameToFile(); // Timer function
-    bool createVideoFFmpeg();
+    void createVideoFFmpeg();
 
     // If posRelativeToScreen is true, it will return the positon be relative to
     // the screen, if it's false, it will return the position relative to the

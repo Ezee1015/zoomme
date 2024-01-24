@@ -323,7 +323,7 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
   }
 }
 
-bool ZoomWidget::createVideoFFmpeg()
+void ZoomWidget::createVideoFFmpeg()
 {
   QString resolution;
   resolution.append(QString::number(_drawnPixmap.width()));
@@ -359,10 +359,19 @@ bool ZoomWidget::createVideoFFmpeg()
   updateCursorShape();
 
   const int timeout = 10000;
-  if (!ffmpeg.waitForStarted(timeout) || !ffmpeg.waitForFinished(-1))
-    return false;
+  if (!ffmpeg.waitForStarted(timeout)){
+    logUser(LOG_ERROR, "Couldn't start ffmpeg or timeout occurred (10 sec.): %s", QSTRING_TO_STRING(ffmpeg.errorString()));
+    logUser(LOG_ERROR, "Killing the ffmpeg process...");
+    ffmpeg.kill();
+    return;
+  }
 
-  return true;
+  if(!ffmpeg.waitForFinished(-1)){
+    logUser(LOG_ERROR, "An error occurred with FFmpeg: %s", QSTRING_TO_STRING(ffmpeg.errorString()));
+    return;
+  }
+
+  QApplication::beep();
 }
 
 void ZoomWidget::saveFrameToFile()
@@ -1447,23 +1456,21 @@ void ZoomWidget::toggleRecording()
 
   if(IS_RECORDING){
     recordTimer->stop();
-    if(createVideoFFmpeg()) {
-      QApplication::beep();
-    } else {
-      logUser(LOG_ERROR, "Couldn't start ffmpeg or timeout occurred (10 sec.): %s", QSTRING_TO_STRING(ffmpeg.errorString()));
-      logUser(LOG_ERROR, "Killing the ffmpeg process...");
-      ffmpeg.terminate();
-    }
+    createVideoFFmpeg();
     recordTempFile->remove();
     return;
   }
 
   // Start recording
-  recordTempFile->remove(); // If already exists
-  if (!recordTempFile->open(QIODevice::ReadWrite)) {
+  recordTempFile->remove(); // Just in case for if it already exists
+
+  bool openTempFile = recordTempFile->open(QIODevice::ReadWrite);
+  if (!openTempFile) {
     logUser(LOG_ERROR, "Couldn't open the temp file for the bytes output");
+    recordTempFile->close();
     return;
   }
+
   recordTimer->start(1000/RECORD_FPS);
   QApplication::beep();
 }
