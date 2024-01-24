@@ -59,6 +59,8 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
 
   _activePen.setColor(QCOLOR_RED);
   _activePen.setWidth(4);
+
+  logUser(LOG_ERROR, "Failed to load pixmap for custom cursor (color-picker)");
 }
 
 ZoomWidget::~ZoomWidget()
@@ -196,11 +198,11 @@ bool ZoomWidget::restoreStateFromFile(QString path, FitImage config)
     else
       scaledPixmap = scaledPixmap.scaledToHeight(_screenSize.height());
 
-    printf("[INFO] Scaling ZoomMe recover file...\n");
-    printf("[INFO]   - Recovered screen size: %dx%d\n", savedScreenSize.width(), savedScreenSize.height());
-    printf("[INFO]   - Actual screen size: %dx%d\n", _screenSize.width(), _screenSize.height());
-    printf("[INFO]   - Recovered image size: %dx%d\n", savedPixmapSize.width(), savedPixmapSize.height());
-    printf("[INFO]   - Scaled (actual) image size: %dx%d\n", scaledPixmap.width(), scaledPixmap.height());
+    logUser(LOG_INFO, "Scaling ZoomMe recover file...");
+    logUser(LOG_INFO, "  - Recovered screen size: %dx%d", savedScreenSize.width(), savedScreenSize.height());
+    logUser(LOG_INFO, "  - Actual screen size: %dx%d", _screenSize.width(), _screenSize.height());
+    logUser(LOG_INFO, "  - Recovered image size: %dx%d", savedPixmapSize.width(), savedPixmapSize.height());
+    logUser(LOG_INFO, "  - Scaled (actual) image size: %dx%d", scaledPixmap.width(), scaledPixmap.height());
 
     // With 'The Rule of Three'...
     // oldPixmapSize --> pointOfDrawing
@@ -1041,7 +1043,7 @@ void ZoomWidget::updateCursorShape()
   QCursor waiting   = QCursor(Qt::WaitCursor);
 
   QPixmap pickColorPixmap(":/resources/color-picker-16.png");
-  if (pickColorPixmap.isNull()) printf("[ERROR] Failed to load pixmap for custom cursor (color-picker)\n");
+  if (pickColorPixmap.isNull()) logUser(LOG_ERROR, "Failed to load pixmap for custom cursor (color-picker)");
   QCursor pickColor = QCursor(pickColorPixmap, 0, pickColorPixmap.height()-1);
 
   if(IS_FFMPEG_RUNNING)
@@ -1461,8 +1463,8 @@ void ZoomWidget::toggleRecording()
     if(createVideoFFmpeg()) {
       QApplication::beep();
     } else {
-      printf("[ERROR] Couldn't start ffmpeg or timeout occurred (10 sec.): %s\n", QSTRING_TO_STRING(ffmpeg.errorString()));
-      printf("[ERROR] Killing the ffmpeg process...\n");
+      logUser(LOG_ERROR, "Couldn't start ffmpeg or timeout occurred (10 sec.): %s", QSTRING_TO_STRING(ffmpeg.errorString()));
+      logUser(LOG_ERROR, "Killing the ffmpeg process...");
       ffmpeg.terminate();
     }
     recordTempFile->remove();
@@ -1472,7 +1474,7 @@ void ZoomWidget::toggleRecording()
   // Start recording
   recordTempFile->remove(); // If already exists
   if (!recordTempFile->open(QIODevice::ReadWrite)) {
-    printf("[ERROR] Couldn't open the temp file for the bytes output\n");
+    logUser(LOG_ERROR, "Couldn't open the temp file for the bytes output");
     return;
   }
   recordTimer->start(1000/RECORD_FPS);
@@ -1747,6 +1749,33 @@ bool ZoomWidget::isTextEditable(QPoint cursorPos)
 {
   return (isInEditTextMode()) &&
          (cursorOverForm(cursorPos) != -1);
+}
+
+// Function taken from https://github.com/tsoding/musializer/blob/master/src/nob.h
+// inside the nob_log function
+void ZoomWidget::logUser(Log_Urgency type, const char *fmt, ...)
+{
+  FILE *output;
+
+  switch (type) {
+    case LOG_INFO:
+      output = stderr;
+      fprintf(stderr, "[INFO] ");
+      break;
+    case LOG_ERROR:
+      output = stderr;
+      fprintf(stderr, "[ERROR] ");
+      break;
+    case LOG_TEXT:
+      output = stdout;
+      break;
+  }
+
+  va_list args;
+  va_start(args, fmt);
+  vfprintf(output, fmt, args);
+  fprintf(output, "\n");
+  va_end(args);
 }
 
 void ZoomWidget::getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h, bool posRelativeToScreen)

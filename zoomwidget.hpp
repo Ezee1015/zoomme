@@ -11,6 +11,8 @@
 #include <QTimer>
 #include <QFile>
 #include <QFont>
+#include <stdio.h>
+#include <stdarg.h>
 
 // CUSTOMIZATION
 #define QCOLOR_RED       QColor(224,  49,  49)
@@ -122,6 +124,12 @@ enum ZoomWidgetScreenOpts {
                        // too (like the mouse actions and changing modes)
   SCREENOPTS_HIDE_STATUS,
   SCREENOPTS_SHOW_ALL,
+};
+
+enum Log_Urgency {
+  LOG_INFO,
+  LOG_ERROR,
+  LOG_TEXT
 };
 
 class ZoomWidget : public QWidget
@@ -321,6 +329,8 @@ class ZoomWidget : public QWidget
     void getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h, bool posRelativeToScreen);
 
     void saveStateToFile(); // Create a .zoomme file
+
+    void logUser(Log_Urgency type, const char *fmt, ...);
 };
 
 #endif // ZOOMWIDGET_HPP

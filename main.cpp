@@ -9,29 +9,37 @@
 #include <stdlib.h>
 #include <QFileInfo>
 
-void printHelp(const int exitStatus, const char* errorMsg){
-  if(strlen(errorMsg) != 0)
-    printf("[ERROR] %s\n", errorMsg);
-  else
-    printf("ZoomMe is an application for zooming/magnifying and noting the desktop.\n");
+void printHelp(const char *errorMsg){
+  FILE *output;
+  int exitStatus;
 
-  printf("\nUsage: zoomme [options]\n");
-  printf("Options:\n");
-  printf("  --help                    Display this help message\n");
-  printf("  -p [path/to/folder]       Specify the path where to save the exported (saved) image (default: Pictures folder)\n");
-  printf("  -n [file_name]            Specify the name of the exported (saved) image (default: Zoomme {date})\n");
-  printf("  -e:i [extension]          Specify the extension of the exported (saved) image (default: png)\n");
-  printf("  -e:v [extension]          Specify the extension of the exported (saved) video file (default: mp4)\n");
-  printf("  -l                        EXPERIMENTAL: Not use a background (live mode/transparent). In this mode there's no zooming, only drawings allowed\n");
-  printf("  -i <image_path> [opts]    Specify the path to an image as the background, instead of the desktop. It will automatically fit it to the screen\n");
-  printf("       -w                        Force to fit to the screen's width\n");
-  printf("       -h                        Force to fit to the screen's height\n");
-  printf("       --replace-on-save         This will replace the source image (autocompletes -p, -e and -n flags).\n");
-  printf("  -r [path/to/file] [opts]  Load/Restore the state of the program saved in that file. It should be a '.zoomme' file\n");
-  printf("       -w                        Force to fit to the screen's width if the recovered file doesn't have the same resolution\n");
-  printf("       -h                        Force to fit to the screen's height if the recovered file doesn't have the same resolution\n");
+  if(strlen(errorMsg) == 0){
+    output = stdout;
+    exitStatus = EXIT_SUCCESS;
+    fprintf(output, "ZoomMe is an application for zooming/magnifying and noting the desktop.\n");
+  } else {
+    output = stderr;
+    exitStatus = EXIT_FAILURE;
+    fprintf(output, "[ERROR] %s\n", errorMsg);
+  }
 
-  printf("\n  For more information, visit https://github.com/Ezee1015/zoomme\n");
+  fprintf(output, "\nUsage: zoomme [options]\n");
+  fprintf(output, "Options:\n");
+  fprintf(output, "  --help                    Display this help message\n");
+  fprintf(output, "  -p [path/to/folder]       Set the path where to save the exported files (default: Desktop folder)\n");
+  fprintf(output, "  -n [file_name]            Specify the name of the exported files (default: Zoomme {date})\n");
+  fprintf(output, "  -e:i [extension]          Specify the extension of the exported (saved) image (default: png)\n");
+  fprintf(output, "  -e:v [extension]          Specify the extension of the exported (saved) video file (default: mp4)\n");
+  fprintf(output, "  -l                        Not use a background (transparent). In this mode zooming is disabled\n");
+  fprintf(output, "  -i <image_path> [opts]    Specify the path to an image as the background, instead of the desktop. It will automatically fit it to the screen\n");
+  fprintf(output, "       -w                        Force to fit to the screen's width\n");
+  fprintf(output, "       -h                        Force to fit to the screen's height\n");
+  fprintf(output, "       --replace-on-save         This will replace the source image (autocompletes -p, -e and -n flags).\n");
+  fprintf(output, "  -r [path/to/file] [opts]  Load/Restore the state of the program saved in that file. It should be a '.zoomme' file\n");
+  fprintf(output, "       -w                        Force to fit to the screen's width if the recovered file doesn't have the same resolution\n");
+  fprintf(output, "       -h                        Force to fit to the screen's height if the recovered file doesn't have the same resolution\n");
+
+  fprintf(output, "\n  For more information, visit https://github.com/Ezee1015/zoomme\n");
 
   exit(exitStatus);
 }
@@ -54,55 +62,55 @@ int main(int argc, char *argv[])
   // Parsing arguments
   for(int i=1; i<argc ; ++i){
     if(strcmp(argv[i], "--help") == 0)
-      printHelp(EXIT_SUCCESS, "");
+      printHelp("");
 
     else if(strcmp(argv[i], "-l") == 0){
       if(liveMode == true)
-        printHelp(EXIT_FAILURE, "Live mode already specified");
+        printHelp("Live mode already specified");
 
       liveMode=true;
     }
 
     else if(strcmp(argv[i], "-i") == 0) {
       if((i+1) == argc)
-        printHelp(EXIT_FAILURE, "Image path not provided");
+        printHelp("Image path not provided");
 
       if(img != "")
-        printHelp(EXIT_FAILURE, "Image already provided");
+        printHelp("Image already provided");
 
       img = argv[++i];
     }
 
     else if(strcmp(argv[i], "-w") == 0) {
       if(img.isEmpty() && backupFile.isEmpty())
-        printHelp(EXIT_FAILURE, "Fit width argument was given, but either the image or the recovery file was not provided");
+        printHelp("Fit width argument was given, but either the image or the recovery file was not provided");
 
       if(fitOption != FIT_AUTO)
-        printHelp(EXIT_FAILURE, "Fit setting already provided");
+        printHelp("Fit setting already provided");
 
       fitOption = FIT_TO_WIDTH;
     }
 
     else if(strcmp(argv[i], "-h") == 0) {
       if(img.isEmpty() && backupFile.isEmpty())
-        printHelp(EXIT_FAILURE, "Fit height argument was given, but either the image or the recovery file was not provided");
+        printHelp("Fit height argument was given, but either the image or the recovery file was not provided");
 
       if(fitOption != FIT_AUTO)
-        printHelp(EXIT_FAILURE, "Fit setting already provided");
+        printHelp("Fit setting already provided");
 
       fitOption = FIT_TO_HEIGHT;
     }
 
     else if(strcmp(argv[i], "--replace-on-save") == 0) {
       if(img.isEmpty())
-        printHelp(EXIT_FAILURE, "Override source image was indicated, but the source image is not provided");
+        printHelp("Override source image was indicated, but the source image is not provided");
 
       if(savePath != "")
-        printHelp(EXIT_FAILURE, "Saving path already provided");
+        printHelp("Saving path already provided");
       if(saveName != "")
-        printHelp(EXIT_FAILURE, "Saving name already provided");
+        printHelp("Saving name already provided");
       if(saveImgExt != "")
-        printHelp(EXIT_FAILURE, "Saving extension already provided");
+        printHelp("Saving extension already provided");
 
       QFileInfo imgInfo = QFileInfo(img);
 
@@ -113,40 +121,40 @@ int main(int argc, char *argv[])
 
     else if(strcmp(argv[i], "-p") == 0) {
       if((i+1) == argc)
-        printHelp(EXIT_FAILURE, "Saving path not provided");
+        printHelp("Saving path not provided");
 
       if(savePath != "")
-        printHelp(EXIT_FAILURE, "Saving path already provided");
+        printHelp("Saving path already provided");
 
       savePath = argv[++i];
     }
 
     else if(strcmp(argv[i], "-n") == 0) {
       if((i+1) == argc)
-        printHelp(EXIT_FAILURE, "Saving name not provided");
+        printHelp("Saving name not provided");
 
       if(saveName != "")
-        printHelp(EXIT_FAILURE, "Saving name already provided");
+        printHelp("Saving name already provided");
 
       saveName = argv[++i];
     }
 
     else if(strcmp(argv[i], "-e:i") == 0) {
       if((i+1) == argc)
-        printHelp(EXIT_FAILURE, "Saving extension for the image not provided");
+        printHelp("Saving extension for the image not provided");
 
       if(saveImgExt != "")
-        printHelp(EXIT_FAILURE, "Saving extension already provided");
+        printHelp("Saving extension already provided");
 
       saveImgExt = argv[++i];
     }
 
     else if(strcmp(argv[i], "-e:v") == 0) {
       if((i+1) == argc)
-        printHelp(EXIT_FAILURE, "Saving extension for the video file not provided");
+        printHelp("Saving extension for the video file not provided");
 
       if(saveVidExt != "")
-        printHelp(EXIT_FAILURE, "Saving extension fot the video file already provided");
+        printHelp("Saving extension fot the video file already provided");
 
       saveVidExt = argv[++i];
     }
@@ -155,14 +163,14 @@ int main(int argc, char *argv[])
       backupFile = argv[++i];
 
       if(QFileInfo(backupFile).suffix() != "zoomme")
-        printHelp(EXIT_FAILURE, "It's not a '.zoomme' file");
+        printHelp("It's not a '.zoomme' file");
     }
 
     else {
       QString textError;
       textError.append("Unknown flag: ");
       textError.append(argv[i]);
-      printHelp(EXIT_FAILURE, QSTRING_TO_STRING(textError));
+      printHelp(QSTRING_TO_STRING(textError));
     }
   }
 
@@ -178,18 +186,18 @@ int main(int argc, char *argv[])
   // Set the path, name and extension for saving the file
   QString saveFileError = w.initFileConfig(savePath, saveName, saveImgExt, saveVidExt);
   if(!saveFileError.isEmpty())
-    printHelp(EXIT_FAILURE, qPrintable(saveFileError));
+    printHelp(qPrintable(saveFileError));
 
   // Configure the app source
   if(!backupFile.isEmpty()) {
     bool restoreCorrect = w.restoreStateFromFile(backupFile, fitOption);
     if(!restoreCorrect)
-      printHelp(EXIT_FAILURE, "Couldn't restore the state from the file");
+      printHelp("Couldn't restore the state from the file");
 
   } else if(!img.isEmpty()) {
     bool getImageCorrect = w.grabImage(QPixmap(img), fitOption);
     if (!getImageCorrect)
-      printHelp(EXIT_FAILURE, "Couldn't open the image");
+      printHelp("Couldn't open the image");
 
   } else {
     w.grabDesktop(liveMode);
