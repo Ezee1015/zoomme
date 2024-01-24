@@ -397,6 +397,20 @@ QRect fixQRectForText(int x, int y, int width, int height)
   return QRect(x, y, width, height);
 }
 
+void updateFontSize(QPainter *painter)
+{
+  QFont font;
+  font.setPixelSize(painter->pen().width() * FONT_SIZE_FACTOR);
+  painter->setFont(font);
+}
+
+void changePenWidth(QPainter *painter, int width)
+{
+  QPen pen = painter->pen();
+  pen.setWidth(width);
+  painter->setPen(pen);
+}
+
 void drawArrowHead(int x, int y, int width, int height, QPainter *p)
 {
   float opposite=-1 * height;
@@ -463,7 +477,7 @@ bool ZoomWidget::isDrawingHovered(int drawType, int vectorPos)
 {
   // Only if it's deleting or if it's trying to modify a text
   bool isDeleting       = (_state == STATE_DELETING);
-  if(!isDeleting && !IS_IN_EDIT_TEXT_MODE)
+  if(!isDeleting && !isInEditTextMode())
     return false;
 
   // This is the position of the form (in the current draw mode) in the vector,
@@ -508,7 +522,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   QString text;
 
   // Line 1 -ALWAYS DISPLAYING-
-  if(IS_DISABLED_MOUSE_TRACKING)
+  if(isDisabledMouseTracking())
     text.append(BLOCK_ICON);
   else
     text.append( (_desktopPixmapScale == 1.0f) ? NO_ZOOM_ICON : ZOOM_ICON );
@@ -536,7 +550,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
     case STATE_DELETING:     text.append("\n-- DELETING --"); h += lineHeight; break;
     case STATE_COLOR_PICKER: text.append("\n-- PICK COLOR --"); h += lineHeight; break;
   };
-  if(IS_IN_EDIT_TEXT_MODE){
+  if(isInEditTextMode()){
     text += "\n-- SELECT --";
     h += lineHeight;
   }
@@ -608,7 +622,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   // Settings
   screenPainter->setPen(_activePen);
   QFont font; font.setPixelSize(fontSize); screenPainter->setFont(font);
-  CHANGE_PEN_WIDTH_FROM_PAINTER(screenPainter, penWidth);
+  changePenWidth(screenPainter, penWidth);
 
   // Background (highlight) to improve contrast
   QColor color = (_activePen.color() == QCOLOR_BLACK) ? QCOLOR_WHITE : QCOLOR_BLACK;
@@ -714,7 +728,7 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
   int textsCount = _state == STATE_TYPING ? _userTexts.size()-1 : _userTexts.size();
   for (int i = 0; i < textsCount; ++i) {
     pixmapPainter->setPen(_userTexts.at(i).data.pen);
-    UPDATE_FONT_SIZE(pixmapPainter);
+    updateFontSize(pixmapPainter);
     getRealUserObjectPos(_userTexts.at(i).data, &x, &y, &w, &h, false);
 
     if(isDrawingHovered(DRAWMODE_TEXT, i))
@@ -754,7 +768,7 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
     UserTextData textObject = _userTexts.last();
     int x, y, w, h;
     painter->setPen(textObject.data.pen);
-    UPDATE_FONT_SIZE(painter);
+    updateFontSize(painter);
     getRealUserObjectPos(textObject.data, &x, &y, &w, &h, drawToScreen);
 
     QString text = textObject.text;
@@ -762,7 +776,7 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
     else text.insert(textObject.caretPos, '|');
     painter->drawText(fixQRectForText(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
 
-    CHANGE_PEN_WIDTH_FROM_PAINTER(painter, 1);
+    changePenWidth(painter, 1);
     painter->drawRect(x, y, w, h);
   }
 
@@ -799,8 +813,8 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
         break;
       case DRAWMODE_TEXT:
         {
-          UPDATE_FONT_SIZE(painter);
-          CHANGE_PEN_WIDTH_FROM_PAINTER(painter, 1);
+          updateFontSize(painter);
+          changePenWidth(painter, 1);
           painter->drawRect(x, y, width, height);
           QString defaultText;
           defaultText.append("Sizing... (");
@@ -866,12 +880,12 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   // By the way, ¿Why would you draw when the flashlight effect is enabled? I
   // don't know why I'm allowing this... You can't even see the cursor!
   if(_flashlightMode){
-    DRAW_DRAWN_PIXMAP(screen);
+    drawDrawnPixmap(&screen);
     drawFlashlightEffect(&screen);
     drawActiveForm(&screen, true);
   } else{
     drawActiveForm(&pixmapPainter, false);
-    DRAW_DRAWN_PIXMAP(screen);
+    drawDrawnPixmap(&screen);
   }
 
   drawStatus(&screen);
@@ -1098,7 +1112,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 // The mouse pos shouldn't be fixed to the hdpi scaling
 void ZoomWidget::updateAtMousePos(QPoint mousePos)
 {
-  if(!IS_DISABLED_MOUSE_TRACKING) {
+  if(!isDisabledMouseTracking()) {
     QPoint delta = mousePos - _lastMousePos;
 
     shiftPixmap(delta);
@@ -1380,22 +1394,16 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
                       _drawMode = DRAWMODE_ELLIPSE;
                     break;
 
-    case Qt::Key_S:
-                    if(_shiftPressed)
-                      SAVE_TO_CLIPBOARD();
-                    else
-                      SAVE_TO_IMAGE();
-                    break;
-
-    case Qt::Key_U:      undoLastDrawing();       break;
-    case Qt::Key_Q:      clearAllDrawings();      break;
+    case Qt::Key_S:      savePixmap(_shiftPressed); break;
+    case Qt::Key_U:      undoLastDrawing();         break;
+    case Qt::Key_Q:      clearAllDrawings();        break;
     case Qt::Key_Tab:    SWITCH_BOARD_MODE();       break;
-    case Qt::Key_Space:  CYCLE_SCREEN_OPTS();       break;
+    case Qt::Key_Space:  cycleScreenOpts();         break;
     case Qt::Key_Period: SWITCH_FLASHLIGHT_MODE();  break;
-    case Qt::Key_Comma:  switchDeleteMode();      break;
-    case Qt::Key_Escape: escapeKeyFunction();     break;
-    case Qt::Key_Minus:  toggleRecording();       break;
-    case Qt::Key_P:      pickColorMode();         break;
+    case Qt::Key_Comma:  switchDeleteMode();        break;
+    case Qt::Key_Escape: escapeKeyFunction();       break;
+    case Qt::Key_Minus:  toggleRecording();         break;
+    case Qt::Key_P:      pickColorMode();           break;
 
     case Qt::Key_1:
     case Qt::Key_2:
@@ -1513,7 +1521,7 @@ void ZoomWidget::escapeKeyFunction()
   } else if(_flashlightMode) {
     _flashlightMode = false;
   } else if(_screenOpts == SCREENOPTS_HIDE_ALL) {
-    CYCLE_SCREEN_OPTS();
+    cycleScreenOpts();
   } else if(_desktopPixmapSize != _desktopPixmapOriginalSize) {
     _desktopPixmapScale = 1.0f;
     scalePixmapAt(QPoint(0,0));
@@ -1682,6 +1690,63 @@ QSize ZoomWidget::pixmapSizeToScreenSize(QSize qsize){
   qsize.setHeight( GET_Y_FROM_HDPI_SCALING(qsize.height()) );
 
   return qsize * _desktopPixmapScale;
+}
+
+void ZoomWidget::drawDrawnPixmap(QPainter *painter)
+{
+  const int x = _desktopPixmapPos.x();
+  const int y = _desktopPixmapPos.y();
+  const int w = _desktopPixmapSize.width();
+  const int h = _desktopPixmapSize.height();
+
+  painter->drawPixmap(x, y, w, h, _drawnPixmap);
+}
+
+void ZoomWidget::cycleScreenOpts()
+{
+  if(_state!=STATE_MOVING)
+    return;
+
+  switch(_screenOpts) {
+    case SCREENOPTS_HIDE_ALL:    _screenOpts = SCREENOPTS_SHOW_ALL;    break;
+    case SCREENOPTS_HIDE_STATUS: _screenOpts = SCREENOPTS_HIDE_ALL;    break;
+    case SCREENOPTS_SHOW_ALL:    _screenOpts = SCREENOPTS_HIDE_STATUS; break;
+  }
+}
+
+void ZoomWidget::savePixmap(bool toClipboard)
+{
+  if(toClipboard) {
+    clipboard->setImage(_drawnPixmap.toImage());
+    QApplication::beep();
+    return;
+  }
+
+  // To file
+  QString path = _saveFilePath + "." + _imageExtension;
+  if(_drawnPixmap.save(path))
+    QApplication::beep();
+}
+
+bool ZoomWidget::isInEditTextMode()
+{
+  return (_state == STATE_MOVING) &&
+         (_drawMode == DRAWMODE_TEXT) &&
+         (_shiftPressed) &&
+         (_screenOpts != SCREENOPTS_HIDE_ALL);
+}
+
+bool ZoomWidget::isDisabledMouseTracking()
+{
+  return (_state != STATE_TYPING && _shiftPressed) ||
+         (_state == STATE_TYPING && _freezeDesktopPosWhileWriting);
+}
+
+// The cursor pos shouln't be fixed to hdpi scaling
+bool ZoomWidget::isTextEditable(QPoint cursorPos)
+{
+  return (isInEditTextMode()) &&
+         (cursorOverForm(cursorPos) != -1);
 }
 
 void ZoomWidget::getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h, bool posRelativeToScreen)

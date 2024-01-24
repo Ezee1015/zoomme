@@ -44,45 +44,8 @@
 // CODE
 #define QSTRING_TO_STRING(string) string.toStdString().c_str()
 
-// The painter argument must be a pointer to the painter
-#define UPDATE_FONT_SIZE(painter)                                 \
-  do {                                                            \
-    QFont font;                                                   \
-    font.setPixelSize(painter->pen().width() * FONT_SIZE_FACTOR); \
-    painter->setFont(font);                                       \
-  } while(0)
-
-// The painter argument must be a pointer to the painter
-#define CHANGE_PEN_WIDTH_FROM_PAINTER(painter, width) \
-  do {                                                \
-    QPen pen = painter->pen();                        \
-    pen.setWidth(width);                              \
-    painter->setPen(pen);                             \
-  } while(0)
-
-#define DRAW_DRAWN_PIXMAP(painter)                                 \
-  painter.drawPixmap(_desktopPixmapPos.x(), _desktopPixmapPos.y(), \
-      _desktopPixmapSize.width(), _desktopPixmapSize.height(),     \
-      _drawnPixmap);
-
-#define SAVE_TO_IMAGE() if(_drawnPixmap.save(_saveFilePath + "." + _imageExtension)) QApplication::beep();
-#define SAVE_TO_CLIPBOARD()                      \
-  do {                                           \
-    clipboard->setImage(_drawnPixmap.toImage()); \
-    QApplication::beep();                        \
-  } while(0)
-
 #define SWITCH_FLASHLIGHT_MODE() _flashlightMode = !_flashlightMode;
 #define SWITCH_BOARD_MODE()      _boardMode = !_boardMode;
-
-#define CYCLE_SCREEN_OPTS()                                                     \
-  if(_state==STATE_MOVING){                                                     \
-    switch(_screenOpts){                                                        \
-      case SCREENOPTS_HIDE_ALL:    _screenOpts = SCREENOPTS_SHOW_ALL;    break; \
-      case SCREENOPTS_HIDE_STATUS: _screenOpts = SCREENOPTS_HIDE_ALL;    break; \
-      case SCREENOPTS_SHOW_ALL:    _screenOpts = SCREENOPTS_HIDE_STATUS; break; \
-    }                                                                           \
-  }
 
 #define GET_COLOR_UNDER_CURSOR() _drawnPixmap.toImage().pixel( screenPointToPixmapPos(getCursorPos(false)) )
 
@@ -102,22 +65,6 @@
 // FIX_X_FOR_HDPI_SCALING.
 #define GET_X_FROM_HDPI_SCALING(point) (point * (_desktopPixmapOriginalSize.width())  / _desktopPixmap.width() )
 #define GET_Y_FROM_HDPI_SCALING(point) (point * (_desktopPixmapOriginalSize.height()) / _desktopPixmap.height())
-
-#define IS_IN_EDIT_TEXT_MODE (           \
-    (_state == STATE_MOVING) &&          \
-    (_drawMode == DRAWMODE_TEXT) &&      \
-    (_shiftPressed) &&                   \
-    (_screenOpts != SCREENOPTS_HIDE_ALL) \
-  )
-#define IS_DISABLED_MOUSE_TRACKING (                          \
-    (_state != STATE_TYPING && _shiftPressed) ||              \
-    (_state == STATE_TYPING && _freezeDesktopPosWhileWriting) \
-  )
-// The cursor pos shouln't be fixed to hdpi scaling
-#define isTextEditable(cursorPos) (      \
-    (IS_IN_EDIT_TEXT_MODE) &&            \
-    (cursorOverForm(cursorPos) != -1)    \
-  )
 
 #define IS_RECORDING (recordTimer->isActive())
 #define IS_FFMPEG_RUNNING (ffmpeg.state() != QProcess::NotRunning)
@@ -169,7 +116,7 @@ enum ZoomWidgetDrawMode {
   DRAWMODE_HIGHLIGHT,
 };
 
-// When modifying this enum, don't forget to modify the CYCLE_SCREEN_OPTS macro
+// When modifying this enum, don't forget to modify the cycleScreenOpts function
 enum ZoomWidgetScreenOpts {
   SCREENOPTS_HIDE_ALL, // Only show the background. This disables some functions
                        // too (like the mouse actions and changing modes)
@@ -300,6 +247,7 @@ class ZoomWidget : public QWidget
     QPoint	_startDrawPoint;
     QPoint	_endDrawPoint;
 
+    void drawDrawnPixmap(QPainter *painter);
     void drawSavedForms(QPainter *pixmapPainter);
     // Opaque the area outside the circle of the cursor
     void drawFlashlightEffect(QPainter *screenPainter);
@@ -345,6 +293,9 @@ class ZoomWidget : public QWidget
     void removeFormBehindCursor(QPoint cursorPos);
     void updateCursorShape();
     bool isDrawingHovered(int drawMode, int i);
+    bool isInEditTextMode();
+    bool isDisabledMouseTracking();
+    bool isTextEditable(QPoint cursorPos);
 
     // The X, Y, W and H arguments must be a point in the SCREEN, not in the pixmap
     // If floating is enabled, the form (the width and height) is not affected by zoom/scaling
@@ -357,6 +308,8 @@ class ZoomWidget : public QWidget
     void undoLastDrawing();
     void toggleRecording();
     void pickColorMode();
+    void savePixmap(bool toClipboard);
+    void cycleScreenOpts();
 
     // Recording
     void saveFrameToFile(); // Timer function
@@ -367,7 +320,7 @@ class ZoomWidget : public QWidget
     // pixmap
     void getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h, bool posRelativeToScreen);
 
-    void saveStateToFile();
+    void saveStateToFile(); // Create a .zoomme file
 };
 
 #endif // ZOOMWIDGET_HPP
