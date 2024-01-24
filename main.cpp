@@ -184,22 +184,22 @@ int main(int argc, char *argv[])
   w.setAttribute(Qt::WA_TranslucentBackground, true);
   w.show();
 
-  // The backup file has it's own live mode
-  if(backupFile.isEmpty())
-    w.setLiveMode(liveMode);
-
   // Set the path, name and extension for saving the file
   w.initFileConfig(savePath, saveName, saveImgExt, saveVidExt);
 
   // Configure the app source
-  if(!backupFile.isEmpty())
+  if(!backupFile.isEmpty()) {
     w.restoreStateFromFile(backupFile, fitOption);
+    // The backup file has it's own live mode
 
-  else if(!img.isEmpty())
+  } else if(!img.isEmpty()) {
     w.grabImage(QPixmap(img), fitOption);
+    w.setLiveMode(false);
 
-  else
+  } else {
     w.grabDesktop();
+    w.setLiveMode(liveMode);
+  }
 
   QApplication::beep();
   return a.exec();
