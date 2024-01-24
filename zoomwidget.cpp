@@ -333,38 +333,28 @@ bool ZoomWidget::createVideoFFmpeg()
   // Read the video bytes and pipe it to FFmpeg...
   // Arguments for FFmpeg taken from:
   // https://github.com/tsoding/rendering-video-in-c-with-ffmpeg/blob/master/ffmpeg_linux.c
-  QString script;
-
-  script.append("cat ");
-    script.append(RECORD_TMP_FILEPATH);
-
-  script.append(" | ");
-
-  script.append("ffmpeg ");
-  // GLOBAL ARGS
-    script.append("-loglevel "); script.append("verbose "       );
-    script.append("-y "       );
-  // INPUT ARGS
-    // No rawvideo because it's now compressed in jpeg
-    // script.append("-f "      );  script.append("rawvideo ");
-    script.append("-pix_fmt " );  script.append("yuv420p "      );
-    script.append("-s "       );  script.append(resolution + " ");
-    script.append("-r "       );  script.append(QString::number(RECORD_FPS) + " ");
-    script.append("-i "       );  script.append("- "            );
-  // OUTPUT ARGS
-    script.append("-c:v "     );  script.append("libx264 "      );
-    script.append("-vb "      );  script.append("2500k "        );
-    script.append("-c:a "     );  script.append("aac "          );
-    script.append("-ab "      );  script.append("200k "         );
-    script.append("-pix_fmt " );  script.append("yuv420p "      );
-    script.append("'" + _saveFilePath + "." + _videoExtension + "'");
-
   QList<QString> arguments;
-  arguments << "-c";
-  arguments << script;
+
+  // GLOBAL ARGS
+  arguments << "-loglevel"  << "verbose"
+            << "-y"
+  // INPUT ARGS
+            // No rawvideo because it's now compressed in jpeg
+            // << "-f"         << "rawvideo"
+            << "-pix_fmt"   << "yuv420p"
+            << "-s"         << resolution
+            << "-r"         << QString::number(RECORD_FPS)
+            << "-i"         << RECORD_TMP_FILEPATH
+  // OUTPUT ARGS
+            << "-c:v"       << "libx264"
+            << "-vb"        << "2500k"
+            << "-c:a"       << "aac"
+            << "-ab"        << "200k"
+            << "-pix_fmt"   << "yuv420p"
+            << _saveFilePath + "." + _videoExtension;
 
   // Start process
-  ffmpeg.start("bash", arguments);
+  ffmpeg.start("ffmpeg", arguments);
 
   updateCursorShape();
 
