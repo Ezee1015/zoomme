@@ -141,12 +141,14 @@ class ZoomWidget : public QWidget
     explicit ZoomWidget(QWidget *parent = 0);
     ~ZoomWidget();
 
+    void setLiveMode(bool liveMode);
+
     void restoreStateFromFile(QString path, FitImage config);
 
     // By passing an empty QString, sets the argument to the default
     void initFileConfig(QString path, QString name, QString imgExt, QString vidExt);
 
-    void grabDesktop(bool liveMode);
+    void grabDesktop();
     void grabImage(QPixmap img, FitImage config);
 
   protected:

@@ -228,6 +228,8 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
     grabImage(savedPixmap, config);
   }
 
+  if(!_liveMode) showFullScreen();
+
   // Read the drawings
   // Rectangles
   for(int i=0; i<userRectsCount; i++){
@@ -319,10 +321,6 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
 
     _userHighlights.append(objectData);
   }
-
-  if(!_liveMode)
-    showFullScreen();
-  return;
 }
 
 bool ZoomWidget::createVideoFFmpeg()
@@ -1545,10 +1543,15 @@ void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
   }
 }
 
-void ZoomWidget::grabDesktop(bool liveMode)
+void ZoomWidget::setLiveMode(bool liveMode)
 {
   _liveMode = liveMode;
 
+  if(!_liveMode) showFullScreen();
+}
+
+void ZoomWidget::grabDesktop()
+{
   QPixmap desktop = _desktopScreen->grabWindow(0);
 
   if(desktop.isNull())
@@ -1561,9 +1564,6 @@ void ZoomWidget::grabDesktop(bool liveMode)
   QPainter painter(&_desktopPixmap);
   painter.drawPixmap(0, 0, desktop.width(), desktop.height(), desktop);
   painter.end();
-
-  if(!liveMode)
-    showFullScreen();
 }
 
 void ZoomWidget::grabImage(QPixmap img, FitImage config)
@@ -1608,9 +1608,6 @@ void ZoomWidget::grabImage(QPixmap img, FitImage config)
 
   _desktopPixmapSize = _desktopPixmap.size();
   _desktopPixmapOriginalSize = _desktopPixmapSize;
-
-  showFullScreen();
-  return true;
 }
 
 void ZoomWidget::shiftPixmap(const QPoint delta)
