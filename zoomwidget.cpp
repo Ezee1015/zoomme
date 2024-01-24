@@ -859,6 +859,10 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 {
   (void) event;
 
+  // Exit if the _desktopPixmap is not initialized
+  if(_desktopPixmap.isNull())
+    return;
+
   _drawnPixmap = _desktopPixmap;
 
   if(_liveMode)
@@ -1553,8 +1557,15 @@ void ZoomWidget::grabDesktop()
 {
   QPixmap desktop = _desktopScreen->grabWindow(0);
 
-  if(desktop.isNull())
+  if(desktop.isNull()){
+    if(_liveMode){
+      _desktopPixmap = QPixmap(_screenSize);
+      _desktopPixmap.fill(Qt::transparent);
+      return;
+    }
+
     logUser(LOG_ERROR_AND_EXIT, "Couldn't grab the desktop");
+  }
 
   // Paint the desktop over _desktopPixmap
   // Fixes the issue with hdpi scaling (now the size of the image is the real

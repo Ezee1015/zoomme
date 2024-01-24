@@ -132,6 +132,9 @@ make
 
 ### Running
 
+> [!WARNING]
+> When using Wayland, this program is unable to take a screenshot of the screen, so it must be run with either the [-l flag](#live-mode) for a transparent background or the [-i flag](#from-image) for grabbing an image
+
 <!-- Start 1 -->
 <details>
 <summary><b>Running the application as normal</b></summary><p>
@@ -212,7 +215,7 @@ make
 
 <!-- Start 7 -->
 <details>
-<summary><b>***Experimental*** -- Use a transparent background. No zooming allowed, only drawing</b></summary><p>
+<summary id="live-mode"><b>Use a transparent background. No zooming allowed, only drawing</b></summary><p>
 
 ```bash
 ./zoomme -l
@@ -223,7 +226,7 @@ make
 
 <!-- Start 8 -->
 <details>
-<summary><b>Use an image as the background (instead of the desktop)</b></summary><p>
+<summary id="from-image"><b>Use an image as the background (instead of the desktop)</b></summary><p>
 
  You can modifying any image (including previously saved images from ZoomMe)
 

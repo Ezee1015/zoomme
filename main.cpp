@@ -189,16 +189,16 @@ int main(int argc, char *argv[])
 
   // Configure the app source
   if(!backupFile.isEmpty()) {
-    w.restoreStateFromFile(backupFile, fitOption);
     // The backup file has it's own live mode
+    w.restoreStateFromFile(backupFile, fitOption);
 
   } else if(!img.isEmpty()) {
-    w.grabImage(QPixmap(img), fitOption);
     w.setLiveMode(false);
+    w.grabImage(QPixmap(img), fitOption);
 
   } else {
-    w.grabDesktop();
     w.setLiveMode(liveMode);
+    w.grabDesktop();
   }
 
   QApplication::beep();
