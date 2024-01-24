@@ -68,9 +68,12 @@ ZoomWidget::~ZoomWidget()
 
 void ZoomWidget::saveStateToFile()
 {
-  QFile file(_saveFilePath + ".zoomme");
-  if (!file.open(QIODevice::WriteOnly))
-   return;
+  QString filePath = _saveFilePath + ".zoomme";
+  QFile file(filePath);
+  if (!file.open(QIODevice::WriteOnly)){
+    logUser(LOG_ERROR, "Couldn't create the file: %s", QSTRING_TO_STRING(filePath));
+    return;
+  }
 
   QDataStream out(&file);
   // There should be the same arguments that the restoreStateToFile()
@@ -132,11 +135,11 @@ void ZoomWidget::saveStateToFile()
   QApplication::beep();
 }
 
-bool ZoomWidget::restoreStateFromFile(QString path, FitImage config)
+void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
 {
   QFile file(path);
   if (!file.open(QIODevice::ReadOnly))
-   return false;
+    logUser(LOG_ERROR_AND_EXIT, "Couldn't restore the state from the file");
 
   long long userRectsCount      = 0,
             userLinesCount      = 0,
@@ -319,7 +322,7 @@ bool ZoomWidget::restoreStateFromFile(QString path, FitImage config)
 
   if(!_liveMode)
     showFullScreen();
-  return true;
+  return;
 }
 
 bool ZoomWidget::createVideoFFmpeg()
@@ -1158,7 +1161,7 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
   update();
 }
 
-QString ZoomWidget::initFileConfig(QString path, QString name, QString imgExt, QString vidExt)
+void ZoomWidget::initFileConfig(QString path, QString name, QString imgExt, QString vidExt)
 {
   // Path
   QDir folderPath;
@@ -1168,13 +1171,13 @@ QString ZoomWidget::initFileConfig(QString path, QString name, QString imgExt, Q
   } else {
     folderPath = QDir(path);
     if(!folderPath.exists())
-      return "The given path doesn't exits or it's a file";
+      logUser(LOG_ERROR_AND_EXIT,  "The given path doesn't exits or it's a file");
   }
 
   // Check if extension is supported
   QList supportedExtensions = QImageWriter::supportedImageFormats();
   if( (!imgExt.isEmpty()) && (!supportedExtensions.contains(imgExt)) )
-    return "Image extension not supported";
+    logUser(LOG_ERROR_AND_EXIT, "Image extension not supported");
 
   // Name
   QString fileName;
@@ -1188,8 +1191,6 @@ QString ZoomWidget::initFileConfig(QString path, QString name, QString imgExt, Q
   _videoExtension += (vidExt.isEmpty()) ? defaultVidExt : vidExt;
 
   _saveFilePath = folderPath.absoluteFilePath(fileName);
-
-  return "";
 }
 
 // The cursor pos should be fixed to the hdpi scaling if the x, y, width and
@@ -1550,6 +1551,9 @@ void ZoomWidget::grabDesktop(bool liveMode)
 
   QPixmap desktop = _desktopScreen->grabWindow(0);
 
+  if(desktop.isNull())
+    logUser(LOG_ERROR_AND_EXIT, "Couldn't grab the desktop");
+
   // Paint the desktop over _desktopPixmap
   // Fixes the issue with hdpi scaling (now the size of the image is the real
   // resolution of the screen)
@@ -1562,10 +1566,10 @@ void ZoomWidget::grabDesktop(bool liveMode)
     showFullScreen();
 }
 
-bool ZoomWidget::grabImage(QPixmap img, FitImage config)
+void ZoomWidget::grabImage(QPixmap img, FitImage config)
 {
   if(img.isNull())
-    return false;
+    logUser(LOG_ERROR_AND_EXIT, "Couldn't open the image");
 
   // Auto detect the fit config
   if(config == FIT_AUTO){
@@ -1726,6 +1730,8 @@ void ZoomWidget::savePixmap(bool toClipboard)
   QString path = _saveFilePath + "." + _imageExtension;
   if(_drawnPixmap.save(path))
     QApplication::beep();
+  else
+    logUser(LOG_ERROR, "Couldn't save the picture to: %s", QSTRING_TO_STRING(path));
 }
 
 bool ZoomWidget::isInEditTextMode()
@@ -1754,6 +1760,7 @@ bool ZoomWidget::isTextEditable(QPoint cursorPos)
 void ZoomWidget::logUser(Log_Urgency type, const char *fmt, ...)
 {
   FILE *output;
+  bool exitApp = false;
 
   switch (type) {
     case LOG_INFO:
@@ -1763,6 +1770,11 @@ void ZoomWidget::logUser(Log_Urgency type, const char *fmt, ...)
     case LOG_ERROR:
       output = stderr;
       fprintf(stderr, "[ERROR] ");
+      break;
+    case LOG_ERROR_AND_EXIT:
+      output = stderr;
+      fprintf(stderr, "[ERROR] ");
+      exitApp = true;
       break;
     case LOG_TEXT:
       output = stdout;
@@ -1774,6 +1786,9 @@ void ZoomWidget::logUser(Log_Urgency type, const char *fmt, ...)
   vfprintf(output, fmt, args);
   fprintf(output, "\n");
   va_end(args);
+
+  if(exitApp)
+    exit(EXIT_FAILURE);
 }
 
 void ZoomWidget::getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h, bool posRelativeToScreen)

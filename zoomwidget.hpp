@@ -129,6 +129,7 @@ enum ZoomWidgetScreenOpts {
 enum Log_Urgency {
   LOG_INFO,
   LOG_ERROR,
+  LOG_ERROR_AND_EXIT,
   LOG_TEXT
 };
 
@@ -140,13 +141,13 @@ class ZoomWidget : public QWidget
     explicit ZoomWidget(QWidget *parent = 0);
     ~ZoomWidget();
 
-    bool restoreStateFromFile(QString path, FitImage config);
+    void restoreStateFromFile(QString path, FitImage config);
 
     // By passing an empty QString, sets the argument to the default
-    QString initFileConfig(QString path, QString name, QString imgExt, QString vidExt);
+    void initFileConfig(QString path, QString name, QString imgExt, QString vidExt);
 
     void grabDesktop(bool liveMode);
-    bool grabImage(QPixmap img, FitImage config);
+    void grabImage(QPixmap img, FitImage config);
 
   protected:
     virtual void paintEvent(QPaintEvent *event);

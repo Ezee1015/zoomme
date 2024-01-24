@@ -185,24 +185,17 @@ int main(int argc, char *argv[])
   w.show();
 
   // Set the path, name and extension for saving the file
-  QString saveFileError = w.initFileConfig(savePath, saveName, saveImgExt, saveVidExt);
-  if(!saveFileError.isEmpty())
-    printHelp(qPrintable(saveFileError));
+  w.initFileConfig(savePath, saveName, saveImgExt, saveVidExt);
 
   // Configure the app source
-  if(!backupFile.isEmpty()) {
-    bool restoreCorrect = w.restoreStateFromFile(backupFile, fitOption);
-    if(!restoreCorrect)
-      printHelp("Couldn't restore the state from the file");
+  if(!backupFile.isEmpty())
+    w.restoreStateFromFile(backupFile, fitOption);
 
-  } else if(!img.isEmpty()) {
-    bool getImageCorrect = w.grabImage(QPixmap(img), fitOption);
-    if (!getImageCorrect)
-      printHelp("Couldn't open the image");
+  else if(!img.isEmpty())
+    w.grabImage(QPixmap(img), fitOption);
 
-  } else {
+  else
     w.grabDesktop(liveMode);
-  }
 
   QApplication::beep();
   return a.exec();
