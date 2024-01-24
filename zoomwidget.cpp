@@ -1755,20 +1755,17 @@ bool ZoomWidget::isTextEditable(QPoint cursorPos)
 // inside the nob_log function
 void ZoomWidget::logUser(Log_Urgency type, const char *fmt, ...)
 {
-  FILE *output;
+  FILE *output = stderr;
   bool exitApp = false;
 
   switch (type) {
     case LOG_INFO:
-      output = stderr;
       fprintf(stderr, "[INFO] ");
       break;
     case LOG_ERROR:
-      output = stderr;
       fprintf(stderr, "[ERROR] ");
       break;
     case LOG_ERROR_AND_EXIT:
-      output = stderr;
       fprintf(stderr, "[ERROR] ");
       exitApp = true;
       break;
