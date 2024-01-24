@@ -40,7 +40,6 @@
 
 #define RECORD_FPS 16
 #define RECORD_QUALITY 70 // 0-100
-#define RECORD_TMP_FILEPATH "/tmp/ZoomMe_video_bytes"
 // END OF CUSTOMIZATION
 
 // CODE

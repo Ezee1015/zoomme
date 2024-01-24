@@ -16,6 +16,8 @@
 #include <QList>
 #include <QImageWriter>
 #include <QBuffer>
+#include <QFile>
+#include <QFileInfo>
 
 ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget)
 {
@@ -55,7 +57,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   // inconsistency
   // ffmpeg.setStandardErrorFile("ffmpeg_log.txt");
   // ffmpeg.setStandardOutputFile("ffmpeg_output.txt");
-  recordTempFile = new QFile(RECORD_TMP_FILEPATH);
+  recordTempFile = new QFile("/tmp/ZoomMe_video_bytes");
 
   _activePen.setColor(QCOLOR_RED);
   _activePen.setWidth(4);
@@ -344,7 +346,7 @@ void ZoomWidget::createVideoFFmpeg()
             << "-pix_fmt"   << "yuv420p"
             << "-s"         << resolution
             << "-r"         << QString::number(RECORD_FPS)
-            << "-i"         << RECORD_TMP_FILEPATH
+            << "-i"         << QFileInfo(*recordTempFile).absoluteFilePath()
   // OUTPUT ARGS
             << "-c:v"       << "libx264"
             << "-vb"        << "2500k"
