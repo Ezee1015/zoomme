@@ -859,7 +859,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 {
   (void) event;
 
-  // Exit if the _desktopPixmap is not initialized
+  // Exit if the _desktopPixmap is not initialized (not ready)
   if(_desktopPixmap.isNull())
     return;
 
@@ -1557,6 +1557,9 @@ void ZoomWidget::grabDesktop()
 {
   QPixmap desktop = _desktopScreen->grabWindow(0);
 
+  // The desktop pixmap is null if it couldn't capture the screenshot. For
+  // example, in Wayland, it will be null because Wayland doesn't support screen
+  // grabbing
   if(desktop.isNull()){
     if(_liveMode){
       _desktopPixmap = QPixmap(_screenSize);
