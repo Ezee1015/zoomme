@@ -25,6 +25,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   setMouseTracking(true);
 
   _state = STATE_MOVING;
+  _drawMode  = DRAWMODE_LINE;
 
   _desktopScreen = QGuiApplication::screenAt(QCursor::pos());
   _screenSize = _desktopScreen->geometry().size();
@@ -35,11 +36,9 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
 
   _scaleSensivity = 0.2f;
 
-  _drawMode = DRAWMODE_LINE;
-  _boardMode=0;
-
   _shiftPressed = false;
   _mousePressed = false;
+  _boardMode = false;
   _flashlightMode = false;
   _flashlightRadius = 80;
   _screenOpts = SCREENOPTS_SHOW_ALL;
