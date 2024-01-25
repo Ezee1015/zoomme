@@ -260,7 +260,7 @@ class ZoomWidget : public QWidget
     void drawDrawnPixmap(QPainter *painter);
     void drawSavedForms(QPainter *pixmapPainter);
     // Opaque the area outside the circle of the cursor
-    void drawFlashlightEffect(QPainter *screenPainter);
+    void drawFlashlightEffect(QPainter *screenPainter, bool drawToScreen);
     void drawActiveForm(QPainter *painter, bool drawToScreen);
     // The status is design to remember you things that you can forget they are
     // on or selected, for example, that you have selected some drawing mode,

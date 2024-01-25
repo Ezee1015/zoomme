@@ -745,10 +745,13 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
   }
 }
 
-void ZoomWidget::drawFlashlightEffect(QPainter *screenPainter)
+void ZoomWidget::drawFlashlightEffect(QPainter *painter, bool drawToScreen)
 {
+  const int radius = _flashlightRadius;
   QPoint c = getCursorPos(false);
-  int radius = _flashlightRadius;
+
+  if(!drawToScreen)
+    c = screenPointToPixmapPos(c);
 
   QRect mouseFlashlightBorder = QRect(c.x()-radius, c.y()-radius, radius*2, radius*2);
   QPainterPath mouseFlashlight;
@@ -761,7 +764,7 @@ void ZoomWidget::drawFlashlightEffect(QPainter *screenPainter)
   pixmapPath.addRect(_drawnPixmap.rect());
 
   QPainterPath flashlightArea = pixmapPath.subtracted(mouseFlashlight);
-  screenPainter->fillPath(flashlightArea, QColor(  0,  0,  0, 190));
+  painter->fillPath(flashlightArea, QColor(  0,  0,  0, 190));
 }
 
 void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
@@ -889,11 +892,13 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   // arrow's head)
   // By the way, ¿Why would you draw when the flashlight effect is enabled? I
   // don't know why I'm allowing this... You can't even see the cursor!
-  if(_flashlightMode){
+  if(_flashlightMode && !IS_RECORDING) {
     drawDrawnPixmap(&screen);
-    drawFlashlightEffect(&screen);
+    drawFlashlightEffect(&screen, true);
     drawActiveForm(&screen, true);
-  } else{
+  } else {
+    if(_flashlightMode)
+      drawFlashlightEffect(&pixmapPainter, false);
     drawActiveForm(&pixmapPainter, false);
     drawDrawnPixmap(&screen);
   }
