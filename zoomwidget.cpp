@@ -326,7 +326,7 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
   if(in.atEnd())
     logUser(LOG_INFO, "Recovery finished successfully (reached EOF)");
   else
-    logUser(LOG_ERROR_AND_EXIT, "There is data left in the ZoomMe file that was not loaded by the recovery algorithm (because it reached the end). Expect things to be broken or incomplete. Please check the saving & recovery algorithm. There may be some variables missing in the recovery or in the saving...");
+    logUser(LOG_ERROR_AND_EXIT, "There is data left in the ZoomMe file that was not loaded by the recovery algorithm (because it ended before the EOF). Please check the saving and the recovery algorithm: There may be some variables missing in the recovery and not in the saving or some variables added in the saving but not in the recovery...");
 }
 
 void ZoomWidget::createVideoFFmpeg()
