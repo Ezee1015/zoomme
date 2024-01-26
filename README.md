@@ -118,19 +118,44 @@ The Escape key performs the following actions in a sequential order. If one cond
 - `qt6`
 - `libopengl-dev`
 
-## Instalation
+## Instalation (Compilation)
 
-### Dependencies
+
+Choose one build system:
+
+### Compile with cmake (recommended)
+Install dependencies:
+- Debian-based: `sudo apt install build-essential qt6-base-dev libqt6opengl6-dev libqt5opengl5-dev cmake`
+- Arch-based: `sudo pacman -S base-devel qt6-base cmake`
+
+Compile:
+```bash
+cmake .
+make
+```
+You're ready. Now you can [run it](#running).
+
+> **FOR DEVELOPERS**
+>
+> Fix the LSP problem with the Qt libraries not being found (in my case Neovim with Clangd):
+> ```bash
+> cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+> ```
+
+### Compile with qmake
+Install dependencies:
 - Debian-based: `sudo apt install build-essential qt6-base-dev libqt6opengl6-dev libqt5opengl5-dev`
 - Arch-based: `sudo pacman -S base-devel qt6-base`
 
-### Compilation
+Compile:
 ```bash
 qmake6 -makefile zoomme.pro
 make
 ```
 
-### Running
+You're ready. Now you can [run it](#running).
+
+## Running
 
 > [!WARNING]
 > When using Wayland, this program is unable to take a screenshot of the screen, so it must be run with either the [-l flag](#live-mode) for a transparent background or the [-i flag](#from-image) for grabbing an image

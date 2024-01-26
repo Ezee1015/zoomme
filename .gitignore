@@ -1,11 +1,25 @@
-/.qmake.stash
-/Makefile
-/main.o
-/moc_predefs.h
-/moc_zoomwidget.cpp
-/moc_zoomwidget.o
-/ui_zoomwidget.h
-/zoomme
-/zoomwidget.o
+# Generated files
 /qrc_resources.cpp
 /qrc_resources.o
+/moc_zoomwidget.cpp
+/moc_zoomwidget.o
+/moc_predefs.h
+/ui_zoomwidget.h
+/zoomwidget.o
+/main.o
+/Makefile
+
+# QMake
+/.qmake.stash
+
+# CMake
+/.qt
+/.cache
+/CMakeCache.txt
+/CMakeFiles
+/cmake_install.cmake
+/zoomme_autogen
+/compile_commands.json
+
+# App
+/zoomme
