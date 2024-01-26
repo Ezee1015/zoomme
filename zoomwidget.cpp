@@ -93,7 +93,7 @@ void ZoomWidget::saveStateToFile()
       << _fileConfig.zoommeExt
       << _liveMode
       // I don't think is good to save if the status bar and/or the
-      // drawings are hiden
+      // drawings are hidden
       // << _screenOpts
       << _drawMode
       << _activePen
@@ -173,7 +173,7 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
       >> _fileConfig.zoommeExt
       >> _liveMode
       // I don't think is good to save if the status bar and/or the
-      // drawings are hiden
+      // drawings are hidden
       // >> _screenOpts
       >> _drawMode
       >> _activePen
