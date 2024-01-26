@@ -11,6 +11,7 @@
 #include <QTimer>
 #include <QFile>
 #include <QFont>
+#include <QDir>
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -91,6 +92,20 @@ struct UserFreeFormData {
   QVector<QPoint> points;
   QPen pen;
   bool active;
+};
+
+struct UserFileConfig {
+  QDir folder;
+  QString name;
+  // Extensions
+  QString videoExt;
+  QString imageExt;
+  QString zoommeExt;
+};
+enum FileType {
+  FILE_VIDEO,
+  FILE_IMAGE,
+  FILE_ZOOMME
 };
 
 enum FitImage {
@@ -201,10 +216,8 @@ class ZoomWidget : public QWidget
     // blackboard if _boardMode is activated, with the drawings on top.
     QPixmap _drawnPixmap;
 
-    // Save path for exporting the project
-    QString    _saveFilePath;
-    QString    _imageExtension;
-    QString    _videoExtension;
+    // For exporting files
+    UserFileConfig _fileConfig;
 
     // User objects.
     QVector<UserObjectData>    _userRects;
@@ -299,6 +312,8 @@ class ZoomWidget : public QWidget
     // mode) that is behind the cursor position. Returns -1 if there's no form
     // under the cursor
     int cursorOverForm(QPoint cursorPos);
+
+    QString getFilePath(FileType type);
 
     void removeFormBehindCursor(QPoint cursorPos);
     void updateCursorShape();

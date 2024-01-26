@@ -8,7 +8,6 @@
 #include <QRect>
 #include <QGuiApplication>
 #include <QOpenGLWidget>
-#include <QDir>
 #include <QCursor>
 #include <QDateTime>
 #include <QColor>
@@ -69,7 +68,7 @@ ZoomWidget::~ZoomWidget()
 
 void ZoomWidget::saveStateToFile()
 {
-  QString filePath = _saveFilePath + ".zoomme";
+  QString filePath = getFilePath(FILE_ZOOMME);
   QFile file(filePath);
   if (!file.open(QIODevice::WriteOnly)){
     logUser(LOG_ERROR, "Couldn't create the file: %s", QSTRING_TO_STRING(filePath));
@@ -87,9 +86,11 @@ void ZoomWidget::saveStateToFile()
       << _desktopPixmapOriginalSize
       // The save path is absolute, so it is bound to the PC, so it shouldn't
       // be saved
-      // << _saveFilePath
-      << _imageExtension
-      << _videoExtension
+      // << _fileConfig.folder
+      << _fileConfig.name
+      << _fileConfig.imageExt
+      << _fileConfig.videoExt
+      << _fileConfig.zoommeExt
       << _liveMode
       // I don't think is good to save if the status bar and/or the
       // drawings are hiden
@@ -165,9 +166,11 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
       >> savedPixmapSize
       // The save path is absolute, so it is bound to the PC, so it shouldn't
       // be saved
-      // >> _saveFilePath
-      >> _imageExtension
-      >> _videoExtension
+      // << _fileConfig.folder
+      >> _fileConfig.name
+      >> _fileConfig.imageExt
+      >> _fileConfig.videoExt
+      >> _fileConfig.zoommeExt
       >> _liveMode
       // I don't think is good to save if the status bar and/or the
       // drawings are hiden
@@ -357,7 +360,7 @@ void ZoomWidget::createVideoFFmpeg()
             << "-c:a"       << "aac"
             << "-ab"        << "200k"
             << "-pix_fmt"   << "yuv420p"
-            << _saveFilePath + "." + _videoExtension;
+            << getFilePath(FILE_VIDEO);
 
   // Start process
   ffmpeg.start("ffmpeg", arguments);
@@ -1173,36 +1176,54 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
   update();
 }
 
+QString ZoomWidget::getFilePath(FileType type)
+{
+  // Generate Name
+  QString fileName;
+  const QString date = QDateTime::currentDateTime().toString(DATE_FORMAT_FOR_FILE);
+  fileName = (_fileConfig.name.isEmpty()) ? ("ZoomMe " + date) : _fileConfig.name;
+
+  // Select extension
+  fileName.append(".");
+  switch(type) {
+    case FILE_IMAGE:  fileName.append(_fileConfig.imageExt);  break;
+    case FILE_VIDEO:  fileName.append(_fileConfig.videoExt);  break;
+    case FILE_ZOOMME: fileName.append(_fileConfig.zoommeExt); break;
+  }
+
+  // Path
+  QString filePath = _fileConfig.folder.absoluteFilePath(fileName);
+
+  return filePath;
+}
+
 void ZoomWidget::initFileConfig(QString path, QString name, QString imgExt, QString vidExt)
 {
   // Path
-  QDir folderPath;
   if(path.isEmpty()){
     QString picturesFolder = QStandardPaths::writableLocation(DEFAULT_FOLDER);
-    folderPath = (picturesFolder.isEmpty()) ? QDir::currentPath() : picturesFolder;
+    _fileConfig.folder = (picturesFolder.isEmpty()) ? QDir::currentPath() : picturesFolder;
   } else {
-    folderPath = QDir(path);
-    if(!folderPath.exists())
+    _fileConfig.folder = QDir(path);
+    if(!_fileConfig.folder.exists())
       logUser(LOG_ERROR_AND_EXIT,  "The given path doesn't exits or it's a file");
   }
 
-  // Check if extension is supported
+  // Name
+  _fileConfig.name = name;
+
+  // Check if image extension is supported
   QList supportedExtensions = QImageWriter::supportedImageFormats();
   if( (!imgExt.isEmpty()) && (!supportedExtensions.contains(imgExt)) )
     logUser(LOG_ERROR_AND_EXIT, "Image extension not supported");
 
-  // Name
-  QString fileName;
-  const QString date = QDateTime::currentDateTime().toString(DATE_FORMAT_FOR_FILE);
-  fileName = (name.isEmpty()) ? ("ZoomMe " + date) : name;
-
   // Extension
   const char* defaultImgExt = "png";
-  _imageExtension += (imgExt.isEmpty()) ? defaultImgExt : imgExt;
+  _fileConfig.imageExt = (imgExt.isEmpty()) ? defaultImgExt : imgExt;
   const char* defaultVidExt = "mp4";
-  _videoExtension += (vidExt.isEmpty()) ? defaultVidExt : vidExt;
-
-  _saveFilePath = folderPath.absoluteFilePath(fileName);
+  _fileConfig.videoExt = (vidExt.isEmpty()) ? defaultVidExt : vidExt;
+  const char* defaultZoommeExt = "zoomme";
+  _fileConfig.zoommeExt = defaultZoommeExt;
 }
 
 // The cursor pos should be fixed to the hdpi scaling if the x, y, width and
@@ -1748,7 +1769,7 @@ void ZoomWidget::savePixmap(bool toClipboard)
   }
 
   // To file
-  QString path = _saveFilePath + "." + _imageExtension;
+  QString path = getFilePath(FILE_IMAGE);
   if(_drawnPixmap.save(path))
     QApplication::beep();
   else
