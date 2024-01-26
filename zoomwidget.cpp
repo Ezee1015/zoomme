@@ -350,15 +350,17 @@ void ZoomWidget::createVideoFFmpeg()
   // INPUT ARGS
             // No rawvideo because it's now compressed in jpeg
             // << "-f"         << "rawvideo"
-            << "-pix_fmt"   << "yuv420p"
+            << "-pix_fmt"   << "yuv420p" // Indicates that the file contains JPEG images
             << "-s"         << resolution
             << "-r"         << QString::number(RECORD_FPS)
             << "-i"         << QFileInfo(*recordTempFile).absoluteFilePath()
   // OUTPUT ARGS
-            << "-c:v"       << "libx264"
+            // Commented to add support to GIF, for example
+            // << "-c:v"       << "libx264"
+            // There's no audio, so no need for this flags
+            // << "-c:a"       << "aac"
+            // << "-ab"        << "200k"
             << "-vb"        << "2500k"
-            << "-c:a"       << "aac"
-            << "-ab"        << "200k"
             << "-pix_fmt"   << "yuv420p"
             << getFilePath(FILE_VIDEO);
 
