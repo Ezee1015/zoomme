@@ -158,7 +158,7 @@ You're ready. Now you can [run it](#running).
 ## Running
 
 > [!WARNING]
-> When using Wayland, this program is unable to take a screenshot of the screen, so it must be run with either the [-l flag](#live-mode) for a transparent background or the [-i flag](#from-image) for grabbing an image
+> When using Wayland, this program is unable to take a screenshot, so it must be run with either the [-l flag](#live-mode) for a transparent background or the [-i flag](#from-image) for grabbing an image
 
 <!-- Start 1 -->
 <details>
