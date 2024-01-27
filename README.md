@@ -156,14 +156,14 @@ make
 
 You're ready. Now you can [run it](#running).
 
-## Running
+## Running (flags)
 
 > [!WARNING]
 > When using Wayland, this program is unable to take a screenshot, so it must be run with either the [-l flag](#live-mode) for a transparent background or the [-i flag](#from-image) for grabbing an image
 
 <!-- Start 1 -->
 <details>
-<summary><b>Running the application as normal</b></summary><p>
+<summary><b>[ No Flags ] Running the application as normal</b></summary><p>
 
 ```bash
 ./zoomme
@@ -174,7 +174,7 @@ You're ready. Now you can [run it](#running).
 
 <!-- Start 2 -->
 <details>
-<summary><b>Show the help message</b></summary><p>
+<summary><b>[ <code>--help</code> ] Show the help message</b></summary><p>
 
 ```bash
 ./zoomme --help
@@ -185,7 +185,7 @@ You're ready. Now you can [run it](#running).
 
 <!-- Start 3 -->
 <details>
-<summary><b>Set the path where the produced files will be saved</b></summary><p>
+<summary><b>[ <code>-p</code> ] Set the path where the produced files will be saved</b></summary><p>
 
 > It can be an absolute or relative path
 
@@ -200,7 +200,7 @@ You're ready. Now you can [run it](#running).
 
 <!-- Start 4 -->
 <details>
-<summary><b>Set the name of the produced files</b></summary><p>
+<summary><b>[ <code>-n</code> ] Set the name of the produced files</b></summary><p>
 
 ```bash
 ./zoomme -n name_of_the_file
@@ -215,7 +215,7 @@ You're ready. Now you can [run it](#running).
 
 <!-- Start 5 -->
 <details>
-<summary><b>Set the extension of the exported image (when pressing the 's' key)</b></summary><p>
+<summary><b>[ <code>-e:i</code> ] Set the extension of the exported image (when pressing the 's' key)</b></summary><p>
 
 ```bash
 ./zoomme -e:i jpg
@@ -228,7 +228,7 @@ You're ready. Now you can [run it](#running).
 
 <!-- Start 6 -->
 <details>
-<summary><b>Set the extension of the recorded video (when pressing the '-' key)</b></summary><p>
+<summary><b>[ <code>-e:v</code> ] Set the extension of the recorded video (when pressing the '-' key)</b></summary><p>
 
 ```bash
 ./zoomme -e:v mkv
@@ -241,7 +241,7 @@ You're ready. Now you can [run it](#running).
 
 <!-- Start 7 -->
 <details>
-<summary id="live-mode"><b>Use a transparent background. No zooming allowed, only drawing</b></summary><p>
+<summary id="live-mode"><b>[ <code>-l</code> ] Use a transparent background. No zooming allowed, only drawing</b></summary><p>
 
 ```bash
 ./zoomme -l
@@ -252,7 +252,7 @@ You're ready. Now you can [run it](#running).
 
 <!-- Start 8 -->
 <details>
-<summary id="from-image"><b>Use an image as the background (instead of the desktop)</b></summary><p>
+<summary id="from-image"><b>[ <code>-i</code> ] Use an image as the background (instead of the desktop)</b></summary><p>
 
  You can modifying any image (including previously saved images from ZoomMe)
 
@@ -270,7 +270,7 @@ You're ready. Now you can [run it](#running).
 
 <!-- Start 9 -->
 <details>
-<summary id="restore-from-file"><b>Restore the state of the program from a `.zoomme` file</b></summary><p>
+<summary id="restore-from-file"><b>[ <code>-r</code> ] Restore the state of the program from a `.zoomme` file</b></summary><p>
 
 Load/Restore the state of the program saved in that file. It should be a '.zoomme' file.
 
