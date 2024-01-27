@@ -135,6 +135,7 @@ make
 ```
 You're ready. Now you can [run it](#running).
 
+> [!TIP]
 > **FOR DEVELOPERS**
 >
 > Fix the LSP problem with the Qt libraries not being found (in my case Neovim with Clangd):
