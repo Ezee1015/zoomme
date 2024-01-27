@@ -202,11 +202,11 @@ int main(int argc, char *argv[])
   w.initFileConfig(savePath, saveName, saveImgExt, saveVidExt);
 
   // Configure the app mode
-  if(!backupFile.isEmpty()) {
+  if(isDefined(backupFile)) {
     // The backup file has it's own live mode
     w.restoreStateFromFile(backupFile, fitOption);
 
-  } else if(!img.isEmpty()) {
+  } else if(isDefined(img)) {
     w.setLiveMode(false);
     w.grabImage(QPixmap(img), fitOption);
 
