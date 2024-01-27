@@ -173,7 +173,7 @@ You're ready. Now you can [run it](#running).
 ./zoomme {configurations} {mode}
 ```
 
-### Configuration
+#### Configuration
 
 ```bash
 ./zoomme {[-p path/to/folder] [-n name_of_file] [-e:i jpg] [-e:v gif]} {mode}
@@ -192,7 +192,7 @@ You're ready. Now you can [run it](#running).
 - [ `-e:v` ] Set the extension of the recorded video (when pressing the '-' key)
     - By default, the extension will be: `mp4`
 
-### Modes
+#### Modes
 
 <!-- Start 7 -->
 <details>
@@ -215,7 +215,7 @@ You're ready. Now you can [run it](#running).
 ./zoomme {configurations} {-i path/to/image [-w|h] [--replace-on-save]}
 ```
 
-#### Additional arguments:
+##### Additional arguments:
 - You can force the image to fit the screen's width or height with `-w` or `-h` after providing the image path, like this: `./zoomme -i path/to/image -w`, if you do not providing anything, it automatically detect the best option.
 
 - You can overwrite the image provided when saving by doing this: `./zoomme -i path/to/image --replace-on-save`. This will autocomplete the `-p`, `-n` and `-e:i` arguments for you. How kind :)
@@ -237,7 +237,7 @@ This will override the [file name, video extension and image extension configura
 ./zoomme {configurations} {-r path/to/file.zoomme [-w|h]}
 ```
 
-#### Additional arguments:
+##### Additional arguments:
 - If the resolutions differ, you can force the image to fit the screen's width or height with `-w` or `-h` after providing the image path, like this: `./zoomme -r path/to/file.zoomme -w`, if you do not providing anything, it automatically detect the best option.
 
 </p></details>
