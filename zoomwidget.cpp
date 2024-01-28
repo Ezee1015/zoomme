@@ -55,7 +55,8 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   // inconsistency
   // ffmpeg.setStandardErrorFile("ffmpeg_log.txt");
   // ffmpeg.setStandardOutputFile("ffmpeg_output.txt");
-  recordTempFile = new QFile("/tmp/ZoomMe_video_bytes");
+  QDir tempFile(QStandardPaths::writableLocation(QStandardPaths::TempLocation));
+  recordTempFile = new QFile(tempFile.absoluteFilePath(RECORD_TEMP_FILENAME));
 
   _activePen.setColor(QCOLOR_RED);
   _activePen.setWidth(4);
@@ -353,7 +354,7 @@ void ZoomWidget::createVideoFFmpeg()
             << "-pix_fmt"   << "yuv420p" // Indicates that the file contains JPEG images
             << "-s"         << resolution
             << "-r"         << QString::number(RECORD_FPS)
-            << "-i"         << QFileInfo(*recordTempFile).absoluteFilePath()
+            << "-i"         << recordTempFile->fileName()
   // OUTPUT ARGS
             // Commented to add support to GIF, for example
             // << "-c:v"       << "libx264"
