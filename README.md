@@ -14,7 +14,9 @@ You can...
 - Switch between your desktop and a blackboard
 - Save the current work to an image
 - Record what you do
-- Save the current work in a `.zoomme` file and [recover from it later](#restore-from-file)
+- Save the current work in a `.zoomme` file and
+<a onclick="document.getElementById('restore-from-file').setAttribute('open', ''); document.getElementById('restore-from-file').scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });">recover from it later</a>
+(like a project/backup file)
 
 Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https://github.com/Ezee1015/zoomme/tree/Qt5)) and OpenGL.
 
@@ -159,7 +161,11 @@ You're ready. Now you can [run it](#running-(flags)).
 ## Running (flags)
 
 > [!WARNING]
-> When using Wayland, this program is unable to take a screenshot, so it must be run with either the [-l flag](#live-mode) for a transparent background or the [-i flag](#from-image) for grabbing an image
+> When using Wayland, this program is unable to take a screenshot, so it must be run with either the
+> <a onclick="document.getElementById('live-mode').setAttribute('open', ''); document.getElementById('live-mode').scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });">-l flag</a>
+> for a transparent background or the
+> <a onclick="document.getElementById('from-image').setAttribute('open', ''); document.getElementById('from-image').scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });">-i flag</a>
+for grabbing an image
 
 > - [ `--help` ] Show the help message
 >
@@ -194,9 +200,19 @@ You're ready. Now you can [run it](#running-(flags)).
 
 #### Modes
 
+<!-- Javascript template for open/close <details>-->
+<!-- Sources: -->
+<!-- - https://www.thoughtfulcode.com/collapse-an-open-details-element-javascript/ -->
+<!-- - https://stackoverflow.com/questions/8922107/javascript-scrollintoview-middle-alignment -->
+<!-- -------------------------------------------------------- -->
+<!-- <a onclick="document.getElementById('live-mode').removeAttribute('open')">Collapse live mode</a> -->
+<!-- <br> -->
+<!-- <a onclick="document.getElementById('live-mode').setAttribute('open', ''); document.getElementById('live-mode').scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });">Open live mode</a> -->
+<!-- -------------------------------------------------------- -->
+
 <!-- Start 7 -->
-<details>
-<summary id="live-mode"><b>[ <code>-l</code> ] Use a transparent background. No zooming allowed, only drawing</b></summary><p>
+<details id="live-mode">
+<summary><b>[ <code>-l</code> ] Use a transparent background. No zooming allowed, only drawing</b></summary><p>
 
 ```bash
 ./zoomme {configurations} {-l}
@@ -206,8 +222,8 @@ You're ready. Now you can [run it](#running-(flags)).
 <!-- End 7 -->
 
 <!-- Start 8 -->
-<details>
-<summary id="from-image"><b>[ <code>-i</code> ] Use an image as the background (instead of the desktop)</b></summary><p>
+<details id="from-image">
+<summary><b>[ <code>-i</code> ] Use an image as the background (instead of the desktop)</b></summary><p>
 
  You can modifying any image (including previously saved images from ZoomMe)
 
@@ -224,8 +240,8 @@ You're ready. Now you can [run it](#running-(flags)).
 <!-- End 8 -->
 
 <!-- Start 9 -->
-<details>
-<summary id="restore-from-file"><b>[ <code>-r</code> ] Restore the state of the program from a `.zoomme` file</b></summary><p>
+<details id="restore-from-file">
+<summary><b>[ <code>-r</code> ] Restore the state of the program from a `.zoomme` file</b></summary><p>
 
 Load/Restore the state of the program saved in that file. It should be a `.zoomme` file.
 
