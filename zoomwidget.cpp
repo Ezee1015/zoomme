@@ -1502,6 +1502,8 @@ void ZoomWidget::toggleRecording()
   }
 
   // Start recording
+  logUser(LOG_INFO, "Temporary record file path: %s", QSTRING_TO_STRING(recordTempFile->fileName()));
+
   recordTempFile->remove(); // Just in case for if it already exists
 
   bool openTempFile = recordTempFile->open(QIODevice::ReadWrite);
