@@ -133,7 +133,7 @@ Compile:
 cmake .
 make
 ```
-You're ready. Now you can [run it](#running).
+You're ready. Now you can [run it](#running-(flags)).
 
 > [!TIP]
 > **FOR DEVELOPERS**
@@ -154,7 +154,7 @@ qmake6 -makefile zoomme.pro
 make
 ```
 
-You're ready. Now you can [run it](#running).
+You're ready. Now you can [run it](#running-(flags)).
 
 ## Running (flags)
 
