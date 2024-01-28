@@ -372,8 +372,9 @@ void ZoomWidget::createVideoFFmpeg()
 
   const int timeout = 10000;
   if (!ffmpeg.waitForStarted(timeout)){
-    logUser(LOG_ERROR, "Couldn't start ffmpeg or timeout occurred (10 sec.): %s", QSTRING_TO_STRING(ffmpeg.errorString()));
-    logUser(LOG_ERROR, "Killing the ffmpeg process...");
+    logUser(LOG_ERROR, "Couldn't start ffmpeg or timeout occurred (10 sec.). Maybe FFmpeg is not installed. Killing the ffmpeg process...");
+    logUser(LOG_ERROR, "  - Error: %s", QSTRING_TO_STRING(ffmpeg.errorString()));
+    logUser(LOG_ERROR, "  - Executed command: ffmpeg %s", QSTRING_TO_STRING(arguments.join(" ")));
     ffmpeg.kill();
     return;
   }
