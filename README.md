@@ -14,9 +14,7 @@ You can...
 - Switch between your desktop and a blackboard
 - Save the current work to an image
 - Record what you do
-- Save the current work in a `.zoomme` file and
-<a onclick="document.getElementById('restore-from-file').setAttribute('open', ''); document.getElementById('restore-from-file').scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });">recover from it later</a>
-(like a project/backup file)
+- Save the current work in a `.zoomme` file and [recover from it later](#restore-from-file) (like a project/backup file)
 
 Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https://github.com/Ezee1015/zoomme/tree/Qt5)) and OpenGL.
 
@@ -37,7 +35,7 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 | **`Shift + Mouse Wheel`** | **When the flashlight effect is turn on**, this will increase/decrease the size of the "light"                                                                                                                                                                                                                                                                                                                                                                                    |
 |          **`S`**          | Save the current work to an image, which will be stored in the Desktop folder (or the current path if not found). The computer will *beep* if the image was correctly saved                                                                                                                                                                                                                                                                                                       |
 |      **`Shift + S`**      | Save the current work to the clipboard. The computer will *beep* once the mapping is pressed                                                                                                                                                                                                                                                                                                                                                                                      |
-|      **`Shift + E`**      | Save the current work inside a '.zoomme' file, so you can <a onclick="document.getElementById('restore-from-file').setAttribute('open', ''); document.getElementById('restore-from-file').scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });">later restore the state of the program</a> from it. It is going to be save in the same path and with the same name that the image of the screenshot. The computer will *beep* if the file was correctly saved |
+|      **`Shift + E`**      | Save the current work inside a '.zoomme' file, so you can [later restore the state of the program](#restore-from-file) from it. It is going to be save in the same path and with the same name that the image of the screenshot. The computer will *beep* if the file was correctly saved |
 |       **`-`** (dash)      | Start/stop recording. After stopping, a video will be produced, but it may take some time for rendering (You'll know when it finished rendering when the recording indicator of the status bar goes away and you listen a *beep*). The video is going to be save in the same path and with the same name that the image of the screenshot. **Requirements**: have `ffmpeg` installed, and use a Unix based system                                                                 |
 |         **`Tab`**         | To toggle between your screen and a blackboard mode. By the way, your drawings will persist between the modes                                                                                                                                                                                                                                                                                                                                                                     |
 |        **`Space`**        | To toggle the visibility of the elements of the screen: hide the status bar, hide all or show all                                                                                                                                                                                                                                                                                                                                                                                 |
@@ -161,11 +159,8 @@ You're ready. Now you can [run it](#running-flags).
 ## Running (flags)
 
 > [!WARNING]
-> When using Wayland, this program is unable to take a screenshot, so it must be run with either the
-> <a onclick="document.getElementById('live-mode').setAttribute('open', ''); document.getElementById('live-mode').scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });">-l flag</a>
-> for a transparent background or the
-> <a onclick="document.getElementById('from-image').setAttribute('open', ''); document.getElementById('from-image').scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });">-i flag</a>
-for grabbing an image
+> When using Wayland, this program is unable to take a screenshot, so it must be run with either the [-l flag](#live-mode)
+> for a transparent background or th [-i flag](#from-image) for grabbing an image
 
 > - [ `--help` ] Show the help message
 >
@@ -199,16 +194,6 @@ for grabbing an image
     - By default, the extension will be: `mp4`
 
 #### Modes
-
-<!-- Javascript template for open/close <details>-->
-<!-- Sources: -->
-<!-- - https://www.thoughtfulcode.com/collapse-an-open-details-element-javascript/ -->
-<!-- - https://stackoverflow.com/questions/8922107/javascript-scrollintoview-middle-alignment -->
-<!-- -------------------------------------------------------- -->
-<!-- <a onclick="document.getElementById('live-mode').removeAttribute('open')">Collapse live mode</a> -->
-<!-- <br> -->
-<!-- <a onclick="document.getElementById('live-mode').setAttribute('open', ''); document.getElementById('live-mode').scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });">Open live mode</a> -->
-<!-- -------------------------------------------------------- -->
 
 <!-- Start 7 -->
 <details id="live-mode">
