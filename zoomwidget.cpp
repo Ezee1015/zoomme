@@ -37,6 +37,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
 
   _shiftPressed = false;
   _mousePressed = false;
+  _showToolBar = false;
   _boardMode = false;
   _flashlightMode = false;
   _flashlightRadius = 80;
@@ -60,11 +61,315 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
 
   _activePen.setColor(QCOLOR_RED);
   _activePen.setWidth(4);
+
+  loadTools();
+  generateToolBar();
 }
 
 ZoomWidget::~ZoomWidget()
 {
   delete ui;
+}
+
+bool ZoomWidget::isToolBarVisible()
+{
+  return _showToolBar            &&
+         _state != STATE_TYPING  &&
+         _state != STATE_DRAWING;
+}
+
+void ZoomWidget::toggleAction(ZoomWidgetAction action)
+{
+  switch(action) {
+    case TOOL_LINE:          _drawMode = DRAWMODE_LINE;          break;
+    case TOOL_RECTANGLE:     _drawMode = DRAWMODE_RECT;          break;
+    case TOOL_ELLIPSE:       _drawMode = DRAWMODE_ELLIPSE;       break;
+    case TOOL_ARROW:         _drawMode = DRAWMODE_ARROW;         break;
+    case TOOL_TEXT:          _drawMode = DRAWMODE_TEXT;          break;
+    case TOOL_FREEFORM:      _drawMode = DRAWMODE_FREEFORM;      break;
+    case TOOL_HIGHLIGHT:     _drawMode = DRAWMODE_HIGHLIGHT;     break;
+
+    case TOOL_FLASHLIGHT:    _flashlightMode = !_flashlightMode; break;
+    case TOOL_BLACKBOARD:    _boardMode = !_boardMode;           break;
+
+    case TOOL_DELETE:
+       if(_screenOpts == SCREENOPTS_HIDE_ALL)
+         return;
+
+       if(_state == STATE_MOVING)        _state = STATE_DELETING;
+       else if(_state == STATE_DELETING) _state = STATE_MOVING;
+       break;
+
+    case TOOL_CLEAR:
+       if(_screenOpts == SCREENOPTS_HIDE_ALL)
+         return;
+
+       _userRects.clear();
+       _userLines.clear();
+       _userArrows.clear();
+       _userEllipses.clear();
+       _userTexts.clear();
+       _userFreeForms.clear();
+       _userHighlights.clear();
+       _state = STATE_MOVING;
+       break;
+
+    case TOOL_UNDO:
+       if(_screenOpts == SCREENOPTS_HIDE_ALL)
+         return;
+
+       switch(_drawMode) {
+         case DRAWMODE_LINE:      if(!_userLines.isEmpty())      _userLines.removeLast();      break;
+         case DRAWMODE_RECT:      if(!_userRects.isEmpty())      _userRects.removeLast();      break;
+         case DRAWMODE_ARROW:     if(!_userArrows.isEmpty())     _userArrows.removeLast();     break;
+         case DRAWMODE_ELLIPSE:   if(!_userEllipses.isEmpty())   _userEllipses.removeLast();   break;
+         case DRAWMODE_TEXT:      if(!_userTexts.isEmpty())      _userTexts.removeLast();      break;
+         case DRAWMODE_FREEFORM:  if(!_userFreeForms.isEmpty())  _userFreeForms.removeLast();  break;
+         case DRAWMODE_HIGHLIGHT: if(!_userHighlights.isEmpty()) _userHighlights.removeLast(); break;
+       }
+       break;
+
+    case TOOL_RECORDING: {
+       // In theory, ffmpeg blocks the thread, so it shouldn't be possible to toggle
+       // the recording while ffmpeg is running. But, just in case, we check it
+       if(IS_FFMPEG_RUNNING)
+         return;
+
+       if(IS_RECORDING){
+         recordTimer->stop();
+         createVideoFFmpeg();
+         recordTempFile->remove();
+         return;
+       }
+
+       // Start recording
+       logUser(LOG_INFO, "Temporary record file path: %s", QSTRING_TO_STRING(recordTempFile->fileName()));
+
+       recordTempFile->remove(); // Just in case for if it already exists
+
+       bool openTempFile = recordTempFile->open(QIODevice::ReadWrite);
+       if (!openTempFile) {
+         logUser(LOG_ERROR, "Couldn't open the temp file for the bytes output");
+         recordTempFile->close();
+         return;
+       }
+
+       recordTimer->start(1000/RECORD_FPS);
+       QApplication::beep();
+       break;
+    }
+
+    case TOOL_PICK_COLOR:
+       if(_state == STATE_COLOR_PICKER) {
+         _state = STATE_MOVING;
+         _activePen.setColor(_colorBeforePickColorMode);
+         return;
+       }
+
+       _colorBeforePickColorMode = _activePen.color();
+
+       if(_screenOpts == SCREENOPTS_HIDE_ALL || _state != STATE_MOVING)
+         return;
+
+       _state = STATE_COLOR_PICKER;
+
+       _activePen.setColor(GET_COLOR_UNDER_CURSOR());
+       break;
+
+    case TOOL_SAVE_TO_FILE: {
+       QString path = getFilePath(FILE_IMAGE);
+       if(_drawnPixmap.save(path))
+         QApplication::beep();
+       else
+         logUser(LOG_ERROR, "Couldn't save the picture to: %s", QSTRING_TO_STRING(path));
+       break;
+    }
+
+    case TOOL_SAVE_TO_CLIPBOARD:
+       clipboard->setImage(_drawnPixmap.toImage());
+       QApplication::beep();
+       break;
+
+    case TOOL_SAVE_PROJECT:
+       saveStateToFile();
+       break;
+
+    case TOOL_SCREEN_OPTS:
+       if(_state!=STATE_MOVING) return;
+
+       switch(_screenOpts) {
+         case SCREENOPTS_HIDE_ALL:    _screenOpts = SCREENOPTS_SHOW_ALL;    break;
+         case SCREENOPTS_HIDE_STATUS: _screenOpts = SCREENOPTS_HIDE_ALL;    break;
+         case SCREENOPTS_SHOW_ALL:    _screenOpts = SCREENOPTS_HIDE_STATUS; break;
+       }
+       break;
+
+
+    case TOOL_COLOR_RED:     _activePen.setColor(QCOLOR_RED);     break;
+    case TOOL_COLOR_GREEN:   _activePen.setColor(QCOLOR_GREEN);   break;
+    case TOOL_COLOR_BLUE:    _activePen.setColor(QCOLOR_BLUE);    break;
+    case TOOL_COLOR_CYAN:    _activePen.setColor(QCOLOR_CYAN);    break;
+    case TOOL_COLOR_ORANGE:  _activePen.setColor(QCOLOR_ORANGE);  break;
+    case TOOL_COLOR_MAGENTA: _activePen.setColor(QCOLOR_MAGENTA); break;
+    case TOOL_COLOR_YELLOW:  _activePen.setColor(QCOLOR_YELLOW);  break;
+    case TOOL_COLOR_WHITE:   _activePen.setColor(QCOLOR_WHITE);   break;
+    case TOOL_COLOR_BLACK:   _activePen.setColor(QCOLOR_BLACK);   break;
+
+    case TOOL_WIDTH_1:       _activePen.setWidth(1);              break;
+    case TOOL_WIDTH_2:       _activePen.setWidth(2);              break;
+    case TOOL_WIDTH_3:       _activePen.setWidth(3);              break;
+    case TOOL_WIDTH_4:       _activePen.setWidth(4);              break;
+    case TOOL_WIDTH_5:       _activePen.setWidth(5);              break;
+    case TOOL_WIDTH_6:       _activePen.setWidth(6);              break;
+    case TOOL_WIDTH_7:       _activePen.setWidth(7);              break;
+    case TOOL_WIDTH_8:       _activePen.setWidth(8);              break;
+    case TOOL_WIDTH_9:       _activePen.setWidth(9);              break;
+
+    case TOOL_SPACER:                                             break;
+  }
+}
+
+void ZoomWidget::loadTools()
+{
+  QRect nullRect(0, 0, 0, 0);
+
+  _toolBar.append(Tool{TOOL_WIDTH_1,           "1",                0, nullRect});
+  _toolBar.append(Tool{TOOL_WIDTH_2,           "2",                0, nullRect});
+  _toolBar.append(Tool{TOOL_WIDTH_3,           "3",                0, nullRect});
+  _toolBar.append(Tool{TOOL_WIDTH_4,           "4",                0, nullRect});
+  _toolBar.append(Tool{TOOL_WIDTH_5,           "5",                0, nullRect});
+  _toolBar.append(Tool{TOOL_WIDTH_6,           "6",                0, nullRect});
+  _toolBar.append(Tool{TOOL_WIDTH_7,           "7",                0, nullRect});
+  _toolBar.append(Tool{TOOL_WIDTH_8,           "8",                0, nullRect});
+  _toolBar.append(Tool{TOOL_WIDTH_9,           "9",                0, nullRect});
+
+  _toolBar.append(Tool{TOOL_SPACER,            "",                 0, nullRect});
+
+  _toolBar.append(Tool{TOOL_COLOR_RED,         "Red",              0, nullRect});
+  _toolBar.append(Tool{TOOL_COLOR_GREEN,       "Green",            0, nullRect});
+  _toolBar.append(Tool{TOOL_COLOR_BLUE,        "Blue",             0, nullRect});
+  _toolBar.append(Tool{TOOL_COLOR_YELLOW,      "Yellow",           0, nullRect});
+  _toolBar.append(Tool{TOOL_COLOR_ORANGE,      "Orange",           0, nullRect});
+  _toolBar.append(Tool{TOOL_COLOR_MAGENTA,     "Magenta",          0, nullRect});
+  _toolBar.append(Tool{TOOL_COLOR_CYAN,        "Cyan",             0, nullRect});
+  _toolBar.append(Tool{TOOL_COLOR_WHITE,       "White",            0, nullRect});
+  _toolBar.append(Tool{TOOL_COLOR_BLACK,       "Black",            0, nullRect});
+
+  _toolBar.append(Tool{TOOL_LINE,              "Line",             1, nullRect});
+  _toolBar.append(Tool{TOOL_RECTANGLE,         "Rectangle",        1, nullRect});
+  _toolBar.append(Tool{TOOL_ARROW,             "Arrow",            1, nullRect});
+  _toolBar.append(Tool{TOOL_ELLIPSE,           "Ellipse",          1, nullRect});
+  _toolBar.append(Tool{TOOL_HIGHLIGHT,         "Highlight",        1, nullRect});
+  _toolBar.append(Tool{TOOL_FREEFORM,          "Free form",        1, nullRect});
+  _toolBar.append(Tool{TOOL_TEXT,              "Text",             1, nullRect});
+
+
+  _toolBar.append(Tool{TOOL_FLASHLIGHT,        "Flashlight",       2, nullRect});
+  _toolBar.append(Tool{TOOL_BLACKBOARD,        "Blackboard",       2, nullRect});
+  _toolBar.append(Tool{TOOL_PICK_COLOR,        "Pick color",       2, nullRect});
+  _toolBar.append(Tool{TOOL_UNDO,              "Undo",             2, nullRect});
+  _toolBar.append(Tool{TOOL_DELETE,            "Delete",           2, nullRect});
+  _toolBar.append(Tool{TOOL_CLEAR,             "Clear",            2, nullRect});
+  _toolBar.append(Tool{TOOL_SCREEN_OPTS,       "Hide elements",    2, nullRect});
+
+  _toolBar.append(Tool{TOOL_SAVE_TO_FILE,      "Export image",     3, nullRect});
+  _toolBar.append(Tool{TOOL_SAVE_TO_CLIPBOARD, "Export clipboard", 3, nullRect});
+  _toolBar.append(Tool{TOOL_SAVE_PROJECT,      "Save project",     3, nullRect});
+  _toolBar.append(Tool{TOOL_RECORDING,         "Record",           3, nullRect});
+}
+
+void ZoomWidget::generateToolBar()
+{
+  const int padding = 20;
+  const int lineHeight = 55;
+
+  // Get the number of lines
+  int numberOfLines = 0;
+  for(int i=0; i<_toolBar.size(); i++) {
+    if(_toolBar.at(i).line > numberOfLines)
+      numberOfLines = _toolBar.at(i).line;
+  }
+
+  const QRect background = QRect (
+                                   padding,
+                                   _screenSize.height() - padding - lineHeight*(numberOfLines+1),
+                                   _screenSize.width() - padding*2,
+                                   lineHeight * (numberOfLines+1) - padding
+                                 );
+
+  _toolBarOpts.lineHeight = lineHeight;
+  _toolBarOpts.padding = padding;
+  _toolBarOpts.numberOfLines = numberOfLines;
+  _toolBarOpts.rect = background;
+
+  // Get the buttons per line
+  int buttonsPerLine[numberOfLines+1];
+  for(int i=0; i<=numberOfLines; i++) buttonsPerLine[i] = 0;
+  for(int i=0; i<_toolBar.size(); i++)
+    buttonsPerLine[ _toolBar.at(i).line ]++;
+
+  // Clear the tool list
+  QVector<Tool> tools;
+  tools.append(_toolBar);
+  _toolBar.clear();
+
+  // Size the buttons
+  const int buttonPadding = 2;
+  float buttonCount[numberOfLines+1];
+  for(int i=0; i<=numberOfLines; i++) buttonCount[i]=0; // Initialize to 0
+
+  for(int i=0; i<tools.size(); i++) {
+    const int line = tools.at(i).line;
+
+    float width = (float)background.width() / (float)buttonsPerLine[line];
+    int height  = lineHeight - (float)padding / (float)(numberOfLines+1);
+    int x       = background.x() + buttonCount[line] * width;
+    int y       = background.y() + line * height;
+
+    // Padding
+    x+=buttonPadding;
+    y+=buttonPadding;
+    width-=buttonPadding*2;
+    height-=buttonPadding*2;
+
+    // Add the button to the count
+    buttonCount[line]++;
+
+    QRect rect(x, y, width, height);
+
+    _toolBar.append(Tool{
+        tools.at(i).action,
+        tools.at(i).name,
+        line,
+        rect
+    });
+  }
+}
+
+int ZoomWidget::buttonBehindCursor(QPoint cursor)
+{
+  if(!_showToolBar)
+    logUser(LOG_ERROR, "cursorOverButton() was called, but the tool box is not visible");
+
+  for(int i=0; i<_toolBar.size(); i++) {
+    if(_toolBar.at(i).rect.contains(cursor))
+      return i;
+  }
+
+  return -1;
+}
+
+bool ZoomWidget::isCursorOverButton()
+{
+  if(!isToolBarVisible())
+    return false;
+
+  const int button = buttonBehindCursor(getCursorPos(false));
+
+  const bool isOverAButton = button != -1;
+  const bool isNotASpacer = _toolBar.at(button).action != TOOL_SPACER;
+
+  return isOverAButton && isNotASpacer;
 }
 
 void ZoomWidget::saveStateToFile()
@@ -517,6 +822,36 @@ void invertColorPainter(QPainter *painter)
   painter->setPen(pen);
 }
 
+void ZoomWidget::drawTool(QPainter *screenPainter, Tool tool)
+{
+  screenPainter->setPen(QCOLOR_TOOL_BAR);
+
+  QFont font;
+  font.setPixelSize(16);
+  screenPainter->setFont(font);
+
+  if(tool.rect.contains(getCursorPos(false)))
+    invertColorPainter(screenPainter);
+
+  screenPainter->drawRoundedRect(tool.rect, 2.5, 2.5);
+  screenPainter->drawText(tool.rect, Qt::AlignCenter | Qt::TextWordWrap, tool.name);
+}
+
+void ZoomWidget::drawToolBar(QPainter *screenPainter)
+{
+  // Paint Background
+  QColor color = QCOLOR_BLACK;
+  color.setAlpha(200); // Transparency
+  screenPainter->fillRect(_toolBarOpts.rect, color);
+
+  for(int i=0; i<_toolBar.size(); i++) {
+    const Tool tool = _toolBar.at(i);
+
+    if(tool.action != TOOL_SPACER)
+      drawTool(screenPainter, tool);
+  }
+}
+
 void ZoomWidget::drawStatus(QPainter *screenPainter)
 {
   if(_screenOpts == SCREENOPTS_HIDE_ALL || _screenOpts == SCREENOPTS_HIDE_STATUS)
@@ -911,6 +1246,8 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   }
 
   drawStatus(&screen);
+  if(isToolBarVisible())
+    drawToolBar(&screen);
 
   // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
   // int x, y, w, h;
@@ -954,6 +1291,16 @@ void ZoomWidget::removeFormBehindCursor(QPoint cursorPos)
 void ZoomWidget::mousePressEvent(QMouseEvent *event)
 {
   (void) event;
+
+  if(isToolBarVisible()) {
+    int toolPos = buttonBehindCursor(getCursorPos(false));
+    if(toolPos==-1)
+      return;
+
+    toggleAction(_toolBar.at(toolPos).action);
+    update();
+    return;
+  }
 
   if(_screenOpts == SCREENOPTS_HIDE_ALL)
     return;
@@ -1068,6 +1415,9 @@ void ZoomWidget::updateCursorShape()
 
   if(IS_FFMPEG_RUNNING)
     setCursor(waiting);
+
+  else if(isCursorOverButton())
+    setCursor(pointHand);
 
   else if(_state == STATE_COLOR_PICKER)
     setCursor(pickColor);
@@ -1346,6 +1696,8 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 
   if(key == Qt::Key_Shift)
     _shiftPressed = true;
+  if(key == Qt::Key_Control)
+    _showToolBar = true;
 
   if(_state == STATE_TYPING) {
     // If it's pressed Enter (without Shift) or Escape
@@ -1407,165 +1759,82 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     return;
   }
 
+  ZoomWidgetAction action;
   switch(key) {
-    case Qt::Key_R: _activePen.setColor(QCOLOR_RED);     break;
-    case Qt::Key_G: _activePen.setColor(QCOLOR_GREEN);   break;
-    case Qt::Key_B: _activePen.setColor(QCOLOR_BLUE);    break;
-    case Qt::Key_C: _activePen.setColor(QCOLOR_CYAN);    break;
-    case Qt::Key_O: _activePen.setColor(QCOLOR_ORANGE);  break;
-    case Qt::Key_M: _activePen.setColor(QCOLOR_MAGENTA); break;
-    case Qt::Key_Y: _activePen.setColor(QCOLOR_YELLOW);  break;
-    case Qt::Key_W: _activePen.setColor(QCOLOR_WHITE);   break;
-    case Qt::Key_D: _activePen.setColor(QCOLOR_BLACK);   break;
+    case Qt::Key_R: action = TOOL_COLOR_RED;     break;
+    case Qt::Key_G: action = TOOL_COLOR_GREEN;   break;
+    case Qt::Key_B: action = TOOL_COLOR_BLUE;    break;
+    case Qt::Key_C: action = TOOL_COLOR_CYAN;    break;
+    case Qt::Key_O: action = TOOL_COLOR_ORANGE;  break;
+    case Qt::Key_M: action = TOOL_COLOR_MAGENTA; break;
+    case Qt::Key_Y: action = TOOL_COLOR_YELLOW;  break;
+    case Qt::Key_W: action = TOOL_COLOR_WHITE;   break;
+    case Qt::Key_D: action = TOOL_COLOR_BLACK;   break;
 
-    case Qt::Key_Z: _drawMode = DRAWMODE_LINE;      break;
-    case Qt::Key_X: _drawMode = DRAWMODE_RECT;      break;
-    case Qt::Key_A: _drawMode = DRAWMODE_ARROW;     break;
-    case Qt::Key_T: _drawMode = DRAWMODE_TEXT;      break;
-    case Qt::Key_F: _drawMode = DRAWMODE_FREEFORM;  break;
-    case Qt::Key_H: _drawMode = DRAWMODE_HIGHLIGHT; break;
+    case Qt::Key_Z: action = TOOL_LINE;          break;
+    case Qt::Key_X: action = TOOL_RECTANGLE;     break;
+    case Qt::Key_A: action = TOOL_ARROW;         break;
+    case Qt::Key_T: action = TOOL_TEXT;          break;
+    case Qt::Key_F: action = TOOL_FREEFORM;      break;
+    case Qt::Key_H: action = TOOL_HIGHLIGHT;     break;
 
     case Qt::Key_E:
                     if(_shiftPressed)
-                      saveStateToFile();
+                      action = TOOL_SAVE_PROJECT;
                     else
-                      _drawMode = DRAWMODE_ELLIPSE;
+                      action = TOOL_ELLIPSE;
                     break;
 
-    case Qt::Key_S:      savePixmap(_shiftPressed); break;
-    case Qt::Key_U:      undoLastDrawing();         break;
-    case Qt::Key_Q:      clearAllDrawings();        break;
-    case Qt::Key_Tab:    SWITCH_BOARD_MODE();       break;
-    case Qt::Key_Space:  cycleScreenOpts();         break;
-    case Qt::Key_Period: SWITCH_FLASHLIGHT_MODE();  break;
-    case Qt::Key_Comma:  switchDeleteMode();        break;
-    case Qt::Key_Escape: escapeKeyFunction();       break;
-    case Qt::Key_Minus:  toggleRecording();         break;
-    case Qt::Key_P:      pickColorMode();           break;
+    case Qt::Key_S:
+                    if(_shiftPressed)
+                      action = TOOL_SAVE_TO_CLIPBOARD;
+                    else
+                      action = TOOL_SAVE_TO_FILE;
+                    break;
 
-    case Qt::Key_1:
-    case Qt::Key_2:
-    case Qt::Key_3:
-    case Qt::Key_4:
-    case Qt::Key_5:
-    case Qt::Key_6:
-    case Qt::Key_7:
-    case Qt::Key_8:
-    case Qt::Key_9:
-      _activePen.setWidth(key - Qt::Key_0);
-      break;
+    case Qt::Key_Escape: escapeKeyFunction();        break;
+    case Qt::Key_U:      action = TOOL_UNDO;         break;
+    case Qt::Key_Q:      action = TOOL_CLEAR;        break;
+    case Qt::Key_Tab:    action = TOOL_BLACKBOARD;   break;
+    case Qt::Key_Space:  action = TOOL_SCREEN_OPTS;  break;
+    case Qt::Key_Period: action = TOOL_FLASHLIGHT;   break;
+    case Qt::Key_Comma:  action = TOOL_DELETE;       break;
+    case Qt::Key_Minus:  action = TOOL_RECORDING;    break;
+    case Qt::Key_P:      action = TOOL_PICK_COLOR;   break;
+
+    case Qt::Key_1: action = TOOL_WIDTH_1;           break;
+    case Qt::Key_2: action = TOOL_WIDTH_2;           break;
+    case Qt::Key_3: action = TOOL_WIDTH_3;           break;
+    case Qt::Key_4: action = TOOL_WIDTH_4;           break;
+    case Qt::Key_5: action = TOOL_WIDTH_5;           break;
+    case Qt::Key_6: action = TOOL_WIDTH_6;           break;
+    case Qt::Key_7: action = TOOL_WIDTH_7;           break;
+    case Qt::Key_8: action = TOOL_WIDTH_8;           break;
+    case Qt::Key_9: action = TOOL_WIDTH_9;           break;
   }
+
+  toggleAction(action);
 
   updateCursorShape();
   update();
 }
 
-void ZoomWidget::pickColorMode()
-{
-  if(_state == STATE_COLOR_PICKER) {
-    _state = STATE_MOVING;
-    _activePen.setColor(_colorBeforePickColorMode);
-    return;
-  }
-
-  _colorBeforePickColorMode = _activePen.color();
-
-  if(_screenOpts == SCREENOPTS_HIDE_ALL || _state != STATE_MOVING)
-    return;
-
-  _state = STATE_COLOR_PICKER;
-
-  _activePen.setColor(GET_COLOR_UNDER_CURSOR());
-}
-
-void ZoomWidget::switchDeleteMode()
-{
-  if(_screenOpts == SCREENOPTS_HIDE_ALL)
-    return;
-
-  if(_state == STATE_MOVING)        _state = STATE_DELETING;
-  else if(_state == STATE_DELETING) _state = STATE_MOVING;
-}
-
-void ZoomWidget::toggleRecording()
-{
-  // In theory, ffmpeg blocks the thread, so it shouldn't be possible to toggle
-  // the recording while ffmpeg is running. But, just in case, we check it
-  if(IS_FFMPEG_RUNNING)
-    return;
-
-  if(IS_RECORDING){
-    recordTimer->stop();
-    createVideoFFmpeg();
-    recordTempFile->remove();
-    return;
-  }
-
-  // Start recording
-  logUser(LOG_INFO, "Temporary record file path: %s", QSTRING_TO_STRING(recordTempFile->fileName()));
-
-  recordTempFile->remove(); // Just in case for if it already exists
-
-  bool openTempFile = recordTempFile->open(QIODevice::ReadWrite);
-  if (!openTempFile) {
-    logUser(LOG_ERROR, "Couldn't open the temp file for the bytes output");
-    recordTempFile->close();
-    return;
-  }
-
-  recordTimer->start(1000/RECORD_FPS);
-  QApplication::beep();
-}
-
-void ZoomWidget::clearAllDrawings()
-{
-  if(_screenOpts == SCREENOPTS_HIDE_ALL)
-    return;
-
-  _userRects.clear();
-  _userLines.clear();
-  _userArrows.clear();
-  _userEllipses.clear();
-  _userTexts.clear();
-  _userFreeForms.clear();
-  _userHighlights.clear();
-  _state = STATE_MOVING;
-}
-
-// Remove last drawing from the current draw mode
-void ZoomWidget::undoLastDrawing()
-{
-  if(_screenOpts == SCREENOPTS_HIDE_ALL)
-    return;
-
-  switch(_drawMode) {
-    case DRAWMODE_LINE:      if(!_userLines.isEmpty())      _userLines.removeLast();      break;
-    case DRAWMODE_RECT:      if(!_userRects.isEmpty())      _userRects.removeLast();      break;
-    case DRAWMODE_ARROW:     if(!_userArrows.isEmpty())     _userArrows.removeLast();     break;
-    case DRAWMODE_ELLIPSE:   if(!_userEllipses.isEmpty())   _userEllipses.removeLast();   break;
-    case DRAWMODE_TEXT:      if(!_userTexts.isEmpty())      _userTexts.removeLast();      break;
-    case DRAWMODE_FREEFORM:  if(!_userFreeForms.isEmpty())  _userFreeForms.removeLast();  break;
-    case DRAWMODE_HIGHLIGHT: if(!_userHighlights.isEmpty()) _userHighlights.removeLast(); break;
-  }
-}
-
 void ZoomWidget::escapeKeyFunction()
 {
   if(_state == STATE_COLOR_PICKER){
-    _state = STATE_MOVING;
-    _activePen.setColor(_colorBeforePickColorMode);
+    toggleAction(TOOL_PICK_COLOR);
   } else if(_state == STATE_DELETING){
-    _state = STATE_MOVING;
+    toggleAction(TOOL_DELETE);
   } else if(_flashlightMode) {
-    _flashlightMode = false;
+    toggleAction(TOOL_FLASHLIGHT);
   } else if(_screenOpts == SCREENOPTS_HIDE_ALL) {
-    cycleScreenOpts();
+    toggleAction(TOOL_SCREEN_OPTS);
   } else if(_desktopPixmapSize != _desktopPixmapOriginalSize) {
     _desktopPixmapScale = 1.0f;
     scalePixmapAt(QPoint(0,0));
     checkPixmapPos();
   } else if(IS_RECORDING){
-    toggleRecording();
+    toggleAction(TOOL_RECORDING);
   } else {
     QApplication::beep();
     QApplication::quit();
@@ -1578,8 +1847,12 @@ void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
     _shiftPressed = false;
     updateCursorShape();
     updateAtMousePos(getCursorPos(false));
-    update();
   }
+
+  if(event->key() == Qt::Key_Control)
+    _showToolBar = false;
+
+  update();
 }
 
 void ZoomWidget::setLiveMode(bool liveMode)
@@ -1752,34 +2025,6 @@ void ZoomWidget::drawDrawnPixmap(QPainter *painter)
   const int h = _desktopPixmapSize.height();
 
   painter->drawPixmap(x, y, w, h, _drawnPixmap);
-}
-
-void ZoomWidget::cycleScreenOpts()
-{
-  if(_state!=STATE_MOVING)
-    return;
-
-  switch(_screenOpts) {
-    case SCREENOPTS_HIDE_ALL:    _screenOpts = SCREENOPTS_SHOW_ALL;    break;
-    case SCREENOPTS_HIDE_STATUS: _screenOpts = SCREENOPTS_HIDE_ALL;    break;
-    case SCREENOPTS_SHOW_ALL:    _screenOpts = SCREENOPTS_HIDE_STATUS; break;
-  }
-}
-
-void ZoomWidget::savePixmap(bool toClipboard)
-{
-  if(toClipboard) {
-    clipboard->setImage(_drawnPixmap.toImage());
-    QApplication::beep();
-    return;
-  }
-
-  // To file
-  QString path = getFilePath(FILE_IMAGE);
-  if(_drawnPixmap.save(path))
-    QApplication::beep();
-  else
-    logUser(LOG_ERROR, "Couldn't save the picture to: %s", QSTRING_TO_STRING(path));
 }
 
 bool ZoomWidget::isInEditTextMode()

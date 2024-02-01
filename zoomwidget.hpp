@@ -27,6 +27,7 @@
 #define QCOLOR_WHITE     QColor(248, 249, 250)
 
 #define BLACKBOARD_COLOR QColor( 33,  37,  41)
+#define QCOLOR_TOOL_BAR  QCOLOR_BLUE
 
 // Font size = (1 to 9) * FONT_SIZE_FACTOR
 #define FONT_SIZE_FACTOR 4
@@ -46,9 +47,6 @@
 
 // CODE
 #define QSTRING_TO_STRING(string) string.toStdString().c_str()
-
-#define SWITCH_FLASHLIGHT_MODE() _flashlightMode = !_flashlightMode;
-#define SWITCH_BOARD_MODE()      _boardMode = !_boardMode;
 
 #define GET_COLOR_UNDER_CURSOR() _drawnPixmap.toImage().pixel( screenPointToPixmapPos(getCursorPos(false)) )
 
@@ -131,6 +129,68 @@ enum ZoomWidgetDrawMode {
   DRAWMODE_TEXT,
   DRAWMODE_FREEFORM,
   DRAWMODE_HIGHLIGHT,
+};
+
+enum ZoomWidgetAction {
+  // DRAW MODES
+  TOOL_LINE,
+  TOOL_RECTANGLE,
+  TOOL_ARROW,
+  TOOL_ELLIPSE,
+  TOOL_TEXT,
+  TOOL_FREEFORM,
+  TOOL_HIGHLIGHT,
+
+  // FUNCTIONS
+  TOOL_FLASHLIGHT,
+  TOOL_BLACKBOARD,
+  TOOL_PICK_COLOR,
+  TOOL_UNDO,
+  TOOL_DELETE,
+  TOOL_CLEAR,
+  TOOL_SAVE_TO_FILE,
+  TOOL_SAVE_TO_CLIPBOARD,
+  TOOL_SAVE_PROJECT,
+  TOOL_SCREEN_OPTS,
+  TOOL_RECORDING,
+
+  // COLORS
+  TOOL_COLOR_RED,
+  TOOL_COLOR_GREEN,
+  TOOL_COLOR_BLUE,
+  TOOL_COLOR_YELLOW,
+  TOOL_COLOR_ORANGE,
+  TOOL_COLOR_MAGENTA,
+  TOOL_COLOR_CYAN,
+  TOOL_COLOR_BLACK,
+  TOOL_COLOR_WHITE,
+
+  // WIDTH OF PEN
+  TOOL_WIDTH_1,
+  TOOL_WIDTH_2,
+  TOOL_WIDTH_3,
+  TOOL_WIDTH_4,
+  TOOL_WIDTH_5,
+  TOOL_WIDTH_6,
+  TOOL_WIDTH_7,
+  TOOL_WIDTH_8,
+  TOOL_WIDTH_9,
+
+  TOOL_SPACER, // Spacer for the tool bar
+};
+
+struct Tool {
+  ZoomWidgetAction action;
+  QString name;
+  int line;
+  QRect rect;
+};
+
+struct ToolBarProperties {
+  int lineHeight;
+  int padding;
+  int numberOfLines;
+  QRect rect;
 };
 
 // When modifying this enum, don't forget to modify the cycleScreenOpts function
@@ -229,6 +289,9 @@ class ZoomWidget : public QWidget
     QVector<UserFreeFormData>  _userFreeForms;
     QVector<UserObjectData>    _userHighlights;
 
+    QVector<Tool> _toolBar;
+    ToolBarProperties _toolBarOpts;
+
     // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
     // QVector<UserObjectData>    _userTests;
     /////////////////////////
@@ -239,6 +302,7 @@ class ZoomWidget : public QWidget
     // States
     bool _shiftPressed;
     bool _mousePressed;
+    bool _showToolBar;
 
     // Modes
     bool _boardMode;
@@ -280,6 +344,17 @@ class ZoomWidget : public QWidget
     // on or selected, for example, that you have selected some drawing mode,
     // the size of the pen, etc.
     void drawStatus(QPainter *screenPainter);
+    void drawToolBar(QPainter *screenPainter);
+    void drawTool(QPainter *screenPainter, Tool tool);
+
+    // Tool bar
+    void loadTools();
+    void generateToolBar();
+    bool isToolBarVisible();
+    bool isCursorOverButton();
+    // Returns the position in the vector of the tools (_toolBar) that is behind
+    // the cursor position. Returns -1 if there's no button under the cursor
+    int buttonBehindCursor(QPoint cursor);
 
     void updateAtMousePos(QPoint mousePos);
     void shiftPixmap(const QPoint delta);
@@ -329,13 +404,7 @@ class ZoomWidget : public QWidget
 
     // Functions for the mappings
     void escapeKeyFunction();
-    void switchDeleteMode();
-    void clearAllDrawings();
-    void undoLastDrawing();
-    void toggleRecording();
-    void pickColorMode();
-    void savePixmap(bool toClipboard);
-    void cycleScreenOpts();
+    void toggleAction(ZoomWidgetAction action);
 
     // Recording
     void saveFrameToFile(); // Timer function
