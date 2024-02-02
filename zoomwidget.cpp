@@ -866,7 +866,7 @@ void ZoomWidget::drawToolBar(QPainter *screenPainter)
 {
   // Color of the background
   QColor color = QCOLOR_BLACK;
-  color.setAlpha(210); // Transparency
+  color.setAlpha(220); // Transparency
 
   // Increase a little bit the background of the tool bar for painting it (like
   // a padding)
