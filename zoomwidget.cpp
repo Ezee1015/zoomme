@@ -1459,7 +1459,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
   }
 
   // Register the position of the cursor for the FreeForm
-  if(_mousePressed && _drawMode == DRAWMODE_FREEFORM) {
+  if(_state == STATE_DRAWING && _mousePressed && _drawMode == DRAWMODE_FREEFORM) {
     QPoint curPos = screenPointToPixmapPos(getCursorPos(false));
 
     if( _userFreeForms.isEmpty() || (!_userFreeForms.isEmpty() && !_userFreeForms.last().active) ) {
