@@ -2067,6 +2067,7 @@ bool ZoomWidget::isInEditTextMode()
 bool ZoomWidget::isDisabledMouseTracking()
 {
   return (_state != STATE_TYPING && _shiftPressed) ||
+         (isToolBarVisible())                      ||
          (_state == STATE_TYPING && _freezeDesktopPosWhileWriting);
 }
 
