@@ -146,6 +146,7 @@ enum ZoomWidgetAction {
   TOOL_BLACKBOARD,
   TOOL_PICK_COLOR,
   TOOL_UNDO,
+  TOOL_REDO,
   TOOL_DELETE,
   TOOL_CLEAR,
   TOOL_SAVE_TO_FILE,
@@ -288,6 +289,15 @@ class ZoomWidget : public QWidget
     QVector<UserTextData>      _userTexts;
     QVector<UserFreeFormData>  _userFreeForms;
     QVector<UserObjectData>    _userHighlights;
+
+    // Undo/Delete history
+    QVector<UserObjectData>    _deletedRects;
+    QVector<UserObjectData>    _deletedLines;
+    QVector<UserObjectData>    _deletedArrows;
+    QVector<UserObjectData>    _deletedEllipses;
+    QVector<UserTextData>      _deletedTexts;
+    QVector<UserFreeFormData>  _deletedFreeForms;
+    QVector<UserObjectData>    _deletedHighlights;
 
     QVector<Tool> _toolBar;
     ToolBarProperties _toolBarOpts;

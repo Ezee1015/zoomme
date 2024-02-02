@@ -119,13 +119,28 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
          return;
 
        switch(_drawMode) {
-         case DRAWMODE_LINE:      if(!_userLines.isEmpty())      _userLines.removeLast();      break;
-         case DRAWMODE_RECT:      if(!_userRects.isEmpty())      _userRects.removeLast();      break;
-         case DRAWMODE_ARROW:     if(!_userArrows.isEmpty())     _userArrows.removeLast();     break;
-         case DRAWMODE_ELLIPSE:   if(!_userEllipses.isEmpty())   _userEllipses.removeLast();   break;
-         case DRAWMODE_TEXT:      if(!_userTexts.isEmpty())      _userTexts.removeLast();      break;
-         case DRAWMODE_FREEFORM:  if(!_userFreeForms.isEmpty())  _userFreeForms.removeLast();  break;
-         case DRAWMODE_HIGHLIGHT: if(!_userHighlights.isEmpty()) _userHighlights.removeLast(); break;
+         case DRAWMODE_LINE:      if(!_userLines.isEmpty())      _deletedLines.append(_userLines.takeLast());           break;
+         case DRAWMODE_RECT:      if(!_userRects.isEmpty())      _deletedRects.append(_userRects.takeLast());           break;
+         case DRAWMODE_ARROW:     if(!_userArrows.isEmpty())     _deletedArrows.append(_userArrows.takeLast());         break;
+         case DRAWMODE_ELLIPSE:   if(!_userEllipses.isEmpty())   _deletedEllipses.append(_userEllipses.takeLast());     break;
+         case DRAWMODE_TEXT:      if(!_userTexts.isEmpty())      _deletedTexts.append(_userTexts.takeLast());           break;
+         case DRAWMODE_FREEFORM:  if(!_userFreeForms.isEmpty())  _deletedFreeForms.append(_userFreeForms.takeLast());   break;
+         case DRAWMODE_HIGHLIGHT: if(!_userHighlights.isEmpty()) _deletedHighlights.append(_userHighlights.takeLast()); break;
+       }
+       break;
+
+    case TOOL_REDO:
+       if(_screenOpts == SCREENOPTS_HIDE_ALL)
+         return;
+
+       switch(_drawMode) {
+         case DRAWMODE_LINE:      if(!_deletedLines.isEmpty())      _userLines.append(_deletedLines.takeLast());           break;
+         case DRAWMODE_RECT:      if(!_deletedRects.isEmpty())      _userRects.append(_deletedRects.takeLast());           break;
+         case DRAWMODE_ARROW:     if(!_deletedArrows.isEmpty())     _userArrows.append(_deletedArrows.takeLast());         break;
+         case DRAWMODE_ELLIPSE:   if(!_deletedEllipses.isEmpty())   _userEllipses.append(_deletedEllipses.takeLast());     break;
+         case DRAWMODE_TEXT:      if(!_deletedTexts.isEmpty())      _userTexts.append(_deletedTexts.takeLast());           break;
+         case DRAWMODE_FREEFORM:  if(!_deletedFreeForms.isEmpty())  _userFreeForms.append(_deletedFreeForms.takeLast());   break;
+         case DRAWMODE_HIGHLIGHT: if(!_deletedHighlights.isEmpty()) _userHighlights.append(_deletedHighlights.takeLast()); break;
        }
        break;
 
@@ -268,6 +283,7 @@ void ZoomWidget::loadTools()
   _toolBar.append(Tool{TOOL_BLACKBOARD,        "Blackboard",       2, nullRect});
   _toolBar.append(Tool{TOOL_PICK_COLOR,        "Pick color",       2, nullRect});
   _toolBar.append(Tool{TOOL_UNDO,              "Undo",             2, nullRect});
+  _toolBar.append(Tool{TOOL_REDO,              "Redo",             2, nullRect});
   _toolBar.append(Tool{TOOL_DELETE,            "Delete",           2, nullRect});
   _toolBar.append(Tool{TOOL_CLEAR,             "Clear",            2, nullRect});
   _toolBar.append(Tool{TOOL_SCREEN_OPTS,       "Hide elements",    2, nullRect});
@@ -1274,13 +1290,13 @@ void ZoomWidget::removeFormBehindCursor(QPoint cursorPos)
     return;
 
   switch(_drawMode) {
-    case DRAWMODE_LINE:      _userLines.remove(formPosBehindCursor);      break;
-    case DRAWMODE_RECT:      _userRects.remove(formPosBehindCursor);      break;
-    case DRAWMODE_HIGHLIGHT: _userHighlights.remove(formPosBehindCursor); break;
-    case DRAWMODE_ARROW:     _userArrows.remove(formPosBehindCursor);     break;
-    case DRAWMODE_ELLIPSE:   _userEllipses.remove(formPosBehindCursor);   break;
-    case DRAWMODE_TEXT:      _userTexts.remove(formPosBehindCursor);      break;
-    case DRAWMODE_FREEFORM:  _userFreeForms.remove(formPosBehindCursor);  break;
+    case DRAWMODE_LINE:      _deletedLines.append(_userLines.takeAt(formPosBehindCursor));           break;
+    case DRAWMODE_RECT:      _deletedRects.append(_userRects.takeAt(formPosBehindCursor));           break;
+    case DRAWMODE_HIGHLIGHT: _deletedHighlights.append(_userHighlights.takeAt(formPosBehindCursor)); break;
+    case DRAWMODE_ARROW:     _deletedArrows.append(_userArrows.takeAt(formPosBehindCursor));         break;
+    case DRAWMODE_ELLIPSE:   _deletedEllipses.append(_userEllipses.takeAt(formPosBehindCursor));     break;
+    case DRAWMODE_TEXT:      _deletedTexts.append(_userTexts.takeAt(formPosBehindCursor));           break;
+    case DRAWMODE_FREEFORM:  _deletedFreeForms.append(_userFreeForms.takeAt(formPosBehindCursor));   break;
   }
 
   _state = STATE_MOVING;
@@ -1761,7 +1777,6 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 
   ZoomWidgetAction action;
   switch(key) {
-    case Qt::Key_R: action = TOOL_COLOR_RED;     break;
     case Qt::Key_G: action = TOOL_COLOR_GREEN;   break;
     case Qt::Key_B: action = TOOL_COLOR_BLUE;    break;
     case Qt::Key_C: action = TOOL_COLOR_CYAN;    break;
@@ -1770,6 +1785,12 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Y: action = TOOL_COLOR_YELLOW;  break;
     case Qt::Key_W: action = TOOL_COLOR_WHITE;   break;
     case Qt::Key_D: action = TOOL_COLOR_BLACK;   break;
+    case Qt::Key_R:
+                    if(_shiftPressed)
+                      action = TOOL_REDO;
+                    else
+                      action = TOOL_COLOR_RED;
+                    break;
 
     case Qt::Key_Z: action = TOOL_LINE;          break;
     case Qt::Key_X: action = TOOL_RECTANGLE;     break;
