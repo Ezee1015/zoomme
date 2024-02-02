@@ -25,21 +25,13 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 
 ## Functions & Mappings
 
-### General functions
-
+### Essential
 |          Key/Event         | Function                                                                                                                                                                                                                                                                                                                                                                                                          |
 |:--------------------------:|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Press & Hold **`Control`** | This will show a panel with all the available tools...                                                                                                                                                                                                                                                                                                                                                            |
 |      **`Mouse Wheel`**     | To zoom in and zoom out                                                                                                                                                                                                                                                                                                                                                                                           |
 |         **`Shift`**        | When it's zoomed in, if you press and hold the key, the screen will not follow the mouse, so you can freely move it around in that part of the screen (for drawing, for example). When you release it, it will continue following the mouse                                                                                                                                                                       |
-|      **`.`** (period)      | To toggle the "Flashlight effect" on the cursor.                                                                                                                                                                                                                                                                                                                                                                  |
 |  **`Shift + Mouse Wheel`** | **When the flashlight effect is turn on**, this will increase/decrease the size of the "light"                                                                                                                                                                                                                                                                                                                    |
-|           **`S`**          | Save the current work to an image, which will be stored in the Desktop folder (or the current path if not found). The computer will *beep* if the image was correctly saved                                                                                                                                                                                                                                       |
-|       **`Shift + S`**      | Save the current work to the clipboard. The computer will *beep* once the mapping is pressed                                                                                                                                                                                                                                                                                                                      |
-|       **`Shift + E`**      | Save the current work inside a '.zoomme' file, so you can [later restore the state of the program](#restore-from-file) from it. It is going to be save in the same path and with the same name that the image of the screenshot. The computer will *beep* if the file was correctly saved                                                                                                                         |
-|       **`-`** (dash)       | Start/stop recording. After stopping, a video will be produced, but it may take some time for rendering (You'll know when it finished rendering when the recording indicator of the status bar goes away and you listen a *beep*). The video is going to be save in the same path and with the same name that the image of the screenshot. **Requirements**: have `ffmpeg` installed, and use a Unix based system |
-|          **`Tab`**         | To toggle between your screen and a blackboard mode. By the way, your drawings will persist between the modes                                                                                                                                                                                                                                                                                                     |
-|         **`Space`**        | To toggle the visibility of the elements of the screen: hide the status bar, hide all or show all                                                                                                                                                                                                                                                                                                                 |
 |          **`ESC`**         | The function of the Escape key is described [in here](#escape-key-functions)...                                                                                                                                                                                                                                                                                                                                   |
 
 #### Escape key functions
@@ -55,6 +47,30 @@ The Escape key performs the following actions in a sequential order. If one cond
 7. If you are recording, it **stops recording**
 8. Otherwise, it **quits/exits**
 
+
+#### Text Mode Mappings
+
+|              Key             | Function                                                                                                                                                  |
+|:----------------------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+|          **`Enter`**         | To finish writing text                                                                                                                                    |
+|       **`Shift+Enter`**      | To make a new line when writing text                                                                                                                      |
+|     **`Left/Right keys`**    | To go to the previous/next character when writing text                                                                                                    |
+|      **`Up/Down keys`**      | To go to the previous/next line break when writing text                                                                                                   |
+| **`Shift and click a text`** | You can access and modify the text by clicking on it when you're in insert text mode. However, you cannot be writing or drawing a new text while clicking |
+
+### General functions
+
+|          Key/Event         | Function                                                                                                                                                                                                                                                                                                                                                                                                          |
+|:--------------------------:|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|      **`.`** (period)      | To toggle the "Flashlight effect" on the cursor.                                                                                                                                                                                                                                                                                                                                                                  |
+|           **`S`**          | Save the current work to an image, which will be stored in the Desktop folder (or the current path if not found). The computer will *beep* if the image was correctly saved                                                                                                                                                                                                                                       |
+|       **`Shift + S`**      | Save the current work to the clipboard. The computer will *beep* once the mapping is pressed                                                                                                                                                                                                                                                                                                                      |
+|       **`Shift + E`**      | Save the current work inside a '.zoomme' file, so you can [later restore the state of the program](#restore-from-file) from it. It is going to be save in the same path and with the same name that the image of the screenshot. The computer will *beep* if the file was correctly saved                                                                                                                         |
+|       **`-`** (dash)       | Start/stop recording. After stopping, a video will be produced, but it may take some time for rendering (You'll know when it finished rendering when the recording indicator of the status bar goes away and you listen a *beep*). The video is going to be save in the same path and with the same name that the image of the screenshot. **Requirements**: have `ffmpeg` installed, and use a Unix based system |
+|          **`Tab`**         | To toggle between your screen and a blackboard mode. By the way, your drawings will persist between the modes                                                                                                                                                                                                                                                                                                     |
+|         **`Space`**        | To toggle the visibility of the elements of the screen: hide the status bar, hide all or show all                                                                                                                                                                                                                                                                                                                 |
+
+
 ### Available Drawing Modes
 
 |            Key            | Function                                                                                                                               |
@@ -66,16 +82,6 @@ The Escape key performs the following actions in a sequential order. If one cond
 |          **`F`**          | To change the mode to drawing Free forms / Hand draws                                                                                  |
 |          **`T`**          | To change the mode to insert Text                                                                                                      |
 |          **`H`**          | To change the mode to a Highlighter (rectangular)                                                                                      |
-
-#### Text Mode Mappings
-
-|              Key             | Function                                                                                                                                                  |
-|:----------------------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-|          **`Enter`**         | To finish writing text                                                                                                                                    |
-|       **`Shift+Enter`**      | To make a new line when writing text                                                                                                                      |
-|     **`Left/Right keys`**    | To go to the previous/next character when writing text                                                                                                    |
-|      **`Up/Down keys`**      | To go to the previous/next line break when writing text                                                                                                   |
-| **`Shift and click a text`** | You can access and modify the text by clicking on it when you're in insert text mode. However, you cannot be writing or drawing a new text while clicking |
 
 ### Available Actions for the drawing modes
 
