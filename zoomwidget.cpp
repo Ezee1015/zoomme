@@ -249,50 +249,50 @@ void ZoomWidget::loadTools()
 {
   QRect nullRect(0, 0, 0, 0);
 
-  _toolBar.append(Tool{TOOL_WIDTH_1,           "1",                0, nullRect});
-  _toolBar.append(Tool{TOOL_WIDTH_2,           "2",                0, nullRect});
-  _toolBar.append(Tool{TOOL_WIDTH_3,           "3",                0, nullRect});
-  _toolBar.append(Tool{TOOL_WIDTH_4,           "4",                0, nullRect});
-  _toolBar.append(Tool{TOOL_WIDTH_5,           "5",                0, nullRect});
-  _toolBar.append(Tool{TOOL_WIDTH_6,           "6",                0, nullRect});
-  _toolBar.append(Tool{TOOL_WIDTH_7,           "7",                0, nullRect});
-  _toolBar.append(Tool{TOOL_WIDTH_8,           "8",                0, nullRect});
-  _toolBar.append(Tool{TOOL_WIDTH_9,           "9",                0, nullRect});
+  _toolBar.append(Tool{TOOL_WIDTH_1,           "1",                   0, nullRect});
+  _toolBar.append(Tool{TOOL_WIDTH_2,           "2",                   0, nullRect});
+  _toolBar.append(Tool{TOOL_WIDTH_3,           "3",                   0, nullRect});
+  _toolBar.append(Tool{TOOL_WIDTH_4,           "4",                   0, nullRect});
+  _toolBar.append(Tool{TOOL_WIDTH_5,           "5",                   0, nullRect});
+  _toolBar.append(Tool{TOOL_WIDTH_6,           "6",                   0, nullRect});
+  _toolBar.append(Tool{TOOL_WIDTH_7,           "7",                   0, nullRect});
+  _toolBar.append(Tool{TOOL_WIDTH_8,           "8",                   0, nullRect});
+  _toolBar.append(Tool{TOOL_WIDTH_9,           "9",                   0, nullRect});
 
-  _toolBar.append(Tool{TOOL_SPACER,            "",                 0, nullRect});
+  _toolBar.append(Tool{TOOL_SPACER,            "",                    0, nullRect});
 
-  _toolBar.append(Tool{TOOL_COLOR_RED,         "Red",              0, nullRect});
-  _toolBar.append(Tool{TOOL_COLOR_GREEN,       "Green",            0, nullRect});
-  _toolBar.append(Tool{TOOL_COLOR_BLUE,        "Blue",             0, nullRect});
-  _toolBar.append(Tool{TOOL_COLOR_YELLOW,      "Yellow",           0, nullRect});
-  _toolBar.append(Tool{TOOL_COLOR_ORANGE,      "Orange",           0, nullRect});
-  _toolBar.append(Tool{TOOL_COLOR_MAGENTA,     "Magenta",          0, nullRect});
-  _toolBar.append(Tool{TOOL_COLOR_CYAN,        "Cyan",             0, nullRect});
-  _toolBar.append(Tool{TOOL_COLOR_WHITE,       "White",            0, nullRect});
-  _toolBar.append(Tool{TOOL_COLOR_BLACK,       "Black",            0, nullRect});
+  _toolBar.append(Tool{TOOL_COLOR_RED,         "Red",                 0, nullRect});
+  _toolBar.append(Tool{TOOL_COLOR_GREEN,       "Green",               0, nullRect});
+  _toolBar.append(Tool{TOOL_COLOR_BLUE,        "Blue",                0, nullRect});
+  _toolBar.append(Tool{TOOL_COLOR_YELLOW,      "Yellow",              0, nullRect});
+  _toolBar.append(Tool{TOOL_COLOR_ORANGE,      "Orange",              0, nullRect});
+  _toolBar.append(Tool{TOOL_COLOR_MAGENTA,     "Magenta",             0, nullRect});
+  _toolBar.append(Tool{TOOL_COLOR_CYAN,        "Cyan",                0, nullRect});
+  _toolBar.append(Tool{TOOL_COLOR_WHITE,       "White",               0, nullRect});
+  _toolBar.append(Tool{TOOL_COLOR_BLACK,       "Black",               0, nullRect});
 
-  _toolBar.append(Tool{TOOL_LINE,              "Line",             1, nullRect});
-  _toolBar.append(Tool{TOOL_RECTANGLE,         "Rectangle",        1, nullRect});
-  _toolBar.append(Tool{TOOL_ARROW,             "Arrow",            1, nullRect});
-  _toolBar.append(Tool{TOOL_ELLIPSE,           "Ellipse",          1, nullRect});
-  _toolBar.append(Tool{TOOL_HIGHLIGHT,         "Highlight",        1, nullRect});
-  _toolBar.append(Tool{TOOL_FREEFORM,          "Free form",        1, nullRect});
-  _toolBar.append(Tool{TOOL_TEXT,              "Text",             1, nullRect});
+  _toolBar.append(Tool{TOOL_LINE,              "Line",                1, nullRect});
+  _toolBar.append(Tool{TOOL_RECTANGLE,         "Rectangle",           1, nullRect});
+  _toolBar.append(Tool{TOOL_ARROW,             "Arrow",               1, nullRect});
+  _toolBar.append(Tool{TOOL_ELLIPSE,           "Ellipse",             1, nullRect});
+  _toolBar.append(Tool{TOOL_HIGHLIGHT,         "Highlight",           1, nullRect});
+  _toolBar.append(Tool{TOOL_FREEFORM,          "Free form",           1, nullRect});
+  _toolBar.append(Tool{TOOL_TEXT,              "Text",                1, nullRect});
 
 
-  _toolBar.append(Tool{TOOL_FLASHLIGHT,        "Flashlight",       2, nullRect});
-  _toolBar.append(Tool{TOOL_BLACKBOARD,        "Blackboard",       2, nullRect});
-  _toolBar.append(Tool{TOOL_PICK_COLOR,        "Pick color",       2, nullRect});
-  _toolBar.append(Tool{TOOL_UNDO,              "Undo",             2, nullRect});
-  _toolBar.append(Tool{TOOL_REDO,              "Redo",             2, nullRect});
-  _toolBar.append(Tool{TOOL_DELETE,            "Delete",           2, nullRect});
-  _toolBar.append(Tool{TOOL_CLEAR,             "Clear",            2, nullRect});
-  _toolBar.append(Tool{TOOL_SCREEN_OPTS,       "Hide elements",    2, nullRect});
+  _toolBar.append(Tool{TOOL_FLASHLIGHT,        "Flashlight",          2, nullRect});
+  _toolBar.append(Tool{TOOL_BLACKBOARD,        "Blackboard",          2, nullRect});
+  _toolBar.append(Tool{TOOL_PICK_COLOR,        "Pick color",          2, nullRect});
+  _toolBar.append(Tool{TOOL_UNDO,              "Undo",                2, nullRect});
+  _toolBar.append(Tool{TOOL_REDO,              "Redo",                2, nullRect});
+  _toolBar.append(Tool{TOOL_DELETE,            "Delete",              2, nullRect});
+  _toolBar.append(Tool{TOOL_CLEAR,             "Clear",               2, nullRect});
+  _toolBar.append(Tool{TOOL_SCREEN_OPTS,       "Hide elements",       2, nullRect});
 
-  _toolBar.append(Tool{TOOL_SAVE_TO_FILE,      "Export image",     3, nullRect});
-  _toolBar.append(Tool{TOOL_SAVE_TO_CLIPBOARD, "Export clipboard", 3, nullRect});
-  _toolBar.append(Tool{TOOL_SAVE_PROJECT,      "Save project",     3, nullRect});
-  _toolBar.append(Tool{TOOL_RECORDING,         "Record",           3, nullRect});
+  _toolBar.append(Tool{TOOL_SAVE_TO_FILE,      "Export image",        3, nullRect});
+  _toolBar.append(Tool{TOOL_SAVE_TO_CLIPBOARD, "Export to clipboard", 3, nullRect});
+  _toolBar.append(Tool{TOOL_SAVE_PROJECT,      "Save project",        3, nullRect});
+  _toolBar.append(Tool{TOOL_RECORDING,         "Record",              3, nullRect});
 }
 
 void ZoomWidget::generateToolBar()
