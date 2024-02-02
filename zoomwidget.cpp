@@ -839,7 +839,7 @@ void invertColorPainter(QPainter *painter)
   painter->setPen(pen);
 }
 
-void ZoomWidget::drawTool(QPainter *screenPainter, Tool tool)
+void ZoomWidget::drawTool(QPainter *screenPainter, Tool tool, float roundnessFactor)
 {
   screenPainter->setPen(QCOLOR_TOOL_BAR);
 
@@ -850,7 +850,7 @@ void ZoomWidget::drawTool(QPainter *screenPainter, Tool tool)
   if(tool.rect.contains(getCursorPos(false)))
     invertColorPainter(screenPainter);
 
-  screenPainter->drawRoundedRect(tool.rect, 2.5, 2.5);
+  screenPainter->drawRoundedRect(tool.rect, roundnessFactor, roundnessFactor);
   screenPainter->drawText(tool.rect, Qt::AlignCenter | Qt::TextWordWrap, tool.name);
 }
 
@@ -859,13 +859,18 @@ void ZoomWidget::drawToolBar(QPainter *screenPainter)
   // Paint Background
   QColor color = QCOLOR_BLACK;
   color.setAlpha(200); // Transparency
-  screenPainter->fillRect(_toolBarOpts.rect, color);
+
+  const float roundnessFactor = 12.0f;
+  QPainterPath background;
+  background.addRoundedRect(_toolBarOpts.rect, roundnessFactor, roundnessFactor);
+
+  screenPainter->fillPath(background, color);
 
   for(int i=0; i<_toolBar.size(); i++) {
     const Tool tool = _toolBar.at(i);
 
     if(tool.action != TOOL_SPACER)
-      drawTool(screenPainter, tool);
+      drawTool(screenPainter, tool, roundnessFactor);
   }
 }
 

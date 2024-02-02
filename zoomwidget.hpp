@@ -355,7 +355,7 @@ class ZoomWidget : public QWidget
     // the size of the pen, etc.
     void drawStatus(QPainter *screenPainter);
     void drawToolBar(QPainter *screenPainter);
-    void drawTool(QPainter *screenPainter, Tool tool);
+    void drawTool(QPainter *screenPainter, Tool tool, float roundnessFactor);
 
     // Tool bar
     void loadTools();
