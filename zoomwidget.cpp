@@ -460,6 +460,7 @@ void ZoomWidget::saveStateToFile()
       out << _userHighlights.at(i).startPoint << _userHighlights.at(i).endPoint << _userHighlights.at(i).pen;
 
   QApplication::beep();
+  logUser(LOG_INFO, "Project saved correctly: %s", QSTRING_TO_STRING(filePath));
 }
 
 void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
