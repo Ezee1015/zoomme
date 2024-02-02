@@ -73,8 +73,9 @@ ZoomWidget::~ZoomWidget()
 
 bool ZoomWidget::isToolBarVisible()
 {
-  return _showToolBar            &&
-         _state != STATE_TYPING  &&
+  return _showToolBar                  &&
+         _state != STATE_COLOR_PICKER  &&
+         _state != STATE_TYPING        &&
          _state != STATE_DRAWING;
 }
 
@@ -1315,6 +1316,7 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
 
     toggleAction(_toolBar.at(toolPos).action);
     update();
+    updateCursorShape();
     return;
   }
 
@@ -1327,6 +1329,7 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
     _activePen.setColor(GET_COLOR_UNDER_CURSOR());
     _state = STATE_MOVING;
     update();
+    updateCursorShape();
     return;
   }
 
