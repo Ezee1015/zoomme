@@ -814,7 +814,7 @@ void drawArrowHead(int x, int y, int width, int height, QPainter *p)
 bool ZoomWidget::isDrawingHovered(int drawType, int vectorPos)
 {
   // Only if it's deleting or if it's trying to modify a text
-  bool isDeleting       = (_state == STATE_DELETING);
+  bool isDeleting = (_state == STATE_DELETING);
   if(!isDeleting && !isInEditTextMode())
     return false;
 
