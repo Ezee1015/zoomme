@@ -194,10 +194,12 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
 
     case TOOL_SAVE_TO_FILE: {
        QString path = getFilePath(FILE_IMAGE);
-       if(_drawnPixmap.save(path))
+       if(_drawnPixmap.save(path)){
          QApplication::beep();
-       else
+         logUser(LOG_INFO, "Image saved correctly: %s", QSTRING_TO_STRING(path));
+       } else {
          logUser(LOG_ERROR, "Couldn't save the picture to: %s", QSTRING_TO_STRING(path));
+       }
        break;
     }
 
