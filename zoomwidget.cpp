@@ -2083,9 +2083,9 @@ bool ZoomWidget::isInEditTextMode()
 
 bool ZoomWidget::isDisabledMouseTracking()
 {
-  return (_state != STATE_TYPING && _shiftPressed) ||
-         (isToolBarVisible())                      ||
-         (_state == STATE_TYPING && _freezeDesktopPosWhileWriting);
+  return (_state != STATE_TYPING && _shiftPressed)                 ||
+         (_state == STATE_TYPING && _freezeDesktopPosWhileWriting) ||
+         (isToolBarVisible());
 }
 
 // The cursor pos shouln't be fixed to hdpi scaling
