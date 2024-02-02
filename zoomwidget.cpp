@@ -1558,7 +1558,7 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
     return;
   }
 
-  if(_liveMode)
+  if(_liveMode || isDisabledMouseTracking())
     return;
 
   _desktopPixmapScale += sign * _scaleSensivity;
