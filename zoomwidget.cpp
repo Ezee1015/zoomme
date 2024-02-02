@@ -709,6 +709,16 @@ void ZoomWidget::createVideoFFmpeg()
     return;
   }
 
+  if(ffmpeg.exitStatus() == QProcess::CrashExit) {
+    logUser(LOG_ERROR, "FFmpeg crashed");
+    return;
+  }
+
+  if(ffmpeg.exitCode() != 0) {
+    logUser(LOG_ERROR, "FFmpeg failed. Exit code: %d", ffmpeg.exitCode());
+    return;
+  }
+
   QApplication::beep();
 }
 
