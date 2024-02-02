@@ -852,7 +852,7 @@ void ZoomWidget::drawTool(QPainter *screenPainter, Tool tool, float roundnessFac
 
   // Background
   QColor color = QCOLOR_TOOL_BAR;
-  color.setAlpha(50); // Transparency
+  color.setAlpha(55); // Transparency
   QPainterPath buttonBg;
   buttonBg.addRoundedRect(tool.rect, roundnessFactor, roundnessFactor);
   screenPainter->fillPath(buttonBg, color);
@@ -866,7 +866,7 @@ void ZoomWidget::drawToolBar(QPainter *screenPainter)
 {
   // Color of the background
   QColor color = QCOLOR_BLACK;
-  color.setAlpha(220); // Transparency
+  color.setAlpha(240); // Transparency
 
   // Increase a little bit the background of the tool bar for painting it (like
   // a padding)
