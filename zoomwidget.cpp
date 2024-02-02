@@ -297,7 +297,7 @@ void ZoomWidget::loadTools()
 
 void ZoomWidget::generateToolBar()
 {
-  const int padding = 20;
+  const int margin = 20;
   const int lineHeight = 55;
 
   // Get the number of lines
@@ -308,14 +308,14 @@ void ZoomWidget::generateToolBar()
   }
 
   const QRect background = QRect (
-                                   padding,
-                                   _screenSize.height() - padding - lineHeight*(numberOfLines+1),
-                                   _screenSize.width() - padding*2,
-                                   lineHeight * (numberOfLines+1) - padding
+                                   margin,
+                                   _screenSize.height() - margin - lineHeight*(numberOfLines+1),
+                                   _screenSize.width() - margin*2,
+                                   lineHeight * (numberOfLines+1) - margin
                                  );
 
   _toolBarOpts.lineHeight = lineHeight;
-  _toolBarOpts.padding = padding;
+  _toolBarOpts.margin = margin;
   _toolBarOpts.numberOfLines = numberOfLines;
   _toolBarOpts.rect = background;
 
@@ -339,7 +339,7 @@ void ZoomWidget::generateToolBar()
     const int line = tools.at(i).line;
 
     float width = (float)background.width() / (float)buttonsPerLine[line];
-    int height  = lineHeight - (float)padding / (float)(numberOfLines+1);
+    int height  = lineHeight - (float)margin / (float)(numberOfLines+1);
     int x       = background.x() + buttonCount[line] * width;
     int y       = background.y() + line * height;
 
@@ -868,12 +868,13 @@ void ZoomWidget::drawToolBar(QPainter *screenPainter)
   QColor color = QCOLOR_BLACK;
   color.setAlpha(210); // Transparency
 
-  // Increase a little bit the background of the tool bar
+  // Increase a little bit the background of the tool bar for painting it (like
+  // a padding)
   QRect bgRect = _toolBarOpts.rect;
-  bgRect.setX(bgRect.x() - _toolBarOpts.padding/2);
-  bgRect.setY(bgRect.y() - _toolBarOpts.padding/2);
-  bgRect.setWidth(bgRect.width() + _toolBarOpts.padding/2);
-  bgRect.setHeight(bgRect.height() + _toolBarOpts.padding/2);
+  bgRect.setX(bgRect.x() - _toolBarOpts.margin/2);
+  bgRect.setY(bgRect.y() - _toolBarOpts.margin/2);
+  bgRect.setWidth(bgRect.width() + _toolBarOpts.margin/2);
+  bgRect.setHeight(bgRect.height() + _toolBarOpts.margin/2);
 
   // Paint
   const float roundnessFactor = 12.0f;

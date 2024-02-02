@@ -189,7 +189,7 @@ struct Tool {
 
 struct ToolBarProperties {
   int lineHeight;
-  int padding;
+  int margin;
   int numberOfLines;
   QRect rect;
 };
