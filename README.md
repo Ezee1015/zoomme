@@ -79,12 +79,12 @@ The Escape key performs the following actions in a sequential order. If one cond
 
 ### Available Actions for the drawing modes
 
-|   Key   | Function                                                                                                                               |
-|:-------:|----------------------------------------------------------------------------------------------------------------------------------------|
-| **`U`** | To delete the last drawing of the current draw mode (undo)                                                                             |
-| **`Shift + R`** | To redo the last deleted drawing of the current draw mode (redo)                                                                             |
-| **`,`** | To delete a drawing (from the current mode) with the mouse. You can exit by deleting a form, with the Escape key or pressing `,` again |
-| **`Q`** | To clear all the drawings                                                                                                              |
+|       Key       | Function                                                                                                                               |
+|:---------------:|----------------------------------------------------------------------------------------------------------------------------------------|
+|     **`U`**     | To delete the last drawing of the current draw mode (undo)                                                                             |
+| **`Shift + R`** | To redo the last deleted drawing of the current draw mode (redo)                                                                       |
+|     **`,`**     | To delete a drawing (from the current mode) with the mouse. You can exit by deleting a form, with the Escape key or pressing `,` again |
+|     **`Q`**     | To clear all the drawings                                                                                                              |
 
 
 ### Change the color of the lines
