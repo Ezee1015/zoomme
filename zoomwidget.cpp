@@ -850,22 +850,38 @@ void ZoomWidget::drawTool(QPainter *screenPainter, Tool tool, float roundnessFac
   if(tool.rect.contains(getCursorPos(false)))
     invertColorPainter(screenPainter);
 
+  // Background
+  QColor color = QCOLOR_TOOL_BAR;
+  color.setAlpha(50); // Transparency
+  QPainterPath buttonBg;
+  buttonBg.addRoundedRect(tool.rect, roundnessFactor, roundnessFactor);
+  screenPainter->fillPath(buttonBg, color);
+
+  // Button
   screenPainter->drawRoundedRect(tool.rect, roundnessFactor, roundnessFactor);
   screenPainter->drawText(tool.rect, Qt::AlignCenter | Qt::TextWordWrap, tool.name);
 }
 
 void ZoomWidget::drawToolBar(QPainter *screenPainter)
 {
-  // Paint Background
+  // Color of the background
   QColor color = QCOLOR_BLACK;
-  color.setAlpha(200); // Transparency
+  color.setAlpha(210); // Transparency
 
+  // Increase a little bit the background of the tool bar
+  QRect bgRect = _toolBarOpts.rect;
+  bgRect.setX(bgRect.x() - _toolBarOpts.padding/2);
+  bgRect.setY(bgRect.y() - _toolBarOpts.padding/2);
+  bgRect.setWidth(bgRect.width() + _toolBarOpts.padding/2);
+  bgRect.setHeight(bgRect.height() + _toolBarOpts.padding/2);
+
+  // Paint
   const float roundnessFactor = 12.0f;
   QPainterPath background;
-  background.addRoundedRect(_toolBarOpts.rect, roundnessFactor, roundnessFactor);
-
+  background.addRoundedRect(bgRect, roundnessFactor, roundnessFactor);
   screenPainter->fillPath(background, color);
 
+  // Draw buttons
   for(int i=0; i<_toolBar.size(); i++) {
     const Tool tool = _toolBar.at(i);
 
