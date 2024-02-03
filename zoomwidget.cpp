@@ -688,7 +688,9 @@ void ZoomWidget::createVideoFFmpeg()
             // << "-c:a"       << "aac"
             // << "-ab"        << "200k"
             << "-vb"        << "2500k"
-            << "-pix_fmt"   << "yuv420p"
+            // Commented because of a warning from FFmpeg
+            // https://superuser.com/questions/1273920/deprecated-pixel-format-used-make-sure-you-did-set-range-correctly
+            // << "-pix_fmt"   << "yuv420p"
             << getFilePath(FILE_VIDEO);
 
   // Start process
