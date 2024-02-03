@@ -896,7 +896,6 @@ void invertColorPainter(QPainter *painter)
 
 void ZoomWidget::drawTool(QPainter *screenPainter, Tool tool)
 {
-
   QFont font;
   font.setPixelSize(16);
   screenPainter->setFont(font);
