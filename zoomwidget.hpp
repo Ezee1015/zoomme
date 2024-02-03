@@ -380,9 +380,11 @@ class ZoomWidget : public QWidget
     // the cursor position. Returns -1 if there's no button under the cursor
     int buttonBehindCursor(QPoint cursor);
 
-    // This function checks if the tool/action is active. It is meant to be used
-    // for checking if a button/action is active or not. Don't use it to check
-    // the state of the app, for example.
+    // This function checks if the tool/action of the button is active. Don't
+    // use it to check the state of a variable in the app (like checking if the
+    // state is in delete mode. Use: _state == STATE_DELETING, NOT
+    // isToolActive(TOOL_DELETE)), for example.
+    //
     // Return values...
     //   -  1 --> Active
     //   -  0 --> Inactive
