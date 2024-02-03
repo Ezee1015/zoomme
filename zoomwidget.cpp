@@ -1061,7 +1061,7 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
     if(isDrawingHovered(DRAWMODE_RECT, i))
       invertColorPainter(pixmapPainter);
 
-    pixmapPainter->drawRect(x, y, w, h);
+    pixmapPainter->drawRoundedRect(x, y, w, h, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
   }
 
   // Draw user Highlights
@@ -1074,7 +1074,10 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
 
     QColor color = pixmapPainter->pen().color();
     color.setAlpha(75); // Transparency
-    pixmapPainter->fillRect(QRect(x, y, w, h), color);
+
+    QPainterPath background;
+    background.addRoundedRect(x, y, w, h, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
+    pixmapPainter->fillPath(background, color);
   }
 
   // Draw user lines.
@@ -1186,7 +1189,7 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
     painter->drawText(fixQRectForText(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
 
     changePenWidth(painter, 1);
-    painter->drawRect(x, y, w, h);
+    painter->drawRoundedRect(x, y, w, h, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
   }
 
   // Draw active user object.
@@ -1208,7 +1211,7 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
 
     switch(_drawMode) {
       case DRAWMODE_RECT:
-        painter->drawRect(x, y, width, height);
+        painter->drawRoundedRect(x, y, width, height, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
         break;
       case DRAWMODE_LINE:
         painter->drawLine(x, y, width + x, height + y);
@@ -1224,7 +1227,7 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
         {
           updateFontSize(painter);
           changePenWidth(painter, 1);
-          painter->drawRect(x, y, width, height);
+          painter->drawRoundedRect(x, y, width, height, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
           QString defaultText;
           defaultText.append("Sizing... (");
           defaultText.append(QString::number(abs(width)));
@@ -1256,7 +1259,10 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
       case DRAWMODE_HIGHLIGHT:
         QColor color = painter->pen().color();
         color.setAlpha(75); // Transparency
-        painter->fillRect(QRect(x, y, width, height), color);
+
+        QPainterPath background;
+        background.addRoundedRect(x, y, width, height, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
+        painter->fillPath(background, color);
         break;
     }
   }
