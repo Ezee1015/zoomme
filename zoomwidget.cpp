@@ -875,7 +875,7 @@ void ZoomWidget::drawTool(QPainter *screenPainter, Tool tool, float roundnessFac
 
   // Button
   screenPainter->drawRoundedRect(tool.rect, roundnessFactor, roundnessFactor);
-  screenPainter->drawText(tool.rect, Qt::AlignCenter | Qt::TextWordWrap, tool.name);
+  screenPainter->drawText(tool.rect, Qt::AlignCenter | Qt::TextWrapAnywhere, tool.name);
 }
 
 void ZoomWidget::drawToolBar(QPainter *screenPainter)
