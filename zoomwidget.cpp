@@ -241,7 +241,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
     case TOOL_WIDTH_8:       _activePen.setWidth(8);              break;
     case TOOL_WIDTH_9:       _activePen.setWidth(9);              break;
 
-    case TOOL_SPACER:                                             break;
+    case TOOL_SPACER:        /* don't do anything here */         break;
   }
 }
 
@@ -1959,7 +1959,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     return;
   }
 
-  ZoomWidgetAction action;
+  ZoomWidgetAction action = TOOL_SPACER;
   switch(key) {
     case Qt::Key_G: action = TOOL_COLOR_GREEN;   break;
     case Qt::Key_B: action = TOOL_COLOR_BLUE;    break;
@@ -2016,6 +2016,11 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     case Qt::Key_7: action = TOOL_WIDTH_7;           break;
     case Qt::Key_8: action = TOOL_WIDTH_8;           break;
     case Qt::Key_9: action = TOOL_WIDTH_9;           break;
+
+    default:
+        updateCursorShape();
+        update();
+        return;
   }
 
   toggleAction(action);
