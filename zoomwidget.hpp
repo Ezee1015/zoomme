@@ -43,6 +43,8 @@
 #define RECORD_FPS 16
 #define RECORD_QUALITY 70 // 0-100
 #define RECORD_TEMP_FILENAME "ZoomMe_video_bytes"
+
+#define POPUP_ROUNDNESS_FACTOR 12.0f
 // END OF CUSTOMIZATION
 
 // CODE
@@ -355,7 +357,7 @@ class ZoomWidget : public QWidget
     // the size of the pen, etc.
     void drawStatus(QPainter *screenPainter);
     void drawToolBar(QPainter *screenPainter);
-    void drawTool(QPainter *screenPainter, Tool tool, float roundnessFactor);
+    void drawTool(QPainter *screenPainter, Tool tool);
 
     // Tool bar
     void loadTools();

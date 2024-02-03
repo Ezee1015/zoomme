@@ -855,7 +855,7 @@ void invertColorPainter(QPainter *painter)
   painter->setPen(pen);
 }
 
-void ZoomWidget::drawTool(QPainter *screenPainter, Tool tool, float roundnessFactor)
+void ZoomWidget::drawTool(QPainter *screenPainter, Tool tool)
 {
   screenPainter->setPen(QCOLOR_TOOL_BAR);
 
@@ -870,11 +870,11 @@ void ZoomWidget::drawTool(QPainter *screenPainter, Tool tool, float roundnessFac
   QColor color = QCOLOR_TOOL_BAR;
   color.setAlpha(55); // Transparency
   QPainterPath buttonBg;
-  buttonBg.addRoundedRect(tool.rect, roundnessFactor, roundnessFactor);
+  buttonBg.addRoundedRect(tool.rect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
   screenPainter->fillPath(buttonBg, color);
 
   // Button
-  screenPainter->drawRoundedRect(tool.rect, roundnessFactor, roundnessFactor);
+  screenPainter->drawRoundedRect(tool.rect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
   screenPainter->drawText(tool.rect, Qt::AlignCenter | Qt::TextWrapAnywhere, tool.name);
 }
 
@@ -893,9 +893,8 @@ void ZoomWidget::drawToolBar(QPainter *screenPainter)
   bgRect.setHeight(bgRect.height() + _toolBarOpts.margin/2);
 
   // Paint
-  const float roundnessFactor = 12.0f;
   QPainterPath background;
-  background.addRoundedRect(bgRect, roundnessFactor, roundnessFactor);
+  background.addRoundedRect(bgRect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
   screenPainter->fillPath(background, color);
 
   // Draw buttons
@@ -903,7 +902,7 @@ void ZoomWidget::drawToolBar(QPainter *screenPainter)
     const Tool tool = _toolBar.at(i);
 
     if(tool.action != TOOL_SPACER)
-      drawTool(screenPainter, tool, roundnessFactor);
+      drawTool(screenPainter, tool);
   }
 }
 
@@ -1027,18 +1026,22 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   QFont font; font.setPixelSize(fontSize); screenPainter->setFont(font);
   changePenWidth(screenPainter, penWidth);
 
+  // Rounded background
+  QPainterPath bgPath;
+  bgPath.addRoundedRect(rect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
+
   // Background (highlight) to improve contrast
   QColor color = (_activePen.color() == QCOLOR_BLACK) ? QCOLOR_WHITE : QCOLOR_BLACK;
   color.setAlpha(175); // Transparency
-  screenPainter->fillRect(rect, color);
+  screenPainter->fillPath(bgPath, color);
 
   // Background (highlight) for current color
   color = _activePen.color();
   color.setAlpha(65); // Transparency
-  screenPainter->fillRect(rect, color);
+  screenPainter->fillPath(bgPath, color);
 
   // Border
-  screenPainter->drawRect(rect);
+  screenPainter->drawRoundedRect(rect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
 
   // Text
   screenPainter->drawText(rect, Qt::AlignCenter | Qt::TextWordWrap, text);
