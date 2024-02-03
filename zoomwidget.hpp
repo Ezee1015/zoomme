@@ -35,14 +35,17 @@
 #define DEFAULT_FOLDER QStandardPaths::DesktopLocation // QStandardPaths::PicturesLocation
 #define DATE_FORMAT_FOR_FILE "dd-MM-yyyy hh.mm.ss"
 
-#define BLOCK_ICON   "🔒"
-#define NO_ZOOM_ICON "⛶"
-#define ZOOM_ICON    "🔍"
-#define RECORD_ICON  "●"
+#define BLOCK_ICON      "🔒"
+#define NO_ZOOM_ICON    "⛶"
+#define ZOOM_ICON       "🔍"
+#define RECORD_ICON     "●"
+#define HIGHLIGHT_ICON  "🖍️"
 
 #define RECORD_FPS 16
 #define RECORD_QUALITY 70 // 0-100
 #define RECORD_TEMP_FILENAME "ZoomMe_video_bytes"
+
+#define HIGHLIGHT_ALPHA 75
 
 #define POPUP_ROUNDNESS_FACTOR 12.0f
 #define RECT_ROUNDNESS_FACTOR 5.0f
@@ -82,6 +85,7 @@ struct UserObjectData {
   QPoint startPoint; // Point in the pixmap
   QPoint endPoint;   // Point in the pixmap
   QPen pen;
+  bool highlight;
 };
 
 struct UserTextData {
@@ -91,9 +95,16 @@ struct UserTextData {
 };
 
 struct UserFreeFormData {
-  QVector<QPoint> points;
+  QList<QPoint> points;
   QPen pen;
+  bool highlight;
   bool active;
+};
+
+struct ArrowHead {
+  QPoint startPoint;
+  QPoint leftLineEnd;
+  QPoint rightLineEnd;
 };
 
 struct UserFileConfig {
@@ -131,7 +142,6 @@ enum ZoomWidgetDrawMode {
   DRAWMODE_ELLIPSE,
   DRAWMODE_TEXT,
   DRAWMODE_FREEFORM,
-  DRAWMODE_HIGHLIGHT,
 };
 
 enum ZoomWidgetAction {
@@ -291,7 +301,6 @@ class ZoomWidget : public QWidget
     QVector<UserObjectData>    _userEllipses;
     QVector<UserTextData>      _userTexts;
     QVector<UserFreeFormData>  _userFreeForms;
-    QVector<UserObjectData>    _userHighlights;
 
     // Undo/Delete history
     QVector<UserObjectData>    _deletedRects;
@@ -300,7 +309,6 @@ class ZoomWidget : public QWidget
     QVector<UserObjectData>    _deletedEllipses;
     QVector<UserTextData>      _deletedTexts;
     QVector<UserFreeFormData>  _deletedFreeForms;
-    QVector<UserObjectData>    _deletedHighlights;
 
     QVector<Tool> _toolBar;
     ToolBarProperties _toolBarOpts;
@@ -322,6 +330,7 @@ class ZoomWidget : public QWidget
     bool _liveMode;
     bool _flashlightMode;
     int _flashlightRadius;
+    bool _highlight;
 
     // IN TEXT MODE: If the user was pressing shift when the mouse released
     // (finished sizing the text rectangle), disable mouse tracking while writing
@@ -359,6 +368,7 @@ class ZoomWidget : public QWidget
     void drawStatus(QPainter *screenPainter);
     void drawToolBar(QPainter *screenPainter);
     void drawTool(QPainter *screenPainter, Tool tool);
+    ArrowHead getArrowHead(int x, int y, int width, int height);
 
     // Tool bar
     void loadTools();

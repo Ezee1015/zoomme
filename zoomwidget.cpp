@@ -39,6 +39,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _mousePressed = false;
   _showToolBar = false;
   _boardMode = false;
+  _highlight = false;
   _flashlightMode = false;
   _flashlightRadius = 80;
   _screenOpts = SCREENOPTS_SHOW_ALL;
@@ -88,8 +89,8 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
     case TOOL_ARROW:         _drawMode = DRAWMODE_ARROW;         break;
     case TOOL_TEXT:          _drawMode = DRAWMODE_TEXT;          break;
     case TOOL_FREEFORM:      _drawMode = DRAWMODE_FREEFORM;      break;
-    case TOOL_HIGHLIGHT:     _drawMode = DRAWMODE_HIGHLIGHT;     break;
 
+    case TOOL_HIGHLIGHT:     _highlight = !_highlight;           break;
     case TOOL_FLASHLIGHT:    _flashlightMode = !_flashlightMode; break;
     case TOOL_BLACKBOARD:    _boardMode = !_boardMode;           break;
 
@@ -111,7 +112,6 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        _userEllipses.clear();
        _userTexts.clear();
        _userFreeForms.clear();
-       _userHighlights.clear();
        _state = STATE_MOVING;
        break;
 
@@ -126,7 +126,6 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
          case DRAWMODE_ELLIPSE:   if(!_userEllipses.isEmpty())   _deletedEllipses.append(_userEllipses.takeLast());     break;
          case DRAWMODE_TEXT:      if(!_userTexts.isEmpty())      _deletedTexts.append(_userTexts.takeLast());           break;
          case DRAWMODE_FREEFORM:  if(!_userFreeForms.isEmpty())  _deletedFreeForms.append(_userFreeForms.takeLast());   break;
-         case DRAWMODE_HIGHLIGHT: if(!_userHighlights.isEmpty()) _deletedHighlights.append(_userHighlights.takeLast()); break;
        }
        break;
 
@@ -141,7 +140,6 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
          case DRAWMODE_ELLIPSE:   if(!_deletedEllipses.isEmpty())   _userEllipses.append(_deletedEllipses.takeLast());     break;
          case DRAWMODE_TEXT:      if(!_deletedTexts.isEmpty())      _userTexts.append(_deletedTexts.takeLast());           break;
          case DRAWMODE_FREEFORM:  if(!_deletedFreeForms.isEmpty())  _userFreeForms.append(_deletedFreeForms.takeLast());   break;
-         case DRAWMODE_HIGHLIGHT: if(!_deletedHighlights.isEmpty()) _userHighlights.append(_deletedHighlights.takeLast()); break;
        }
        break;
 
@@ -277,9 +275,10 @@ void ZoomWidget::loadTools()
   _toolBar.append(Tool{TOOL_RECTANGLE,         "Rectangle",           1, nullRect});
   _toolBar.append(Tool{TOOL_ARROW,             "Arrow",               1, nullRect});
   _toolBar.append(Tool{TOOL_ELLIPSE,           "Ellipse",             1, nullRect});
-  _toolBar.append(Tool{TOOL_HIGHLIGHT,         "Highlight",           1, nullRect});
   _toolBar.append(Tool{TOOL_FREEFORM,          "Free form",           1, nullRect});
   _toolBar.append(Tool{TOOL_TEXT,              "Text",                1, nullRect});
+  _toolBar.append(Tool{TOOL_SPACER,            "",                    1, nullRect});
+  _toolBar.append(Tool{TOOL_HIGHLIGHT,         "Highlight",           1, nullRect});
 
 
   _toolBar.append(Tool{TOOL_FLASHLIGHT,        "Flashlight",          2, nullRect});
@@ -422,30 +421,30 @@ void ZoomWidget::saveStateToFile()
       // << _screenOpts
       << _drawMode
       << _activePen
+      << _highlight
       << _userRects.size()
       << _userLines.size()
       << _userArrows.size()
       << _userEllipses.size()
       << _userTexts.size()
-      << _userFreeForms.size()
-      << _userHighlights.size();
+      << _userFreeForms.size();
 
   // Save the drawings
   // Rectangles
   for(int i=0; i<_userRects.size(); i++)
-      out << _userRects.at(i).startPoint << _userRects.at(i).endPoint << _userRects.at(i).pen;
+      out << _userRects.at(i).startPoint << _userRects.at(i).endPoint << _userRects.at(i).pen << _userRects.at(i).highlight;
   // Lines
   for(int i=0; i<_userLines.size(); i++)
-      out << _userLines.at(i).startPoint << _userLines.at(i).endPoint << _userLines.at(i).pen;
+      out << _userLines.at(i).startPoint << _userLines.at(i).endPoint << _userLines.at(i).pen << _userLines.at(i).highlight;
   // Arrows
   for(int i=0; i<_userArrows.size(); i++)
-      out << _userArrows.at(i).startPoint << _userArrows.at(i).endPoint << _userArrows.at(i).pen;
+      out << _userArrows.at(i).startPoint << _userArrows.at(i).endPoint << _userArrows.at(i).pen << _userArrows.at(i).highlight;
   // Ellipses
   for(int i=0; i<_userEllipses.size(); i++)
-      out << _userEllipses.at(i).startPoint << _userEllipses.at(i).endPoint << _userEllipses.at(i).pen;
+      out << _userEllipses.at(i).startPoint << _userEllipses.at(i).endPoint << _userEllipses.at(i).pen << _userEllipses.at(i).highlight;
   // Texts
   for(int i=0; i<_userTexts.size(); i++){
-    out << _userTexts.at(i).data.startPoint << _userTexts.at(i).data.endPoint << _userTexts.at(i).data.pen;
+    out << _userTexts.at(i).data.startPoint << _userTexts.at(i).data.endPoint << _userTexts.at(i).data.pen << _userTexts.at(i).data.highlight;
     out << _userTexts.at(i).caretPos << _userTexts.at(i).text;
   }
   // Free Forms
@@ -453,11 +452,8 @@ void ZoomWidget::saveStateToFile()
     out << _userFreeForms.at(i).points.size();
     for(int x=0; x<_userFreeForms.at(i).points.size(); x++)
       out << _userFreeForms.at(i).points.at(x);
-    out << _userFreeForms.at(i).pen << _userFreeForms.at(i).active;
+    out << _userFreeForms.at(i).pen << _userFreeForms.at(i).active << _userFreeForms.at(i).highlight;
   }
-  // Highlights
-  for(int i=0; i<_userHighlights.size(); i++)
-      out << _userHighlights.at(i).startPoint << _userHighlights.at(i).endPoint << _userHighlights.at(i).pen;
 
   QApplication::beep();
   logUser(LOG_INFO, "Project saved correctly: %s", QSTRING_TO_STRING(filePath));
@@ -474,8 +470,7 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
             userArrowsCount     = 0,
             userEllipsesCount   = 0,
             userTextsCount      = 0,
-            userFreeFormsCount  = 0,
-            userHighlightsCount = 0;
+            userFreeFormsCount  = 0;
 
   QSize savedScreenSize;
   QPixmap savedPixmap;
@@ -503,13 +498,13 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
       // >> _screenOpts
       >> _drawMode
       >> _activePen
+      >> _highlight
       >> userRectsCount
       >> userLinesCount
       >> userArrowsCount
       >> userEllipsesCount
       >> userTextsCount
-      >> userFreeFormsCount
-      >> userHighlightsCount;
+      >> userFreeFormsCount;
 
   // VARIABLES FOR SCALING THE DRAWINGS
   float scaleFactorX = 1.0, scaleFactorY = 1.0;
@@ -564,7 +559,7 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
   // Rectangles
   for(int i=0; i<userRectsCount; i++){
     UserObjectData objectData;
-    in >> objectData.startPoint >> objectData.endPoint >> objectData.pen;
+    in >> objectData.startPoint >> objectData.endPoint >> objectData.pen >> objectData.highlight;
 
     objectData.startPoint.setX( marginLeft + objectData.startPoint.x() * scaleFactorX );
     objectData.startPoint.setY( marginTop  + objectData.startPoint.y() * scaleFactorY );
@@ -576,7 +571,7 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
   // Lines
   for(int i=0; i<userLinesCount; i++){
     UserObjectData objectData;
-    in >> objectData.startPoint >> objectData.endPoint >> objectData.pen;
+    in >> objectData.startPoint >> objectData.endPoint >> objectData.pen >> objectData.highlight;
 
     objectData.startPoint.setX( marginLeft + objectData.startPoint.x() * scaleFactorX );
     objectData.startPoint.setY( marginTop  + objectData.startPoint.y() * scaleFactorY );
@@ -588,7 +583,7 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
   // Arrows
   for(int i=0; i<userArrowsCount; i++){
     UserObjectData objectData;
-    in >> objectData.startPoint >> objectData.endPoint >> objectData.pen;
+    in >> objectData.startPoint >> objectData.endPoint >> objectData.pen >> objectData.highlight;
 
     objectData.startPoint.setX( marginLeft + objectData.startPoint.x() * scaleFactorX );
     objectData.startPoint.setY( marginTop  + objectData.startPoint.y() * scaleFactorY );
@@ -600,7 +595,7 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
   // Ellipses
   for(int i=0; i<userEllipsesCount; i++){
     UserObjectData objectData;
-    in >> objectData.startPoint >> objectData.endPoint >> objectData.pen;
+    in >> objectData.startPoint >> objectData.endPoint >> objectData.pen >> objectData.highlight;
 
     objectData.startPoint.setX( marginLeft + objectData.startPoint.x() * scaleFactorX );
     objectData.startPoint.setY( marginTop  + objectData.startPoint.y() * scaleFactorY );
@@ -612,7 +607,7 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
   // Texts
   for(int i=0; i<userTextsCount; i++){
     UserTextData textData;
-    in >> textData.data.startPoint >> textData.data.endPoint >> textData.data.pen;
+    in >> textData.data.startPoint >> textData.data.endPoint >> textData.data.pen >> textData.data.highlight;
     in >> textData.caretPos >> textData.text;
 
     textData.data.startPoint.setX( marginLeft + textData.data.startPoint.x() * scaleFactorX );
@@ -636,20 +631,8 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
 
       freeFormData.points.append(point);
     }
-    in >> freeFormData.pen >> freeFormData.active;
+    in >> freeFormData.pen >> freeFormData.active >> freeFormData.highlight;
     _userFreeForms.append(freeFormData);
-  }
-  // Highlights
-  for(int i=0; i<userHighlightsCount; i++){
-    UserObjectData objectData;
-    in >> objectData.startPoint >> objectData.endPoint >> objectData.pen;
-
-    objectData.startPoint.setX( marginLeft + objectData.startPoint.x() * scaleFactorX );
-    objectData.startPoint.setY( marginTop  + objectData.startPoint.y() * scaleFactorY );
-    objectData.endPoint.setX( marginLeft + objectData.endPoint.x() * scaleFactorX );
-    objectData.endPoint.setY( marginTop  + objectData.endPoint.y() * scaleFactorY );
-
-    _userHighlights.append(objectData);
   }
 
   if(in.atEnd())
@@ -738,10 +721,11 @@ void ZoomWidget::saveFrameToFile()
   recordTempFile->write(imageBytes);
 }
 
-QRect fixQRectForText(int x, int y, int width, int height)
+QRect fixQRect(int x, int y, int width, int height)
 {
-  // The width and height of the text must be positive, otherwise strange
-  // things happen, like only showing the first word of the text
+  // The width and height of the rectangle must be positive, otherwise strange
+  // things happen, like only showing the first word on texts, or draw an
+  // ellipse instead of rectangles
   if(width < 0)  { x+=width;  width=abs(width);   }
   if(height < 0) { y+=height; height=abs(height); }
 
@@ -762,7 +746,7 @@ void changePenWidth(QPainter *painter, int width)
   painter->setPen(pen);
 }
 
-void drawArrowHead(int x, int y, int width, int height, QPainter *p)
+ArrowHead ZoomWidget::getArrowHead(int x, int y, int width, int height)
 {
   float opposite=-1 * height;
   float adjacent=width;
@@ -820,8 +804,11 @@ void drawArrowHead(int x, int y, int width, int height, QPainter *p)
     leftLineX  *= (1-lengthProportion); leftLineY  *= lengthProportion;
   }
 
-  p->drawLine(originX, originY, originX+rightLineX, originY+rightLineY);
-  p->drawLine(originX, originY, originX+leftLineX, originY+leftLineY);
+  return ArrowHead {
+    QPoint(originX, originY),
+    QPoint(originX+leftLineX, originY+leftLineY),
+    QPoint(originX+rightLineX, originY+rightLineY),
+  };
 }
 
 bool ZoomWidget::isDrawingHovered(int drawType, int vectorPos)
@@ -930,10 +917,14 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
     text.append( (_desktopPixmapScale == 1.0f) ? NO_ZOOM_ICON : ZOOM_ICON );
   text.append(" ");
 
+  if(_highlight) {
+    text.append(HIGHLIGHT_ICON);
+    text.append(" ");
+  }
+
   switch(_drawMode) {
     case DRAWMODE_LINE:      text.append("Line");        break;
     case DRAWMODE_RECT:      text.append("Rectangle");   break;
-    case DRAWMODE_HIGHLIGHT: text.append("Highlighter"); break;
     case DRAWMODE_ARROW:     text.append("Arrow");       break;
     case DRAWMODE_ELLIPSE:   text.append("Ellipse");     break;
     case DRAWMODE_TEXT:      text.append("Text");        break;
@@ -1061,23 +1052,15 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
     if(isDrawingHovered(DRAWMODE_RECT, i))
       invertColorPainter(pixmapPainter);
 
-    pixmapPainter->drawRoundedRect(x, y, w, h, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
-  }
+    if(_userRects.at(i).highlight) {
+      QColor color = pixmapPainter->pen().color();
+      color.setAlpha(HIGHLIGHT_ALPHA); // Transparency
+      QPainterPath background;
+      background.addRoundedRect(x, y, w, h, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
+      pixmapPainter->fillPath(background, color);
+    }
 
-  // Draw user Highlights
-  for (int i = 0; i < _userHighlights.size(); ++i) {
-    pixmapPainter->setPen(_userHighlights.at(i).pen);
-    getRealUserObjectPos(_userHighlights.at(i), &x, &y, &w, &h, false);
-
-    if(isDrawingHovered(DRAWMODE_HIGHLIGHT, i))
-      invertColorPainter(pixmapPainter);
-
-    QColor color = pixmapPainter->pen().color();
-    color.setAlpha(75); // Transparency
-
-    QPainterPath background;
-    background.addRoundedRect(x, y, w, h, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
-    pixmapPainter->fillPath(background, color);
+    pixmapPainter->drawRoundedRect(fixQRect(x, y, w, h), RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
   }
 
   // Draw user lines.
@@ -1087,6 +1070,22 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
 
     if(isDrawingHovered(DRAWMODE_LINE, i))
       invertColorPainter(pixmapPainter);
+
+    // Draw a wider semi-transparent line behind the line as the highlight
+    if(_userLines.at(i).highlight) {
+      QPen oldPen = pixmapPainter->pen();
+
+      // Change the color and width of the pen
+      QPen newPen = oldPen;
+      QColor color = oldPen.color(); color.setAlpha(HIGHLIGHT_ALPHA); newPen.setColor(color);
+      newPen.setWidth(newPen.width() * 4);
+      pixmapPainter->setPen(newPen);
+
+      pixmapPainter->drawLine(x, y, x+w, y+h);
+
+      // Reset pen
+      pixmapPainter->setPen(oldPen);
+    }
 
     pixmapPainter->drawLine(x, y, x+w, y+h);
   }
@@ -1099,8 +1098,29 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
     if(isDrawingHovered(DRAWMODE_ARROW, i))
       invertColorPainter(pixmapPainter);
 
+    ArrowHead head = getArrowHead(x, y, w, h);
+
+    // Draw a wider semi-transparent line behind the line as the highlight
+    if(_userArrows.at(i).highlight) {
+      QPen oldPen = pixmapPainter->pen();
+
+      // Change the color and width of the pen
+      QPen newPen = oldPen;
+      QColor color = oldPen.color(); color.setAlpha(HIGHLIGHT_ALPHA); newPen.setColor(color);
+      newPen.setWidth(newPen.width() * 4);
+      pixmapPainter->setPen(newPen);
+
+      pixmapPainter->drawLine(x, y, x+w, y+h);
+      pixmapPainter->drawLine(head.startPoint, head.rightLineEnd);
+      pixmapPainter->drawLine(head.startPoint, head.leftLineEnd);
+
+      // Reset pen
+      pixmapPainter->setPen(oldPen);
+    }
+
     pixmapPainter->drawLine(x, y, x+w, y+h);
-    drawArrowHead(x, y, w, h, pixmapPainter);
+    pixmapPainter->drawLine(head.startPoint, head.rightLineEnd);
+    pixmapPainter->drawLine(head.startPoint, head.leftLineEnd);
   }
 
   // Draw user ellipses.
@@ -1110,6 +1130,14 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
 
     if(isDrawingHovered(DRAWMODE_ELLIPSE, i))
       invertColorPainter(pixmapPainter);
+
+    if(_userEllipses.at(i).highlight) {
+      QColor color = pixmapPainter->pen().color();
+      color.setAlpha(HIGHLIGHT_ALPHA); // Transparency
+      QPainterPath background;
+      background.addEllipse(x, y, w, h);
+      pixmapPainter->fillPath(background, color);
+    }
 
     pixmapPainter->drawEllipse(x, y, w, h);
   }
@@ -1123,11 +1151,25 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
     if(isDrawingHovered(DRAWMODE_FREEFORM, i))
       invertColorPainter(pixmapPainter);
 
-    for (int z = 0; z < _userFreeForms.at(i).points.size()-1; ++z) {
-      QPoint current = _userFreeForms.at(i).points.at(z);
-      QPoint next    = _userFreeForms.at(i).points.at(z+1);
+    // Draw the free form with or without the highlight
+    if(_userFreeForms.at(i).highlight) {
+      QPolygon polygon(_userFreeForms.at(i).points);
 
-      pixmapPainter->drawLine(current.x(), current.y(), next.x(), next.y());
+      // Highlight
+      QColor color = pixmapPainter->pen().color();
+      color.setAlpha(HIGHLIGHT_ALPHA); // Transparency
+      QPainterPath background;
+      background.addPolygon(polygon);
+      pixmapPainter->fillPath(background, color);
+
+      pixmapPainter->drawPolygon(polygon);
+    } else {
+      for (int z = 0; z < _userFreeForms.at(i).points.size()-1; ++z) {
+        QPoint current = _userFreeForms.at(i).points.at(z);
+        QPoint next    = _userFreeForms.at(i).points.at(z+1);
+
+        pixmapPainter->drawLine(current.x(), current.y(), next.x(), next.y());
+      }
     }
   }
 
@@ -1143,8 +1185,17 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
     if(isDrawingHovered(DRAWMODE_TEXT, i))
       invertColorPainter(pixmapPainter);
 
+    if(_userTexts.at(i).data.highlight) {
+      QColor color = pixmapPainter->pen().color();
+      color.setAlpha(HIGHLIGHT_ALPHA); // Transparency
+      QPainterPath background;
+      background.addRect(x, y, w, h);
+      pixmapPainter->fillPath(background, color);
+      pixmapPainter->drawRect(x, y, w, h);
+    }
+
     QString text = _userTexts.at(i).text;
-    pixmapPainter->drawText(fixQRectForText(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
+    pixmapPainter->drawText(fixQRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
   }
 }
 
@@ -1186,10 +1237,24 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
     QString text = textObject.text;
     if(text.isEmpty()) text="Type some text... \nThen press Enter to finish...";
     else text.insert(textObject.caretPos, '|');
-    painter->drawText(fixQRectForText(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
 
-    changePenWidth(painter, 1);
-    painter->drawRoundedRect(x, y, w, h, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
+    if(_highlight) {
+      QColor color = _userTexts.last().data.pen.color();
+      color.setAlpha(HIGHLIGHT_ALPHA); // Transparency
+      QPainterPath background;
+      background.addRect(x, y, w, h);
+      painter->fillPath(background, color);
+
+      invertColorPainter(painter);
+      painter->drawRect(x, y, w, h);
+    } else {
+      changePenWidth(painter, 1);
+      invertColorPainter(painter);
+      painter->drawRoundedRect(fixQRect(x, y, w, h), RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
+    }
+
+    invertColorPainter(painter);
+    painter->drawText(fixQRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
   }
 
   // Draw active user object.
@@ -1209,32 +1274,97 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
     int width  = endPoint.x() - startPoint.x();
     int height = endPoint.y() - startPoint.y();
 
+    // For the highlight
+    QColor color = painter->pen().color();
+    color.setAlpha(HIGHLIGHT_ALPHA); // Transparency
+    QPainterPath background;
+
     switch(_drawMode) {
       case DRAWMODE_RECT:
-        painter->drawRoundedRect(x, y, width, height, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
+        painter->drawRoundedRect(fixQRect(x, y, width, height), RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
+
+        if(_highlight) {
+          background.addRoundedRect(x, y, width, height, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
+          painter->fillPath(background, color);
+        }
         break;
       case DRAWMODE_LINE:
+        // Draw a wider semi-transparent line behind the line as the highlight
+        if(_highlight) {
+          QPen oldPen = painter->pen();
+
+          // Change the color and width of the pen
+          QPen newPen = oldPen;
+          newPen.setColor(color);
+          newPen.setWidth(newPen.width() * 4);
+          painter->setPen(newPen);
+
+          painter->drawLine(x, y, x+width, y+height);
+
+          // Reset pen
+          painter->setPen(oldPen);
+        }
+
         painter->drawLine(x, y, width + x, height + y);
         break;
-      case DRAWMODE_ARROW:
-        painter->drawLine(x, y, width + x, height + y);
-        drawArrowHead(x, y, width, height, painter);
-        break;
+      case DRAWMODE_ARROW: {
+          ArrowHead head = getArrowHead(x, y, width, height);
+
+          // Draw a wider semi-transparent line behind the line as the highlight
+          if(_highlight) {
+            QPen oldPen = painter->pen();
+
+            // Change the color and width of the pen
+            QPen newPen = oldPen;
+            newPen.setColor(color);
+            newPen.setWidth(newPen.width() * 4);
+            painter->setPen(newPen);
+
+            painter->drawLine(x, y, x+width, y+height);
+            painter->drawLine(head.startPoint, head.rightLineEnd);
+            painter->drawLine(head.startPoint, head.leftLineEnd);
+
+            // Reset pen
+            painter->setPen(oldPen);
+          }
+
+          painter->drawLine(x, y, width + x, height + y);
+          painter->drawLine(head.startPoint, head.rightLineEnd);
+          painter->drawLine(head.startPoint, head.leftLineEnd);
+          break;
+        }
       case DRAWMODE_ELLIPSE:
         painter->drawEllipse(x, y, width, height);
+
+        if(_highlight) {
+          background.addEllipse(x, y, width, height);
+          painter->fillPath(background, color);
+        }
         break;
       case DRAWMODE_TEXT:
         {
           updateFontSize(painter);
-          changePenWidth(painter, 1);
-          painter->drawRoundedRect(x, y, width, height, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
+
+          if(_highlight) {
+            background.addRoundedRect(x, y, width, height, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
+            painter->fillPath(background, color);
+
+            invertColorPainter(painter);
+            painter->drawRoundedRect(x, y, width, height, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
+          } else {
+            changePenWidth(painter, 1);
+            invertColorPainter(painter);
+            painter->drawRoundedRect(fixQRect(x, y, width, height), RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
+          }
+          invertColorPainter(painter);
+
           QString defaultText;
           defaultText.append("Sizing... (");
           defaultText.append(QString::number(abs(width)));
           defaultText.append("x");
           defaultText.append(QString::number(abs(height)));
           defaultText.append(")");
-          painter->drawText(fixQRectForText(x, y, width, height), Qt::AlignCenter | Qt::TextWordWrap, defaultText);
+          painter->drawText(fixQRect(x, y, width, height), Qt::AlignCenter | Qt::TextWordWrap, defaultText);
           break;
         }
       case DRAWMODE_FREEFORM:
@@ -1244,25 +1374,34 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
           break;
 
         painter->setPen(_userFreeForms.last().pen);
-        for (int z = 0; z < _userFreeForms.last().points.size()-1; ++z) {
-          QPoint current = _userFreeForms.last().points.at(z);
-          QPoint next    = _userFreeForms.last().points.at(z+1);
 
-          if(drawToScreen){
-            current = pixmapPointToScreenPos(current);
-            next = pixmapPointToScreenPos(next);
+        // Draw the free form with or without the highlight
+        if(_userFreeForms.last().highlight) {
+          QPolygon polygon;
+          for (int i = 0; i < _userFreeForms.last().points.size(); ++i) {
+            QPoint point = _userFreeForms.last().points.at(i);
+            if(drawToScreen) point = pixmapPointToScreenPos(point);
+
+            polygon << point;
           }
 
-          painter->drawLine(current.x(), current.y(), next.x(), next.y());
-        }
-        break;
-      case DRAWMODE_HIGHLIGHT:
-        QColor color = painter->pen().color();
-        color.setAlpha(75); // Transparency
+          background.addPolygon(polygon);
+          painter->fillPath(background, color);
 
-        QPainterPath background;
-        background.addRoundedRect(x, y, width, height, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
-        painter->fillPath(background, color);
+          painter->drawPolygon(polygon);
+        } else {
+          for (int i = 0; i < _userFreeForms.last().points.size()-1; ++i) {
+            QPoint current = _userFreeForms.last().points.at(i);
+            QPoint next    = _userFreeForms.last().points.at(i+1);
+
+            if(drawToScreen) {
+              current = pixmapPointToScreenPos(current);
+              next = pixmapPointToScreenPos(next);
+            }
+
+            painter->drawLine(current.x(), current.y(), next.x(), next.y());
+          }
+        }
         break;
     }
   }
@@ -1340,7 +1479,6 @@ void ZoomWidget::removeFormBehindCursor(QPoint cursorPos)
   switch(_drawMode) {
     case DRAWMODE_LINE:      _deletedLines.append(_userLines.takeAt(formPosBehindCursor));           break;
     case DRAWMODE_RECT:      _deletedRects.append(_userRects.takeAt(formPosBehindCursor));           break;
-    case DRAWMODE_HIGHLIGHT: _deletedHighlights.append(_userHighlights.takeAt(formPosBehindCursor)); break;
     case DRAWMODE_ARROW:     _deletedArrows.append(_userArrows.takeAt(formPosBehindCursor));         break;
     case DRAWMODE_ELLIPSE:   _deletedEllipses.append(_userEllipses.takeAt(formPosBehindCursor));     break;
     case DRAWMODE_TEXT:      _deletedTexts.append(_userTexts.takeAt(formPosBehindCursor));           break;
@@ -1428,10 +1566,10 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
   data.pen = _activePen;
   data.startPoint = _startDrawPoint;
   data.endPoint = _endDrawPoint;
+  data.highlight = _highlight;
   switch(_drawMode) {
     case DRAWMODE_LINE:      _userLines.append(data);      break;
     case DRAWMODE_RECT:      _userRects.append(data);      break;
-    case DRAWMODE_HIGHLIGHT: _userHighlights.append(data); break;
     case DRAWMODE_ARROW:     _userArrows.append(data);     break;
     case DRAWMODE_ELLIPSE:   _userEllipses.append(data);   break;
     case DRAWMODE_TEXT:
@@ -1460,6 +1598,7 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
         UserFreeFormData data = _userFreeForms.last();
         _userFreeForms.removeLast();
         data.active = false;
+        data.highlight = _highlight;
         _userFreeForms.append(data);
         break;
       }
@@ -1532,6 +1671,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
       UserFreeFormData data;
       data.pen = _activePen;
       data.active = true;
+      data.highlight = _highlight;
       data.points.append(curPos);
       _userFreeForms.append(data);
     }
@@ -1705,13 +1845,6 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos)
           return i;
       }
       break;
-    case DRAWMODE_HIGHLIGHT:
-      for (int i = 0; i < _userHighlights.size(); ++i) {
-        getRealUserObjectPos(_userHighlights.at(i), &x, &y, &w, &h, true);
-        if(isCursorInsideHitBox(x, y, w, h, cursorPos, false))
-          return i;
-      }
-      break;
     case DRAWMODE_ARROW:
       for (int i = 0; i < _userArrows.size(); ++i) {
         getRealUserObjectPos(_userArrows.at(i), &x, &y, &w, &h, true);
@@ -1762,6 +1895,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 
   if(key == Qt::Key_Shift)
     _shiftPressed = true;
+
   if(key == Qt::Key_Control)
     _showToolBar = true;
 

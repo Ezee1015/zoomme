@@ -86,7 +86,7 @@ The Escape key performs the following actions in a sequential order. If one cond
 | **`E`** | To change the mode to drawing Ellipses                |
 | **`F`** | To change the mode to drawing Free forms / Hand draws |
 | **`T`** | To change the mode to insert Text                     |
-| **`H`** | To change the mode to a Highlighter (rectangular)     |
+| **`H`** | To highlight the background of the forms/drawings     |
 
 ### Available Actions for the drawing modes
 
