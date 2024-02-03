@@ -811,7 +811,7 @@ ArrowHead ZoomWidget::getArrowHead(int x, int y, int width, int height)
   };
 }
 
-bool ZoomWidget::isDrawingHovered(int drawType, int vectorPos)
+bool ZoomWidget::isDrawingHovered(ZoomWidgetDrawMode drawType, int vectorPos)
 {
   // Only if it's deleting or if it's trying to modify a text
   bool isDeleting = (_state == STATE_DELETING);

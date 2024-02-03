@@ -416,7 +416,7 @@ class ZoomWidget : public QWidget
 
     void removeFormBehindCursor(QPoint cursorPos);
     void updateCursorShape();
-    bool isDrawingHovered(int drawMode, int i);
+    bool isDrawingHovered(ZoomWidgetDrawMode drawMode, int i);
     bool isInEditTextMode();
     bool isDisabledMouseTracking();
     bool isTextEditable(QPoint cursorPos);
