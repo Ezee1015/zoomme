@@ -671,7 +671,8 @@ void ZoomWidget::createVideoFFmpeg()
   QList<QString> arguments;
 
   // GLOBAL ARGS
-  arguments << "-loglevel"  << "verbose"
+  arguments << "-hide_banner"
+            << "-loglevel"  << "warning"
             << "-y"
   // INPUT ARGS
             // No rawvideo because it's now compressed in jpeg
