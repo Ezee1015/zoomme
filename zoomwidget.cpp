@@ -296,6 +296,58 @@ void ZoomWidget::loadTools()
   _toolBar.append(Tool{TOOL_RECORDING,         "Record",              3, nullRect});
 }
 
+int ZoomWidget::isToolActive(ZoomWidgetAction action)
+{
+  bool actionStatus = false;
+  switch(action) {
+    case TOOL_WIDTH_1:           actionStatus = (_activePen.width() == 1);              break;
+    case TOOL_WIDTH_2:           actionStatus = (_activePen.width() == 2);              break;
+    case TOOL_WIDTH_3:           actionStatus = (_activePen.width() == 3);              break;
+    case TOOL_WIDTH_4:           actionStatus = (_activePen.width() == 4);              break;
+    case TOOL_WIDTH_5:           actionStatus = (_activePen.width() == 5);              break;
+    case TOOL_WIDTH_6:           actionStatus = (_activePen.width() == 6);              break;
+    case TOOL_WIDTH_7:           actionStatus = (_activePen.width() == 7);              break;
+    case TOOL_WIDTH_8:           actionStatus = (_activePen.width() == 8);              break;
+    case TOOL_WIDTH_9:           actionStatus = (_activePen.width() == 9);              break;
+
+    case TOOL_COLOR_RED:         actionStatus = (_activePen.color() == QCOLOR_RED);     break;
+    case TOOL_COLOR_GREEN:       actionStatus = (_activePen.color() == QCOLOR_GREEN);   break;
+    case TOOL_COLOR_BLUE:        actionStatus = (_activePen.color() == QCOLOR_BLUE);    break;
+    case TOOL_COLOR_YELLOW:      actionStatus = (_activePen.color() == QCOLOR_YELLOW);  break;
+    case TOOL_COLOR_ORANGE:      actionStatus = (_activePen.color() == QCOLOR_ORANGE);  break;
+    case TOOL_COLOR_MAGENTA:     actionStatus = (_activePen.color() == QCOLOR_MAGENTA); break;
+    case TOOL_COLOR_CYAN:        actionStatus = (_activePen.color() == QCOLOR_CYAN);    break;
+    case TOOL_COLOR_WHITE:       actionStatus = (_activePen.color() == QCOLOR_WHITE);   break;
+    case TOOL_COLOR_BLACK:       actionStatus = (_activePen.color() == QCOLOR_BLACK);   break;
+
+    case TOOL_LINE:              actionStatus = (_drawMode == DRAWMODE_LINE);           break;
+    case TOOL_RECTANGLE:         actionStatus = (_drawMode == DRAWMODE_RECT);           break;
+    case TOOL_ARROW:             actionStatus = (_drawMode == DRAWMODE_ARROW);          break;
+    case TOOL_ELLIPSE:           actionStatus = (_drawMode == DRAWMODE_ELLIPSE);        break;
+    case TOOL_FREEFORM:          actionStatus = (_drawMode == DRAWMODE_FREEFORM);       break;
+    case TOOL_TEXT:              actionStatus = (_drawMode == DRAWMODE_TEXT);           break;
+    case TOOL_HIGHLIGHT:         actionStatus = (_highlight);                           break;
+
+    case TOOL_FLASHLIGHT:        actionStatus = (_flashlightMode);                      break;
+    case TOOL_BLACKBOARD:        actionStatus = (_boardMode);                           break;
+    case TOOL_PICK_COLOR:        actionStatus = (_state == STATE_COLOR_PICKER);         break;
+    case TOOL_DELETE:            actionStatus = (_state == STATE_DELETING);             break;
+    case TOOL_UNDO:              return -1;
+    case TOOL_REDO:              return -1;
+    case TOOL_CLEAR:             return -1;
+    case TOOL_SCREEN_OPTS:       actionStatus = (_screenOpts != SCREENOPTS_SHOW_ALL);   break;
+
+    case TOOL_SAVE_TO_FILE:      return -1;
+    case TOOL_SAVE_TO_CLIPBOARD: return -1;
+    case TOOL_SAVE_PROJECT:      return -1;
+    case TOOL_RECORDING:         actionStatus = IS_RECORDING;                           break;
+
+    case TOOL_SPACER:  logUser(LOG_ERROR, "You shouldn't check if a 'spacer' is active"); return -1;
+  }
+
+  return (actionStatus) ? 1 : 0;
+}
+
 void ZoomWidget::generateToolBar()
 {
   const int margin = 20;
@@ -844,14 +896,10 @@ void invertColorPainter(QPainter *painter)
 
 void ZoomWidget::drawTool(QPainter *screenPainter, Tool tool)
 {
-  screenPainter->setPen(QCOLOR_TOOL_BAR);
 
   QFont font;
   font.setPixelSize(16);
   screenPainter->setFont(font);
-
-  if(tool.rect.contains(getCursorPos(false)))
-    invertColorPainter(screenPainter);
 
   // Background
   QColor color = QCOLOR_TOOL_BAR;
@@ -861,6 +909,17 @@ void ZoomWidget::drawTool(QPainter *screenPainter, Tool tool)
   screenPainter->fillPath(buttonBg, color);
 
   // Button
+  const bool isUnderCursor = (tool.rect.contains(getCursorPos(false)));
+  const bool isActive      = (isToolActive(tool.action) == 1);
+
+  screenPainter->setPen(QCOLOR_TOOL_BAR);
+  if(isUnderCursor) {
+    invertColorPainter(screenPainter);
+  }
+  if(isActive && !isUnderCursor) {
+    screenPainter->setPen(QCOLOR_GREEN);
+  }
+
   screenPainter->drawRoundedRect(tool.rect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
   screenPainter->drawText(tool.rect, Qt::AlignCenter | Qt::TextWrapAnywhere, tool.name);
 }
@@ -2031,19 +2090,19 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 
 void ZoomWidget::escapeKeyFunction()
 {
-  if(_state == STATE_COLOR_PICKER){
+  if (isToolActive(TOOL_PICK_COLOR))
     toggleAction(TOOL_PICK_COLOR);
-  } else if(_state == STATE_DELETING){
+  else if (isToolActive(TOOL_DELETE))
     toggleAction(TOOL_DELETE);
-  } else if(_flashlightMode) {
+  else if (isToolActive(TOOL_FLASHLIGHT))
     toggleAction(TOOL_FLASHLIGHT);
-  } else if(_screenOpts == SCREENOPTS_HIDE_ALL) {
+  else if(_screenOpts == SCREENOPTS_HIDE_ALL) {
     toggleAction(TOOL_SCREEN_OPTS);
   } else if(_desktopPixmapSize != _desktopPixmapOriginalSize) {
     _desktopPixmapScale = 1.0f;
     scalePixmapAt(QPoint(0,0));
     checkPixmapPos();
-  } else if(IS_RECORDING){
+  } else if(isToolActive(TOOL_RECORDING)){
     toggleAction(TOOL_RECORDING);
   } else {
     QApplication::beep();

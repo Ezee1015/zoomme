@@ -375,9 +375,19 @@ class ZoomWidget : public QWidget
     void generateToolBar();
     bool isToolBarVisible();
     bool isCursorOverButton();
+
     // Returns the position in the vector of the tools (_toolBar) that is behind
     // the cursor position. Returns -1 if there's no button under the cursor
     int buttonBehindCursor(QPoint cursor);
+
+    // This function checks if the tool/action is active. It is meant to be used
+    // for checking if a button/action is active or not. Don't use it to check
+    // the state of the app, for example.
+    // Return values...
+    //   -  1 --> Active
+    //   -  0 --> Inactive
+    //   - -1 --> No state
+    int isToolActive(ZoomWidgetAction action);
 
     void updateAtMousePos(QPoint mousePos);
     void shiftPixmap(const QPoint delta);
