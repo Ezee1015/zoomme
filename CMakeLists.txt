@@ -12,6 +12,8 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
+set(CMAKE_CXX_FLAGS "-ggdb")
+
 set(TARGET    zoomme) # Executable name
 set(SOURCES   main.cpp zoomwidget.cpp)
 set(HEADERS   zoomwidget.hpp)
