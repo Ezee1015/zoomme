@@ -146,54 +146,54 @@ enum ZoomWidgetDrawMode {
 
 enum ZoomWidgetAction {
   // DRAW MODES
-  TOOL_LINE,
-  TOOL_RECTANGLE,
-  TOOL_ARROW,
-  TOOL_ELLIPSE,
-  TOOL_TEXT,
-  TOOL_FREEFORM,
-  TOOL_HIGHLIGHT,
+  ACTION_LINE,
+  ACTION_RECTANGLE,
+  ACTION_ARROW,
+  ACTION_ELLIPSE,
+  ACTION_TEXT,
+  ACTION_FREEFORM,
+  ACTION_HIGHLIGHT,
 
   // FUNCTIONS
-  TOOL_FLASHLIGHT,
-  TOOL_BLACKBOARD,
-  TOOL_PICK_COLOR,
-  TOOL_UNDO,
-  TOOL_REDO,
-  TOOL_DELETE,
-  TOOL_CLEAR,
-  TOOL_SAVE_TO_FILE,
-  TOOL_SAVE_TO_CLIPBOARD,
-  TOOL_SAVE_PROJECT,
-  TOOL_SCREEN_OPTS,
-  TOOL_RECORDING,
+  ACTION_FLASHLIGHT,
+  ACTION_BLACKBOARD,
+  ACTION_PICK_COLOR,
+  ACTION_UNDO,
+  ACTION_REDO,
+  ACTION_DELETE,
+  ACTION_CLEAR,
+  ACTION_SAVE_TO_FILE,
+  ACTION_SAVE_TO_CLIPBOARD,
+  ACTION_SAVE_PROJECT,
+  ACTION_SCREEN_OPTS,
+  ACTION_RECORDING,
 
   // COLORS
-  TOOL_COLOR_RED,
-  TOOL_COLOR_GREEN,
-  TOOL_COLOR_BLUE,
-  TOOL_COLOR_YELLOW,
-  TOOL_COLOR_ORANGE,
-  TOOL_COLOR_MAGENTA,
-  TOOL_COLOR_CYAN,
-  TOOL_COLOR_BLACK,
-  TOOL_COLOR_WHITE,
+  ACTION_COLOR_RED,
+  ACTION_COLOR_GREEN,
+  ACTION_COLOR_BLUE,
+  ACTION_COLOR_YELLOW,
+  ACTION_COLOR_ORANGE,
+  ACTION_COLOR_MAGENTA,
+  ACTION_COLOR_CYAN,
+  ACTION_COLOR_BLACK,
+  ACTION_COLOR_WHITE,
 
   // WIDTH OF PEN
-  TOOL_WIDTH_1,
-  TOOL_WIDTH_2,
-  TOOL_WIDTH_3,
-  TOOL_WIDTH_4,
-  TOOL_WIDTH_5,
-  TOOL_WIDTH_6,
-  TOOL_WIDTH_7,
-  TOOL_WIDTH_8,
-  TOOL_WIDTH_9,
+  ACTION_WIDTH_1,
+  ACTION_WIDTH_2,
+  ACTION_WIDTH_3,
+  ACTION_WIDTH_4,
+  ACTION_WIDTH_5,
+  ACTION_WIDTH_6,
+  ACTION_WIDTH_7,
+  ACTION_WIDTH_8,
+  ACTION_WIDTH_9,
 
-  TOOL_SPACER, // Spacer for the tool bar
+  ACTION_SPACER, // Spacer for the tool bar
 };
 
-struct Tool {
+struct Button {
   ZoomWidgetAction action;
   QString name;
   int line;
@@ -310,7 +310,7 @@ class ZoomWidget : public QWidget
     QVector<UserTextData>      _deletedTexts;
     QVector<UserFreeFormData>  _deletedFreeForms;
 
-    QVector<Tool> _toolBar;
+    QVector<Button> _toolBar;
     ToolBarProperties _toolBarOpts;
 
     // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
@@ -367,29 +367,27 @@ class ZoomWidget : public QWidget
     // the size of the pen, etc.
     void drawStatus(QPainter *screenPainter);
     void drawToolBar(QPainter *screenPainter);
-    void drawTool(QPainter *screenPainter, Tool tool);
+    void drawButton(QPainter *screenPainter, Button button);
     ArrowHead getArrowHead(int x, int y, int width, int height);
 
     // Tool bar
-    void loadTools();
+    void loadButtons();
     void generateToolBar();
     bool isToolBarVisible();
     bool isCursorOverButton();
-
-    // Returns the position in the vector of the tools (_toolBar) that is behind
+    // Returns the position in the vector of the buttons (_toolBar) that is behind
     // the cursor position. Returns -1 if there's no button under the cursor
     int buttonBehindCursor(QPoint cursor);
-
     // This function checks if the tool/action of the button is active. Don't
     // use it to check the state of a variable in the app (like checking if the
     // state is in delete mode. Use: _state == STATE_DELETING, NOT
-    // isToolActive(TOOL_DELETE)), for example.
+    // isToolActive(ACTION_DELETE)), for example.
     //
     // Return values...
     //   -  1 --> Active
     //   -  0 --> Inactive
     //   - -1 --> No state
-    int isToolActive(ZoomWidgetAction action);
+    int isButtonActive(Button button);
 
     void updateAtMousePos(QPoint mousePos);
     void shiftPixmap(const QPoint delta);

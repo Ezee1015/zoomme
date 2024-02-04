@@ -63,7 +63,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _activePen.setColor(QCOLOR_RED);
   _activePen.setWidth(4);
 
-  loadTools();
+  loadButtons();
   generateToolBar();
 }
 
@@ -83,18 +83,18 @@ bool ZoomWidget::isToolBarVisible()
 void ZoomWidget::toggleAction(ZoomWidgetAction action)
 {
   switch(action) {
-    case TOOL_LINE:          _drawMode = DRAWMODE_LINE;          break;
-    case TOOL_RECTANGLE:     _drawMode = DRAWMODE_RECT;          break;
-    case TOOL_ELLIPSE:       _drawMode = DRAWMODE_ELLIPSE;       break;
-    case TOOL_ARROW:         _drawMode = DRAWMODE_ARROW;         break;
-    case TOOL_TEXT:          _drawMode = DRAWMODE_TEXT;          break;
-    case TOOL_FREEFORM:      _drawMode = DRAWMODE_FREEFORM;      break;
+    case ACTION_LINE:          _drawMode = DRAWMODE_LINE;          break;
+    case ACTION_RECTANGLE:     _drawMode = DRAWMODE_RECT;          break;
+    case ACTION_ELLIPSE:       _drawMode = DRAWMODE_ELLIPSE;       break;
+    case ACTION_ARROW:         _drawMode = DRAWMODE_ARROW;         break;
+    case ACTION_TEXT:          _drawMode = DRAWMODE_TEXT;          break;
+    case ACTION_FREEFORM:      _drawMode = DRAWMODE_FREEFORM;      break;
 
-    case TOOL_HIGHLIGHT:     _highlight = !_highlight;           break;
-    case TOOL_FLASHLIGHT:    _flashlightMode = !_flashlightMode; break;
-    case TOOL_BLACKBOARD:    _boardMode = !_boardMode;           break;
+    case ACTION_HIGHLIGHT:     _highlight = !_highlight;           break;
+    case ACTION_FLASHLIGHT:    _flashlightMode = !_flashlightMode; break;
+    case ACTION_BLACKBOARD:    _boardMode = !_boardMode;           break;
 
-    case TOOL_DELETE:
+    case ACTION_DELETE:
        if(_screenOpts == SCREENOPTS_HIDE_ALL)
          return;
 
@@ -102,7 +102,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        else if(_state == STATE_DELETING) _state = STATE_MOVING;
        break;
 
-    case TOOL_CLEAR:
+    case ACTION_CLEAR:
        if(_screenOpts == SCREENOPTS_HIDE_ALL)
          return;
 
@@ -115,7 +115,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        _state = STATE_MOVING;
        break;
 
-    case TOOL_UNDO:
+    case ACTION_UNDO:
        if(_screenOpts == SCREENOPTS_HIDE_ALL)
          return;
 
@@ -129,7 +129,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        }
        break;
 
-    case TOOL_REDO:
+    case ACTION_REDO:
        if(_screenOpts == SCREENOPTS_HIDE_ALL)
          return;
 
@@ -143,7 +143,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        }
        break;
 
-    case TOOL_RECORDING: {
+    case ACTION_RECORDING: {
        // In theory, ffmpeg blocks the thread, so it shouldn't be possible to toggle
        // the recording while ffmpeg is running. But, just in case, we check it
        if(IS_FFMPEG_RUNNING)
@@ -173,7 +173,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        break;
     }
 
-    case TOOL_PICK_COLOR:
+    case ACTION_PICK_COLOR:
        if(_state == STATE_COLOR_PICKER) {
          _state = STATE_MOVING;
          _activePen.setColor(_colorBeforePickColorMode);
@@ -190,7 +190,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        _activePen.setColor(GET_COLOR_UNDER_CURSOR());
        break;
 
-    case TOOL_SAVE_TO_FILE: {
+    case ACTION_SAVE_TO_FILE: {
        QString path = getFilePath(FILE_IMAGE);
        if(_drawnPixmap.save(path)){
          QApplication::beep();
@@ -201,16 +201,16 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        break;
     }
 
-    case TOOL_SAVE_TO_CLIPBOARD:
+    case ACTION_SAVE_TO_CLIPBOARD:
        clipboard->setImage(_drawnPixmap.toImage());
        QApplication::beep();
        break;
 
-    case TOOL_SAVE_PROJECT:
+    case ACTION_SAVE_PROJECT:
        saveStateToFile();
        break;
 
-    case TOOL_SCREEN_OPTS:
+    case ACTION_SCREEN_OPTS:
        if(_state!=STATE_MOVING) return;
 
        switch(_screenOpts) {
@@ -221,128 +221,128 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        break;
 
 
-    case TOOL_COLOR_RED:     _activePen.setColor(QCOLOR_RED);     break;
-    case TOOL_COLOR_GREEN:   _activePen.setColor(QCOLOR_GREEN);   break;
-    case TOOL_COLOR_BLUE:    _activePen.setColor(QCOLOR_BLUE);    break;
-    case TOOL_COLOR_CYAN:    _activePen.setColor(QCOLOR_CYAN);    break;
-    case TOOL_COLOR_ORANGE:  _activePen.setColor(QCOLOR_ORANGE);  break;
-    case TOOL_COLOR_MAGENTA: _activePen.setColor(QCOLOR_MAGENTA); break;
-    case TOOL_COLOR_YELLOW:  _activePen.setColor(QCOLOR_YELLOW);  break;
-    case TOOL_COLOR_WHITE:   _activePen.setColor(QCOLOR_WHITE);   break;
-    case TOOL_COLOR_BLACK:   _activePen.setColor(QCOLOR_BLACK);   break;
+    case ACTION_COLOR_RED:     _activePen.setColor(QCOLOR_RED);     break;
+    case ACTION_COLOR_GREEN:   _activePen.setColor(QCOLOR_GREEN);   break;
+    case ACTION_COLOR_BLUE:    _activePen.setColor(QCOLOR_BLUE);    break;
+    case ACTION_COLOR_CYAN:    _activePen.setColor(QCOLOR_CYAN);    break;
+    case ACTION_COLOR_ORANGE:  _activePen.setColor(QCOLOR_ORANGE);  break;
+    case ACTION_COLOR_MAGENTA: _activePen.setColor(QCOLOR_MAGENTA); break;
+    case ACTION_COLOR_YELLOW:  _activePen.setColor(QCOLOR_YELLOW);  break;
+    case ACTION_COLOR_WHITE:   _activePen.setColor(QCOLOR_WHITE);   break;
+    case ACTION_COLOR_BLACK:   _activePen.setColor(QCOLOR_BLACK);   break;
 
-    case TOOL_WIDTH_1:       _activePen.setWidth(1);              break;
-    case TOOL_WIDTH_2:       _activePen.setWidth(2);              break;
-    case TOOL_WIDTH_3:       _activePen.setWidth(3);              break;
-    case TOOL_WIDTH_4:       _activePen.setWidth(4);              break;
-    case TOOL_WIDTH_5:       _activePen.setWidth(5);              break;
-    case TOOL_WIDTH_6:       _activePen.setWidth(6);              break;
-    case TOOL_WIDTH_7:       _activePen.setWidth(7);              break;
-    case TOOL_WIDTH_8:       _activePen.setWidth(8);              break;
-    case TOOL_WIDTH_9:       _activePen.setWidth(9);              break;
+    case ACTION_WIDTH_1:       _activePen.setWidth(1);              break;
+    case ACTION_WIDTH_2:       _activePen.setWidth(2);              break;
+    case ACTION_WIDTH_3:       _activePen.setWidth(3);              break;
+    case ACTION_WIDTH_4:       _activePen.setWidth(4);              break;
+    case ACTION_WIDTH_5:       _activePen.setWidth(5);              break;
+    case ACTION_WIDTH_6:       _activePen.setWidth(6);              break;
+    case ACTION_WIDTH_7:       _activePen.setWidth(7);              break;
+    case ACTION_WIDTH_8:       _activePen.setWidth(8);              break;
+    case ACTION_WIDTH_9:       _activePen.setWidth(9);              break;
 
-    case TOOL_SPACER:        /* don't do anything here */         break;
+    case ACTION_SPACER:        /* don't do anything here */         break;
   }
 }
 
-void ZoomWidget::loadTools()
+void ZoomWidget::loadButtons()
 {
   QRect nullRect(0, 0, 0, 0);
 
-  _toolBar.append(Tool{TOOL_WIDTH_1,           "1",                   0, nullRect});
-  _toolBar.append(Tool{TOOL_WIDTH_2,           "2",                   0, nullRect});
-  _toolBar.append(Tool{TOOL_WIDTH_3,           "3",                   0, nullRect});
-  _toolBar.append(Tool{TOOL_WIDTH_4,           "4",                   0, nullRect});
-  _toolBar.append(Tool{TOOL_WIDTH_5,           "5",                   0, nullRect});
-  _toolBar.append(Tool{TOOL_WIDTH_6,           "6",                   0, nullRect});
-  _toolBar.append(Tool{TOOL_WIDTH_7,           "7",                   0, nullRect});
-  _toolBar.append(Tool{TOOL_WIDTH_8,           "8",                   0, nullRect});
-  _toolBar.append(Tool{TOOL_WIDTH_9,           "9",                   0, nullRect});
+  _toolBar.append(Button{ACTION_WIDTH_1,           "1",                   0, nullRect});
+  _toolBar.append(Button{ACTION_WIDTH_2,           "2",                   0, nullRect});
+  _toolBar.append(Button{ACTION_WIDTH_3,           "3",                   0, nullRect});
+  _toolBar.append(Button{ACTION_WIDTH_4,           "4",                   0, nullRect});
+  _toolBar.append(Button{ACTION_WIDTH_5,           "5",                   0, nullRect});
+  _toolBar.append(Button{ACTION_WIDTH_6,           "6",                   0, nullRect});
+  _toolBar.append(Button{ACTION_WIDTH_7,           "7",                   0, nullRect});
+  _toolBar.append(Button{ACTION_WIDTH_8,           "8",                   0, nullRect});
+  _toolBar.append(Button{ACTION_WIDTH_9,           "9",                   0, nullRect});
 
-  _toolBar.append(Tool{TOOL_SPACER,            "",                    0, nullRect});
+  _toolBar.append(Button{ACTION_SPACER,            "",                    0, nullRect});
 
-  _toolBar.append(Tool{TOOL_COLOR_RED,         "Red",                 0, nullRect});
-  _toolBar.append(Tool{TOOL_COLOR_GREEN,       "Green",               0, nullRect});
-  _toolBar.append(Tool{TOOL_COLOR_BLUE,        "Blue",                0, nullRect});
-  _toolBar.append(Tool{TOOL_COLOR_YELLOW,      "Yellow",              0, nullRect});
-  _toolBar.append(Tool{TOOL_COLOR_ORANGE,      "Orange",              0, nullRect});
-  _toolBar.append(Tool{TOOL_COLOR_MAGENTA,     "Magenta",             0, nullRect});
-  _toolBar.append(Tool{TOOL_COLOR_CYAN,        "Cyan",                0, nullRect});
-  _toolBar.append(Tool{TOOL_COLOR_WHITE,       "White",               0, nullRect});
-  _toolBar.append(Tool{TOOL_COLOR_BLACK,       "Black",               0, nullRect});
+  _toolBar.append(Button{ACTION_COLOR_RED,         "Red",                 0, nullRect});
+  _toolBar.append(Button{ACTION_COLOR_GREEN,       "Green",               0, nullRect});
+  _toolBar.append(Button{ACTION_COLOR_BLUE,        "Blue",                0, nullRect});
+  _toolBar.append(Button{ACTION_COLOR_YELLOW,      "Yellow",              0, nullRect});
+  _toolBar.append(Button{ACTION_COLOR_ORANGE,      "Orange",              0, nullRect});
+  _toolBar.append(Button{ACTION_COLOR_MAGENTA,     "Magenta",             0, nullRect});
+  _toolBar.append(Button{ACTION_COLOR_CYAN,        "Cyan",                0, nullRect});
+  _toolBar.append(Button{ACTION_COLOR_WHITE,       "White",               0, nullRect});
+  _toolBar.append(Button{ACTION_COLOR_BLACK,       "Black",               0, nullRect});
 
-  _toolBar.append(Tool{TOOL_LINE,              "Line",                1, nullRect});
-  _toolBar.append(Tool{TOOL_RECTANGLE,         "Rectangle",           1, nullRect});
-  _toolBar.append(Tool{TOOL_ARROW,             "Arrow",               1, nullRect});
-  _toolBar.append(Tool{TOOL_ELLIPSE,           "Ellipse",             1, nullRect});
-  _toolBar.append(Tool{TOOL_FREEFORM,          "Free form",           1, nullRect});
-  _toolBar.append(Tool{TOOL_TEXT,              "Text",                1, nullRect});
-  _toolBar.append(Tool{TOOL_SPACER,            "",                    1, nullRect});
-  _toolBar.append(Tool{TOOL_HIGHLIGHT,         "Highlight",           1, nullRect});
+  _toolBar.append(Button{ACTION_LINE,              "Line",                1, nullRect});
+  _toolBar.append(Button{ACTION_RECTANGLE,         "Rectangle",           1, nullRect});
+  _toolBar.append(Button{ACTION_ARROW,             "Arrow",               1, nullRect});
+  _toolBar.append(Button{ACTION_ELLIPSE,           "Ellipse",             1, nullRect});
+  _toolBar.append(Button{ACTION_FREEFORM,          "Free form",           1, nullRect});
+  _toolBar.append(Button{ACTION_TEXT,              "Text",                1, nullRect});
+  _toolBar.append(Button{ACTION_SPACER,            "",                    1, nullRect});
+  _toolBar.append(Button{ACTION_HIGHLIGHT,         "Highlight",           1, nullRect});
 
 
-  _toolBar.append(Tool{TOOL_FLASHLIGHT,        "Flashlight",          2, nullRect});
-  _toolBar.append(Tool{TOOL_BLACKBOARD,        "Blackboard",          2, nullRect});
-  _toolBar.append(Tool{TOOL_PICK_COLOR,        "Pick color",          2, nullRect});
-  _toolBar.append(Tool{TOOL_UNDO,              "Undo",                2, nullRect});
-  _toolBar.append(Tool{TOOL_REDO,              "Redo",                2, nullRect});
-  _toolBar.append(Tool{TOOL_DELETE,            "Delete",              2, nullRect});
-  _toolBar.append(Tool{TOOL_CLEAR,             "Clear",               2, nullRect});
-  _toolBar.append(Tool{TOOL_SCREEN_OPTS,       "Hide elements",       2, nullRect});
+  _toolBar.append(Button{ACTION_FLASHLIGHT,        "Flashlight",          2, nullRect});
+  _toolBar.append(Button{ACTION_BLACKBOARD,        "Blackboard",          2, nullRect});
+  _toolBar.append(Button{ACTION_PICK_COLOR,        "Pick color",          2, nullRect});
+  _toolBar.append(Button{ACTION_UNDO,              "Undo",                2, nullRect});
+  _toolBar.append(Button{ACTION_REDO,              "Redo",                2, nullRect});
+  _toolBar.append(Button{ACTION_DELETE,            "Delete",              2, nullRect});
+  _toolBar.append(Button{ACTION_CLEAR,             "Clear",               2, nullRect});
+  _toolBar.append(Button{ACTION_SCREEN_OPTS,       "Hide elements",       2, nullRect});
 
-  _toolBar.append(Tool{TOOL_SAVE_TO_FILE,      "Export image",        3, nullRect});
-  _toolBar.append(Tool{TOOL_SAVE_TO_CLIPBOARD, "Export to clipboard", 3, nullRect});
-  _toolBar.append(Tool{TOOL_SAVE_PROJECT,      "Save project",        3, nullRect});
-  _toolBar.append(Tool{TOOL_RECORDING,         "Record",              3, nullRect});
+  _toolBar.append(Button{ACTION_SAVE_TO_FILE,      "Export image",        3, nullRect});
+  _toolBar.append(Button{ACTION_SAVE_TO_CLIPBOARD, "Export to clipboard", 3, nullRect});
+  _toolBar.append(Button{ACTION_SAVE_PROJECT,      "Save project",        3, nullRect});
+  _toolBar.append(Button{ACTION_RECORDING,         "Record",              3, nullRect});
 }
 
-int ZoomWidget::isToolActive(ZoomWidgetAction action)
+int ZoomWidget::isButtonActive(Button button)
 {
   bool actionStatus = false;
-  switch(action) {
-    case TOOL_WIDTH_1:           actionStatus = (_activePen.width() == 1);              break;
-    case TOOL_WIDTH_2:           actionStatus = (_activePen.width() == 2);              break;
-    case TOOL_WIDTH_3:           actionStatus = (_activePen.width() == 3);              break;
-    case TOOL_WIDTH_4:           actionStatus = (_activePen.width() == 4);              break;
-    case TOOL_WIDTH_5:           actionStatus = (_activePen.width() == 5);              break;
-    case TOOL_WIDTH_6:           actionStatus = (_activePen.width() == 6);              break;
-    case TOOL_WIDTH_7:           actionStatus = (_activePen.width() == 7);              break;
-    case TOOL_WIDTH_8:           actionStatus = (_activePen.width() == 8);              break;
-    case TOOL_WIDTH_9:           actionStatus = (_activePen.width() == 9);              break;
+  switch(button.action) {
+    case ACTION_WIDTH_1:           actionStatus = (_activePen.width() == 1);              break;
+    case ACTION_WIDTH_2:           actionStatus = (_activePen.width() == 2);              break;
+    case ACTION_WIDTH_3:           actionStatus = (_activePen.width() == 3);              break;
+    case ACTION_WIDTH_4:           actionStatus = (_activePen.width() == 4);              break;
+    case ACTION_WIDTH_5:           actionStatus = (_activePen.width() == 5);              break;
+    case ACTION_WIDTH_6:           actionStatus = (_activePen.width() == 6);              break;
+    case ACTION_WIDTH_7:           actionStatus = (_activePen.width() == 7);              break;
+    case ACTION_WIDTH_8:           actionStatus = (_activePen.width() == 8);              break;
+    case ACTION_WIDTH_9:           actionStatus = (_activePen.width() == 9);              break;
 
-    case TOOL_COLOR_RED:         actionStatus = (_activePen.color() == QCOLOR_RED);     break;
-    case TOOL_COLOR_GREEN:       actionStatus = (_activePen.color() == QCOLOR_GREEN);   break;
-    case TOOL_COLOR_BLUE:        actionStatus = (_activePen.color() == QCOLOR_BLUE);    break;
-    case TOOL_COLOR_YELLOW:      actionStatus = (_activePen.color() == QCOLOR_YELLOW);  break;
-    case TOOL_COLOR_ORANGE:      actionStatus = (_activePen.color() == QCOLOR_ORANGE);  break;
-    case TOOL_COLOR_MAGENTA:     actionStatus = (_activePen.color() == QCOLOR_MAGENTA); break;
-    case TOOL_COLOR_CYAN:        actionStatus = (_activePen.color() == QCOLOR_CYAN);    break;
-    case TOOL_COLOR_WHITE:       actionStatus = (_activePen.color() == QCOLOR_WHITE);   break;
-    case TOOL_COLOR_BLACK:       actionStatus = (_activePen.color() == QCOLOR_BLACK);   break;
+    case ACTION_COLOR_RED:         actionStatus = (_activePen.color() == QCOLOR_RED);     break;
+    case ACTION_COLOR_GREEN:       actionStatus = (_activePen.color() == QCOLOR_GREEN);   break;
+    case ACTION_COLOR_BLUE:        actionStatus = (_activePen.color() == QCOLOR_BLUE);    break;
+    case ACTION_COLOR_YELLOW:      actionStatus = (_activePen.color() == QCOLOR_YELLOW);  break;
+    case ACTION_COLOR_ORANGE:      actionStatus = (_activePen.color() == QCOLOR_ORANGE);  break;
+    case ACTION_COLOR_MAGENTA:     actionStatus = (_activePen.color() == QCOLOR_MAGENTA); break;
+    case ACTION_COLOR_CYAN:        actionStatus = (_activePen.color() == QCOLOR_CYAN);    break;
+    case ACTION_COLOR_WHITE:       actionStatus = (_activePen.color() == QCOLOR_WHITE);   break;
+    case ACTION_COLOR_BLACK:       actionStatus = (_activePen.color() == QCOLOR_BLACK);   break;
 
-    case TOOL_LINE:              actionStatus = (_drawMode == DRAWMODE_LINE);           break;
-    case TOOL_RECTANGLE:         actionStatus = (_drawMode == DRAWMODE_RECT);           break;
-    case TOOL_ARROW:             actionStatus = (_drawMode == DRAWMODE_ARROW);          break;
-    case TOOL_ELLIPSE:           actionStatus = (_drawMode == DRAWMODE_ELLIPSE);        break;
-    case TOOL_FREEFORM:          actionStatus = (_drawMode == DRAWMODE_FREEFORM);       break;
-    case TOOL_TEXT:              actionStatus = (_drawMode == DRAWMODE_TEXT);           break;
-    case TOOL_HIGHLIGHT:         actionStatus = (_highlight);                           break;
+    case ACTION_LINE:              actionStatus = (_drawMode == DRAWMODE_LINE);           break;
+    case ACTION_RECTANGLE:         actionStatus = (_drawMode == DRAWMODE_RECT);           break;
+    case ACTION_ARROW:             actionStatus = (_drawMode == DRAWMODE_ARROW);          break;
+    case ACTION_ELLIPSE:           actionStatus = (_drawMode == DRAWMODE_ELLIPSE);        break;
+    case ACTION_FREEFORM:          actionStatus = (_drawMode == DRAWMODE_FREEFORM);       break;
+    case ACTION_TEXT:              actionStatus = (_drawMode == DRAWMODE_TEXT);           break;
+    case ACTION_HIGHLIGHT:         actionStatus = (_highlight);                           break;
 
-    case TOOL_FLASHLIGHT:        actionStatus = (_flashlightMode);                      break;
-    case TOOL_BLACKBOARD:        actionStatus = (_boardMode);                           break;
-    case TOOL_PICK_COLOR:        actionStatus = (_state == STATE_COLOR_PICKER);         break;
-    case TOOL_DELETE:            actionStatus = (_state == STATE_DELETING);             break;
-    case TOOL_UNDO:              return -1;
-    case TOOL_REDO:              return -1;
-    case TOOL_CLEAR:             return -1;
-    case TOOL_SCREEN_OPTS:       actionStatus = (_screenOpts != SCREENOPTS_SHOW_ALL);   break;
+    case ACTION_FLASHLIGHT:        actionStatus = (_flashlightMode);                      break;
+    case ACTION_BLACKBOARD:        actionStatus = (_boardMode);                           break;
+    case ACTION_PICK_COLOR:        actionStatus = (_state == STATE_COLOR_PICKER);         break;
+    case ACTION_DELETE:            actionStatus = (_state == STATE_DELETING);             break;
+    case ACTION_UNDO:              return -1;
+    case ACTION_REDO:              return -1;
+    case ACTION_CLEAR:             return -1;
+    case ACTION_SCREEN_OPTS:       actionStatus = (_screenOpts != SCREENOPTS_SHOW_ALL);   break;
 
-    case TOOL_SAVE_TO_FILE:      return -1;
-    case TOOL_SAVE_TO_CLIPBOARD: return -1;
-    case TOOL_SAVE_PROJECT:      return -1;
-    case TOOL_RECORDING:         actionStatus = IS_RECORDING;                           break;
+    case ACTION_SAVE_TO_FILE:      return -1;
+    case ACTION_SAVE_TO_CLIPBOARD: return -1;
+    case ACTION_SAVE_PROJECT:      return -1;
+    case ACTION_RECORDING:         actionStatus = IS_RECORDING;                           break;
 
-    case TOOL_SPACER:  logUser(LOG_ERROR, "You shouldn't check if a 'spacer' is active"); return -1;
+    case ACTION_SPACER:  logUser(LOG_ERROR, "You shouldn't check if a 'spacer' is active"); return -1;
   }
 
   return (actionStatus) ? 1 : 0;
@@ -379,8 +379,8 @@ void ZoomWidget::generateToolBar()
     buttonsPerLine[ _toolBar.at(i).line ]++;
 
   // Clear the tool list
-  QVector<Tool> tools;
-  tools.append(_toolBar);
+  QVector<Button> buttons;
+  buttons.append(_toolBar);
   _toolBar.clear();
 
   // Size the buttons
@@ -388,8 +388,8 @@ void ZoomWidget::generateToolBar()
   float buttonCount[numberOfLines+1];
   for(int i=0; i<=numberOfLines; i++) buttonCount[i]=0; // Initialize to 0
 
-  for(int i=0; i<tools.size(); i++) {
-    const int line = tools.at(i).line;
+  for(int i=0; i<buttons.size(); i++) {
+    const int line = buttons.at(i).line;
 
     float width = (float)background.width() / (float)buttonsPerLine[line];
     int height  = lineHeight - (float)margin / (float)(numberOfLines+1);
@@ -407,9 +407,9 @@ void ZoomWidget::generateToolBar()
 
     QRect rect(x, y, width, height);
 
-    _toolBar.append(Tool{
-        tools.at(i).action,
-        tools.at(i).name,
+    _toolBar.append(Button{
+        buttons.at(i).action,
+        buttons.at(i).name,
         line,
         rect
     });
@@ -437,7 +437,7 @@ bool ZoomWidget::isCursorOverButton()
   const int button = buttonBehindCursor(getCursorPos(false));
 
   const bool isOverAButton = button != -1;
-  const bool isNotASpacer = _toolBar.at(button).action != TOOL_SPACER;
+  const bool isNotASpacer = _toolBar.at(button).action != ACTION_SPACER;
 
   return isOverAButton && isNotASpacer;
 }
@@ -894,7 +894,7 @@ void invertColorPainter(QPainter *painter)
   painter->setPen(pen);
 }
 
-void ZoomWidget::drawTool(QPainter *screenPainter, Tool tool)
+void ZoomWidget::drawButton(QPainter *screenPainter, Button button)
 {
   QFont font;
   font.setPixelSize(16);
@@ -904,12 +904,12 @@ void ZoomWidget::drawTool(QPainter *screenPainter, Tool tool)
   QColor color = QCOLOR_TOOL_BAR;
   color.setAlpha(55); // Transparency
   QPainterPath buttonBg;
-  buttonBg.addRoundedRect(tool.rect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
+  buttonBg.addRoundedRect(button.rect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
   screenPainter->fillPath(buttonBg, color);
 
   // Button
-  const bool isUnderCursor = (tool.rect.contains(getCursorPos(false)));
-  const bool isActive      = (isToolActive(tool.action) == 1);
+  const bool isUnderCursor = (button.rect.contains(getCursorPos(false)));
+  const bool isActive      = (isButtonActive(button) == 1);
 
   screenPainter->setPen(QCOLOR_TOOL_BAR);
   if(isUnderCursor) {
@@ -919,8 +919,8 @@ void ZoomWidget::drawTool(QPainter *screenPainter, Tool tool)
     screenPainter->setPen(QCOLOR_GREEN);
   }
 
-  screenPainter->drawRoundedRect(tool.rect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
-  screenPainter->drawText(tool.rect, Qt::AlignCenter | Qt::TextWrapAnywhere, tool.name);
+  screenPainter->drawRoundedRect(button.rect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
+  screenPainter->drawText(button.rect, Qt::AlignCenter | Qt::TextWrapAnywhere, button.name);
 }
 
 void ZoomWidget::drawToolBar(QPainter *screenPainter)
@@ -944,10 +944,10 @@ void ZoomWidget::drawToolBar(QPainter *screenPainter)
 
   // Draw buttons
   for(int i=0; i<_toolBar.size(); i++) {
-    const Tool tool = _toolBar.at(i);
+    const Button btn = _toolBar.at(i);
 
-    if(tool.action != TOOL_SPACER)
-      drawTool(screenPainter, tool);
+    if(btn.action != ACTION_SPACER)
+      drawButton(screenPainter, btn);
   }
 }
 
@@ -1553,11 +1553,11 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
   (void) event;
 
   if(isToolBarVisible()) {
-    int toolPos = buttonBehindCursor(getCursorPos(false));
-    if(toolPos==-1)
+    int buttonPos = buttonBehindCursor(getCursorPos(false));
+    if(buttonPos==-1)
       return;
 
-    toggleAction(_toolBar.at(toolPos).action);
+    toggleAction(_toolBar.at(buttonPos).action);
     update();
     updateCursorShape();
     return;
@@ -2017,63 +2017,63 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     return;
   }
 
-  ZoomWidgetAction action = TOOL_SPACER;
+  ZoomWidgetAction action = ACTION_SPACER;
   switch(key) {
-    case Qt::Key_G: action = TOOL_COLOR_GREEN;   break;
-    case Qt::Key_B: action = TOOL_COLOR_BLUE;    break;
-    case Qt::Key_C: action = TOOL_COLOR_CYAN;    break;
-    case Qt::Key_O: action = TOOL_COLOR_ORANGE;  break;
-    case Qt::Key_M: action = TOOL_COLOR_MAGENTA; break;
-    case Qt::Key_Y: action = TOOL_COLOR_YELLOW;  break;
-    case Qt::Key_W: action = TOOL_COLOR_WHITE;   break;
-    case Qt::Key_D: action = TOOL_COLOR_BLACK;   break;
+    case Qt::Key_G: action = ACTION_COLOR_GREEN;   break;
+    case Qt::Key_B: action = ACTION_COLOR_BLUE;    break;
+    case Qt::Key_C: action = ACTION_COLOR_CYAN;    break;
+    case Qt::Key_O: action = ACTION_COLOR_ORANGE;  break;
+    case Qt::Key_M: action = ACTION_COLOR_MAGENTA; break;
+    case Qt::Key_Y: action = ACTION_COLOR_YELLOW;  break;
+    case Qt::Key_W: action = ACTION_COLOR_WHITE;   break;
+    case Qt::Key_D: action = ACTION_COLOR_BLACK;   break;
     case Qt::Key_R:
                     if(_shiftPressed)
-                      action = TOOL_REDO;
+                      action = ACTION_REDO;
                     else
-                      action = TOOL_COLOR_RED;
+                      action = ACTION_COLOR_RED;
                     break;
 
-    case Qt::Key_Z: action = TOOL_LINE;          break;
-    case Qt::Key_X: action = TOOL_RECTANGLE;     break;
-    case Qt::Key_A: action = TOOL_ARROW;         break;
-    case Qt::Key_T: action = TOOL_TEXT;          break;
-    case Qt::Key_F: action = TOOL_FREEFORM;      break;
-    case Qt::Key_H: action = TOOL_HIGHLIGHT;     break;
+    case Qt::Key_Z: action = ACTION_LINE;          break;
+    case Qt::Key_X: action = ACTION_RECTANGLE;     break;
+    case Qt::Key_A: action = ACTION_ARROW;         break;
+    case Qt::Key_T: action = ACTION_TEXT;          break;
+    case Qt::Key_F: action = ACTION_FREEFORM;      break;
+    case Qt::Key_H: action = ACTION_HIGHLIGHT;     break;
 
     case Qt::Key_E:
                     if(_shiftPressed)
-                      action = TOOL_SAVE_PROJECT;
+                      action = ACTION_SAVE_PROJECT;
                     else
-                      action = TOOL_ELLIPSE;
+                      action = ACTION_ELLIPSE;
                     break;
 
     case Qt::Key_S:
                     if(_shiftPressed)
-                      action = TOOL_SAVE_TO_CLIPBOARD;
+                      action = ACTION_SAVE_TO_CLIPBOARD;
                     else
-                      action = TOOL_SAVE_TO_FILE;
+                      action = ACTION_SAVE_TO_FILE;
                     break;
 
     case Qt::Key_Escape: escapeKeyFunction();        break;
-    case Qt::Key_U:      action = TOOL_UNDO;         break;
-    case Qt::Key_Q:      action = TOOL_CLEAR;        break;
-    case Qt::Key_Tab:    action = TOOL_BLACKBOARD;   break;
-    case Qt::Key_Space:  action = TOOL_SCREEN_OPTS;  break;
-    case Qt::Key_Period: action = TOOL_FLASHLIGHT;   break;
-    case Qt::Key_Comma:  action = TOOL_DELETE;       break;
-    case Qt::Key_Minus:  action = TOOL_RECORDING;    break;
-    case Qt::Key_P:      action = TOOL_PICK_COLOR;   break;
+    case Qt::Key_U:      action = ACTION_UNDO;         break;
+    case Qt::Key_Q:      action = ACTION_CLEAR;        break;
+    case Qt::Key_Tab:    action = ACTION_BLACKBOARD;   break;
+    case Qt::Key_Space:  action = ACTION_SCREEN_OPTS;  break;
+    case Qt::Key_Period: action = ACTION_FLASHLIGHT;   break;
+    case Qt::Key_Comma:  action = ACTION_DELETE;       break;
+    case Qt::Key_Minus:  action = ACTION_RECORDING;    break;
+    case Qt::Key_P:      action = ACTION_PICK_COLOR;   break;
 
-    case Qt::Key_1: action = TOOL_WIDTH_1;           break;
-    case Qt::Key_2: action = TOOL_WIDTH_2;           break;
-    case Qt::Key_3: action = TOOL_WIDTH_3;           break;
-    case Qt::Key_4: action = TOOL_WIDTH_4;           break;
-    case Qt::Key_5: action = TOOL_WIDTH_5;           break;
-    case Qt::Key_6: action = TOOL_WIDTH_6;           break;
-    case Qt::Key_7: action = TOOL_WIDTH_7;           break;
-    case Qt::Key_8: action = TOOL_WIDTH_8;           break;
-    case Qt::Key_9: action = TOOL_WIDTH_9;           break;
+    case Qt::Key_1: action = ACTION_WIDTH_1;           break;
+    case Qt::Key_2: action = ACTION_WIDTH_2;           break;
+    case Qt::Key_3: action = ACTION_WIDTH_3;           break;
+    case Qt::Key_4: action = ACTION_WIDTH_4;           break;
+    case Qt::Key_5: action = ACTION_WIDTH_5;           break;
+    case Qt::Key_6: action = ACTION_WIDTH_6;           break;
+    case Qt::Key_7: action = ACTION_WIDTH_7;           break;
+    case Qt::Key_8: action = ACTION_WIDTH_8;           break;
+    case Qt::Key_9: action = ACTION_WIDTH_9;           break;
 
     default:
         updateCursorShape();
@@ -2089,20 +2089,26 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 
 void ZoomWidget::escapeKeyFunction()
 {
-  if (isToolActive(TOOL_PICK_COLOR))
-    toggleAction(TOOL_PICK_COLOR);
-  else if (isToolActive(TOOL_DELETE))
-    toggleAction(TOOL_DELETE);
-  else if (isToolActive(TOOL_FLASHLIGHT))
-    toggleAction(TOOL_FLASHLIGHT);
-  else if(_screenOpts == SCREENOPTS_HIDE_ALL) {
-    toggleAction(TOOL_SCREEN_OPTS);
+  if (_state == STATE_COLOR_PICKER) {
+    toggleAction(ACTION_PICK_COLOR);
+
+  } else if (_state == STATE_DELETING) {
+    toggleAction(ACTION_DELETE);
+
+  } else if (_flashlightMode) {
+    toggleAction(ACTION_FLASHLIGHT);
+
+  } else if (_screenOpts == SCREENOPTS_HIDE_ALL) {
+    toggleAction(ACTION_SCREEN_OPTS);
+
   } else if(_desktopPixmapSize != _desktopPixmapOriginalSize) {
     _desktopPixmapScale = 1.0f;
     scalePixmapAt(QPoint(0,0));
     checkPixmapPos();
-  } else if(isToolActive(TOOL_RECORDING)){
-    toggleAction(TOOL_RECORDING);
+
+  } else if(IS_RECORDING) {
+    toggleAction(ACTION_RECORDING);
+
   } else {
     QApplication::beep();
     QApplication::quit();
