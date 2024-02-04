@@ -40,6 +40,7 @@
 #define ZOOM_ICON       "🔍"
 #define RECORD_ICON     "●"
 #define HIGHLIGHT_ICON  "🖍️"
+#define EXIT_ICON       "⊗" // ✖
 
 #define RECORD_FPS 16
 #define RECORD_QUALITY 70 // 0-100

@@ -270,6 +270,8 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
         toggleAction(ACTION_RECORDING);
 
       } else {
+        // TODO Add a timer that cancels the escape after some time (and calls
+        // to update() to update the status bar)
         _escapeConfirm = true;
         loadButtons();
         generateToolBar();
@@ -1064,6 +1066,14 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
     text.append("\n");
     text.append(RECORD_ICON);
     text.append(" Recording...");
+
+    h += lineHeight;
+  }
+  if(_escapeConfirm) {
+    text.append("\n");
+    text.append(EXIT_ICON);
+    text.append(" EXIT? ");
+    text.append(EXIT_ICON);
 
     h += lineHeight;
   }
