@@ -97,7 +97,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
 
     case ACTION_DELETE:
        if(_screenOpts == SCREENOPTS_HIDE_ALL)
-         return;
+         break;
 
        if(_state == STATE_MOVING)        _state = STATE_DELETING;
        else if(_state == STATE_DELETING) _state = STATE_MOVING;
@@ -105,7 +105,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
 
     case ACTION_CLEAR:
        if(_screenOpts == SCREENOPTS_HIDE_ALL)
-         return;
+         break;
 
        _userRects.clear();
        _userLines.clear();
@@ -118,7 +118,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
 
     case ACTION_UNDO:
        if(_screenOpts == SCREENOPTS_HIDE_ALL)
-         return;
+         break;
 
        switch(_drawMode) {
          case DRAWMODE_LINE:      if(!_userLines.isEmpty())      _deletedLines.append(_userLines.takeLast());           break;
@@ -132,7 +132,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
 
     case ACTION_REDO:
        if(_screenOpts == SCREENOPTS_HIDE_ALL)
-         return;
+         break;
 
        switch(_drawMode) {
          case DRAWMODE_LINE:      if(!_deletedLines.isEmpty())      _userLines.append(_deletedLines.takeLast());           break;
@@ -148,13 +148,13 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        // In theory, ffmpeg blocks the thread, so it shouldn't be possible to toggle
        // the recording while ffmpeg is running. But, just in case, we check it
        if(IS_FFMPEG_RUNNING)
-         return;
+         break;
 
        if(IS_RECORDING){
          recordTimer->stop();
          createVideoFFmpeg();
          recordTempFile->remove();
-         return;
+         break;
        }
 
        // Start recording
@@ -166,7 +166,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        if (!openTempFile) {
          logUser(LOG_ERROR, "Couldn't open the temp file for the bytes output");
          recordTempFile->close();
-         return;
+         break;
        }
 
        recordTimer->start(1000/RECORD_FPS);
@@ -178,13 +178,13 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        if(_state == STATE_COLOR_PICKER) {
          _state = STATE_MOVING;
          _activePen.setColor(_colorBeforePickColorMode);
-         return;
+         break;
        }
 
-       _colorBeforePickColorMode = _activePen.color();
-
        if(_screenOpts == SCREENOPTS_HIDE_ALL || _state != STATE_MOVING)
-         return;
+         break;
+
+       _colorBeforePickColorMode = _activePen.color();
 
        _state = STATE_COLOR_PICKER;
 
@@ -212,7 +212,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        break;
 
     case ACTION_SCREEN_OPTS:
-       if(_state!=STATE_MOVING) return;
+       if(_state != STATE_MOVING) break;
 
        switch(_screenOpts) {
          case SCREENOPTS_HIDE_ALL:    _screenOpts = SCREENOPTS_SHOW_ALL;    break;
@@ -246,7 +246,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
       if(_exitConfirm) {
         QApplication::beep();
         QApplication::quit();
-        return;
+        break;
       }
 
       if (_state == STATE_COLOR_PICKER) {
@@ -287,6 +287,9 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
 
     case ACTION_SPACER:        /* don't do anything here */         break;
   }
+
+  updateCursorShape();
+  update();
 }
 
 void ZoomWidget::loadButtons()
@@ -2110,9 +2113,6 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
   }
 
   toggleAction(action);
-
-  updateCursorShape();
-  update();
 }
 
 void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
