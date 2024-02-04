@@ -1020,7 +1020,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   const int margin            = 20;
   const int penWidth          = 5;
   const int fontSize          = 16;
-  const int w                 = 160;
+  const int w                 = 180;
   const int initialLineHeight = lineHeight + 5; // lineHeight + margin
 
   int h = initialLineHeight;
