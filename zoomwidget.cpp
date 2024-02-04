@@ -205,20 +205,34 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
     }
 
     case ACTION_SAVE_TO_CLIPBOARD: {
-         QMimeData *mimeData = new QMimeData();
-         QDir tempFile(QStandardPaths::writableLocation(QStandardPaths::TempLocation));
-         QString path(tempFile.absoluteFilePath(CLIPBOARD_TEMP_FILENAME));
+#ifdef Q_OS_LINUX
+       // Save the image in a temp folder and save its path.
+       // Some apps will not fully recognize the image, because there's not a
+       // standard way to save it in linux afaik (in example, Dolphin will copy
+       // the image, but Thunar and GIMP will not). Apparently in other systems
+       // the other way (copying the image directly to the clipboard) work just
+       // fine
+       QMimeData *mimeData = new QMimeData();
+       QDir tempFile(QStandardPaths::writableLocation(QStandardPaths::TempLocation));
+       QString path(tempFile.absoluteFilePath(CLIPBOARD_TEMP_FILENAME));
 
-         if(!_drawnPixmap.save(path)) {
-           logUser(LOG_ERROR, "Couldn't save the image to the temp location for the clipboard: %s", QSTRING_TO_STRING(path));
-           break;
-         }
-
-         mimeData->setUrls({QUrl::fromLocalFile(path)});
-         clipboard->setMimeData(mimeData);
-
-         QApplication::beep();
+       if(!_drawnPixmap.save(path)) {
+         logUser(LOG_ERROR, "Couldn't save the image to the temp location for the clipboard: %s", QSTRING_TO_STRING(path));
          break;
+       }
+
+       QList<QUrl> urlList; urlList.append(QUrl::fromLocalFile(path));
+       mimeData->setUrls(urlList);
+       clipboard->setMimeData(mimeData);
+
+#else
+       // Copy the image into clipboard (this causes some problems with the
+       // clipboard manager in Linux, because when the app exits, the image gets
+       // deleted with it. The clipboard only save a pointer to that image)
+       clipboard->setPixmap(_drawnPixmap);
+#endif
+       QApplication::beep();
+       break;
        }
 
     case ACTION_SAVE_PROJECT:
