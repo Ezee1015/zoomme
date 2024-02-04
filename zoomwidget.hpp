@@ -191,6 +191,9 @@ enum ZoomWidgetAction {
   ACTION_WIDTH_9,
 
   ACTION_SPACER, // Spacer for the tool bar
+
+  ACTION_ESCAPE,
+  ACTION_ESCAPE_CANCEL,
 };
 
 struct Button {
@@ -324,6 +327,7 @@ class ZoomWidget : public QWidget
     bool _shiftPressed;
     bool _mousePressed;
     bool _showToolBar;
+    bool _escapeConfirm;
 
     // Modes
     bool _boardMode;
@@ -373,6 +377,7 @@ class ZoomWidget : public QWidget
     // Tool bar
     void loadButtons();
     void generateToolBar();
+    void toggleAction(ZoomWidgetAction action);
     bool isToolBarVisible();
     bool isCursorOverButton();
     // Returns the position in the vector of the buttons (_toolBar) that is behind
@@ -434,10 +439,6 @@ class ZoomWidget : public QWidget
     // The X, Y, W and H arguments must be a point in the SCREEN, not in the pixmap
     // If floating is enabled, the form (the width and height) is not affected by zoom/scaling
     bool isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos, bool isFloating);
-
-    // Functions for the mappings
-    void escapeKeyFunction();
-    void toggleAction(ZoomWidgetAction action);
 
     // Recording
     void saveFrameToFile(); // Timer function

@@ -38,6 +38,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _shiftPressed = false;
   _mousePressed = false;
   _showToolBar = false;
+  _escapeConfirm = false;
   _boardMode = false;
   _highlight = false;
   _flashlightMode = false;
@@ -241,12 +242,53 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
     case ACTION_WIDTH_8:       _activePen.setWidth(8);              break;
     case ACTION_WIDTH_9:       _activePen.setWidth(9);              break;
 
+    case ACTION_ESCAPE:
+      if(_escapeConfirm) {
+        QApplication::beep();
+        QApplication::quit();
+        return;
+      }
+
+      if (_state == STATE_COLOR_PICKER) {
+        toggleAction(ACTION_PICK_COLOR);
+
+      } else if (_state == STATE_DELETING) {
+        toggleAction(ACTION_DELETE);
+
+      } else if (_flashlightMode) {
+        toggleAction(ACTION_FLASHLIGHT);
+
+      } else if (_screenOpts == SCREENOPTS_HIDE_ALL) {
+        toggleAction(ACTION_SCREEN_OPTS);
+
+      } else if(_desktopPixmapSize != _desktopPixmapOriginalSize) {
+        _desktopPixmapScale = 1.0f;
+        scalePixmapAt(QPoint(0,0));
+        checkPixmapPos();
+
+      } else if(IS_RECORDING) {
+        toggleAction(ACTION_RECORDING);
+
+      } else {
+        _escapeConfirm = true;
+        loadButtons();
+        generateToolBar();
+      }
+      break;
+    case ACTION_ESCAPE_CANCEL:
+      _escapeConfirm = false;
+      loadButtons();
+      generateToolBar();
+      break;
+
     case ACTION_SPACER:        /* don't do anything here */         break;
   }
 }
 
 void ZoomWidget::loadButtons()
 {
+  _toolBar.clear();
+
   QRect nullRect(0, 0, 0, 0);
 
   _toolBar.append(Button{ACTION_WIDTH_1,           "1",                   0, nullRect});
@@ -289,6 +331,14 @@ void ZoomWidget::loadButtons()
   _toolBar.append(Button{ACTION_DELETE,            "Delete",              2, nullRect});
   _toolBar.append(Button{ACTION_CLEAR,             "Clear",               2, nullRect});
   _toolBar.append(Button{ACTION_SCREEN_OPTS,       "Hide elements",       2, nullRect});
+
+  _toolBar.append(Button{ACTION_SPACER,            "",                    2, nullRect});
+
+  if(_escapeConfirm) {
+    _toolBar.append(Button{ACTION_ESCAPE        ,    "Confirm Escape",      2, nullRect});
+    _toolBar.append(Button{ACTION_ESCAPE_CANCEL,     "Cancel Escape",       2, nullRect});
+  } else
+    _toolBar.append(Button{ACTION_ESCAPE,            "Escape",              2, nullRect});
 
   _toolBar.append(Button{ACTION_SAVE_TO_FILE,      "Export image",        3, nullRect});
   _toolBar.append(Button{ACTION_SAVE_TO_CLIPBOARD, "Export to clipboard", 3, nullRect});
@@ -341,6 +391,9 @@ int ZoomWidget::isButtonActive(Button button)
     case ACTION_SAVE_TO_CLIPBOARD: return -1;
     case ACTION_SAVE_PROJECT:      return -1;
     case ACTION_RECORDING:         actionStatus = IS_RECORDING;                           break;
+
+    case ACTION_ESCAPE:            actionStatus = _escapeConfirm;                         break;
+    case ACTION_ESCAPE_CANCEL:     actionStatus = false;                                  break;
 
     case ACTION_SPACER:  logUser(LOG_ERROR, "You shouldn't check if a 'spacer' is active"); return -1;
   }
@@ -2055,25 +2108,25 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
                       action = ACTION_SAVE_TO_FILE;
                     break;
 
-    case Qt::Key_Escape: escapeKeyFunction();        break;
-    case Qt::Key_U:      action = ACTION_UNDO;         break;
-    case Qt::Key_Q:      action = ACTION_CLEAR;        break;
-    case Qt::Key_Tab:    action = ACTION_BLACKBOARD;   break;
-    case Qt::Key_Space:  action = ACTION_SCREEN_OPTS;  break;
-    case Qt::Key_Period: action = ACTION_FLASHLIGHT;   break;
-    case Qt::Key_Comma:  action = ACTION_DELETE;       break;
-    case Qt::Key_Minus:  action = ACTION_RECORDING;    break;
-    case Qt::Key_P:      action = ACTION_PICK_COLOR;   break;
+    case Qt::Key_Escape: action = ACTION_ESCAPE;         break;
+    case Qt::Key_U:      action = ACTION_UNDO;           break;
+    case Qt::Key_Q:      action = ACTION_CLEAR;          break;
+    case Qt::Key_Tab:    action = ACTION_BLACKBOARD;     break;
+    case Qt::Key_Space:  action = ACTION_SCREEN_OPTS;    break;
+    case Qt::Key_Period: action = ACTION_FLASHLIGHT;     break;
+    case Qt::Key_Comma:  action = ACTION_DELETE;         break;
+    case Qt::Key_Minus:  action = ACTION_RECORDING;      break;
+    case Qt::Key_P:      action = ACTION_PICK_COLOR;     break;
 
-    case Qt::Key_1: action = ACTION_WIDTH_1;           break;
-    case Qt::Key_2: action = ACTION_WIDTH_2;           break;
-    case Qt::Key_3: action = ACTION_WIDTH_3;           break;
-    case Qt::Key_4: action = ACTION_WIDTH_4;           break;
-    case Qt::Key_5: action = ACTION_WIDTH_5;           break;
-    case Qt::Key_6: action = ACTION_WIDTH_6;           break;
-    case Qt::Key_7: action = ACTION_WIDTH_7;           break;
-    case Qt::Key_8: action = ACTION_WIDTH_8;           break;
-    case Qt::Key_9: action = ACTION_WIDTH_9;           break;
+    case Qt::Key_1: action = ACTION_WIDTH_1;             break;
+    case Qt::Key_2: action = ACTION_WIDTH_2;             break;
+    case Qt::Key_3: action = ACTION_WIDTH_3;             break;
+    case Qt::Key_4: action = ACTION_WIDTH_4;             break;
+    case Qt::Key_5: action = ACTION_WIDTH_5;             break;
+    case Qt::Key_6: action = ACTION_WIDTH_6;             break;
+    case Qt::Key_7: action = ACTION_WIDTH_7;             break;
+    case Qt::Key_8: action = ACTION_WIDTH_8;             break;
+    case Qt::Key_9: action = ACTION_WIDTH_9;             break;
 
     default:
         updateCursorShape();
@@ -2085,34 +2138,6 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 
   updateCursorShape();
   update();
-}
-
-void ZoomWidget::escapeKeyFunction()
-{
-  if (_state == STATE_COLOR_PICKER) {
-    toggleAction(ACTION_PICK_COLOR);
-
-  } else if (_state == STATE_DELETING) {
-    toggleAction(ACTION_DELETE);
-
-  } else if (_flashlightMode) {
-    toggleAction(ACTION_FLASHLIGHT);
-
-  } else if (_screenOpts == SCREENOPTS_HIDE_ALL) {
-    toggleAction(ACTION_SCREEN_OPTS);
-
-  } else if(_desktopPixmapSize != _desktopPixmapOriginalSize) {
-    _desktopPixmapScale = 1.0f;
-    scalePixmapAt(QPoint(0,0));
-    checkPixmapPos();
-
-  } else if(IS_RECORDING) {
-    toggleAction(ACTION_RECORDING);
-
-  } else {
-    QApplication::beep();
-    QApplication::quit();
-  }
 }
 
 void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
