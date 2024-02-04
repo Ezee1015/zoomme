@@ -17,6 +17,8 @@
 #include <QBuffer>
 #include <QFile>
 #include <QFileInfo>
+#include <QMimeData>
+#include <QUrl>
 
 ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget)
 {
@@ -202,10 +204,22 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        break;
     }
 
-    case ACTION_SAVE_TO_CLIPBOARD:
-       clipboard->setImage(_drawnPixmap.toImage());
-       QApplication::beep();
-       break;
+    case ACTION_SAVE_TO_CLIPBOARD: {
+         QMimeData *mimeData = new QMimeData();
+         QDir tempFile(QStandardPaths::writableLocation(QStandardPaths::TempLocation));
+         QString path(tempFile.absoluteFilePath(CLIPBOARD_TEMP_FILENAME));
+
+         if(!_drawnPixmap.save(path)) {
+           logUser(LOG_ERROR, "Couldn't save the image to the temp location for the clipboard: %s", QSTRING_TO_STRING(path));
+           break;
+         }
+
+         mimeData->setUrls({QUrl::fromLocalFile(path)});
+         clipboard->setMimeData(mimeData);
+
+         QApplication::beep();
+         break;
+       }
 
     case ACTION_SAVE_PROJECT:
        saveStateToFile();
