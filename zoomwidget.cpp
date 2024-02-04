@@ -38,7 +38,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _shiftPressed = false;
   _mousePressed = false;
   _showToolBar = false;
-  _escapeConfirm = false;
+  _exitConfirm = false;
   _boardMode = false;
   _highlight = false;
   _flashlightMode = false;
@@ -243,7 +243,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
     case ACTION_WIDTH_9:       _activePen.setWidth(9);              break;
 
     case ACTION_ESCAPE:
-      if(_escapeConfirm) {
+      if(_exitConfirm) {
         QApplication::beep();
         QApplication::quit();
         return;
@@ -272,13 +272,13 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
       } else {
         // TODO Add a timer that cancels the escape after some time (and calls
         // to update() to update the status bar)
-        _escapeConfirm = true;
+        _exitConfirm = true;
         loadButtons();
         generateToolBar();
       }
       break;
     case ACTION_ESCAPE_CANCEL:
-      _escapeConfirm = false;
+      _exitConfirm = false;
       loadButtons();
       generateToolBar();
       break;
@@ -336,9 +336,9 @@ void ZoomWidget::loadButtons()
 
   _toolBar.append(Button{ACTION_SPACER,            "",                    2, nullRect});
 
-  if(_escapeConfirm) {
-    _toolBar.append(Button{ACTION_ESCAPE        ,    "Confirm Escape",      2, nullRect});
-    _toolBar.append(Button{ACTION_ESCAPE_CANCEL,     "Cancel Escape",       2, nullRect});
+  if(_exitConfirm) {
+    _toolBar.append(Button{ACTION_ESCAPE        ,    "Confirm Exit",        2, nullRect});
+    _toolBar.append(Button{ACTION_ESCAPE_CANCEL,     "Cancel Exit",         2, nullRect});
   } else
     _toolBar.append(Button{ACTION_ESCAPE,            "Escape",              2, nullRect});
 
@@ -394,7 +394,7 @@ int ZoomWidget::isButtonActive(Button button)
     case ACTION_SAVE_PROJECT:      return -1;
     case ACTION_RECORDING:         actionStatus = IS_RECORDING;                           break;
 
-    case ACTION_ESCAPE:            actionStatus = _escapeConfirm;                         break;
+    case ACTION_ESCAPE:            actionStatus = _exitConfirm;                           break;
     case ACTION_ESCAPE_CANCEL:     actionStatus = false;                                  break;
 
     case ACTION_SPACER:  logUser(LOG_ERROR, "You shouldn't check if a 'spacer' is active"); return -1;
@@ -1069,7 +1069,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
 
     h += lineHeight;
   }
-  if(_escapeConfirm) {
+  if(_exitConfirm) {
     text.append("\n");
     text.append(EXIT_ICON);
     text.append(" EXIT? ");

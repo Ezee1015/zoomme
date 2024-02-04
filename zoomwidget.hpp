@@ -328,7 +328,7 @@ class ZoomWidget : public QWidget
     bool _shiftPressed;
     bool _mousePressed;
     bool _showToolBar;
-    bool _escapeConfirm;
+    bool _exitConfirm;
 
     // Modes
     bool _boardMode;
