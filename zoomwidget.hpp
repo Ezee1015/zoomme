@@ -46,6 +46,8 @@
 #define RECORD_QUALITY 70 // 0-100
 #define RECORD_TEMP_FILENAME "ZoomMe_video_bytes"
 
+#define EXIT_CONFIRM_MSECS 1500
+
 #define HIGHLIGHT_ALPHA 75
 
 #define POPUP_ROUNDNESS_FACTOR 12.0f

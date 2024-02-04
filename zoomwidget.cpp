@@ -270,15 +270,17 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
         toggleAction(ACTION_RECORDING);
 
       } else {
-        // TODO Add a timer that cancels the escape after some time (and calls
-        // to update() to update the status bar)
         _exitConfirm = true;
+        // Timer that cancels the escape after some time
+        QTimer::singleShot(EXIT_CONFIRM_MSECS, this, [=]() { toggleAction(ACTION_ESCAPE_CANCEL); });
+
         loadButtons();
         generateToolBar();
       }
       break;
     case ACTION_ESCAPE_CANCEL:
       _exitConfirm = false;
+
       loadButtons();
       generateToolBar();
       break;
