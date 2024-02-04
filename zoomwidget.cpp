@@ -1068,37 +1068,9 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
     h += lineHeight;
   }
 
-  // You can't forget that you have enabled the board mode, as you can clearly
-  // see that there's no desktop
-  // if(_boardMode){
-  //   text += "\n# Black board #";
-  //   h += lineHeight;
-  // }
-
-  // You can't forget that you have enabled the flashlight effect, as you can
-  // clearly see it
-  // if(_flashlightMode){
-  //   text += "\n# Flashlight #";
-  //   h += lineHeight;
-  // }
-
   // Position
   const int x = _screenSize.width() - w - margin;
   const int y = margin;
-
-  // Image
-  // const int marginLeftImage = 10;
-  // const int sizeImage = h;
-  // const int xImage = x - marginLeftImage - sizeImage;
-  // const int yImage = y;
-  //
-  // If the mouse is near the hit box, don't draw it
-  // QRect hitBox = QRect(
-  //                       xImage - margin,
-  //                       yImage - margin,
-  //                       w + sizeImage + marginLeftImage + margin*2,
-  //                       h + margin*2
-  //                     );
 
   // If the mouse is near the hit box, don't draw it
   QRect hitBox = QRect(x-margin, y-margin, w+margin*2, h+margin*2);
@@ -1113,15 +1085,6 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   }
 
   const QRect rect = QRect(x, y, w, h);
-
-  // Draw Image
-  // const QImage img = QImage(":/resources/Icon.png");
-  // screenPainter->drawImage(
-  //                           QRect(xImage, yImage, sizeImage, sizeImage),
-  //                           img,
-  //                           img.rect(),
-  //                           Qt::AutoColor
-  //                         );
 
   // Settings
   screenPainter->setPen(_activePen);
