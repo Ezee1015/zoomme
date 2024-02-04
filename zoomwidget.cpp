@@ -1035,11 +1035,6 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
     text.append( (_desktopPixmapScale == 1.0f) ? NO_ZOOM_ICON : ZOOM_ICON );
   text.append(" ");
 
-  if(_highlight) {
-    text.append(HIGHLIGHT_ICON);
-    text.append(" ");
-  }
-
   switch(_drawMode) {
     case DRAWMODE_LINE:      text.append("Line");        break;
     case DRAWMODE_RECT:      text.append("Rectangle");   break;
@@ -1047,6 +1042,11 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
     case DRAWMODE_ELLIPSE:   text.append("Ellipse");     break;
     case DRAWMODE_TEXT:      text.append("Text");        break;
     case DRAWMODE_FREEFORM:  text.append("Free Form");   break;
+  }
+
+  if(_highlight) {
+    text.append(" ");
+    text.append(HIGHLIGHT_ICON);
   }
 
   text.append(" (");
