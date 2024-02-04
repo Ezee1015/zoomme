@@ -414,7 +414,7 @@ int ZoomWidget::isButtonActive(Button button)
     case ACTION_RECORDING:         actionStatus = IS_RECORDING;                           break;
 
     case ACTION_ESCAPE:            actionStatus = _exitConfirm;                           break;
-    case ACTION_ESCAPE_CANCEL:     actionStatus = false;                                  break;
+    case ACTION_ESCAPE_CANCEL:     return -1;                                             break;
 
     case ACTION_SPACER:  logUser(LOG_ERROR, "You shouldn't check if a 'spacer' is active"); return -1;
   }
