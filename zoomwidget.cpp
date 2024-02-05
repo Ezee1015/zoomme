@@ -218,33 +218,36 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
          break;
        }
 
-       logUser(LOG_INFO, "Trying to save the image to the clipboard with Xclip...");
-       QProcess xclip;
-       xclip.setProcessChannelMode(xclip.ForwardedChannels);
-       QList<QString> arguments;
-       arguments << "-selection" << "clipboard"
-                 << "-target"    << "image/png"
-                 << "-i"         << path;
-       xclip.start("xclip", arguments);
+       // Xclip is a X11 tool, so if you're running wayland, don't use it
+       if(QGuiApplication::platformName() != QString("wayland")) {
+         logUser(LOG_INFO, "Trying to save the image to the clipboard with Xclip...");
+         QProcess xclip;
+         xclip.setProcessChannelMode(xclip.ForwardedChannels);
+         QList<QString> arguments;
+         arguments << "-selection" << "clipboard"
+                   << "-target"    << "image/png"
+                   << "-i"         << path;
+         xclip.start("xclip", arguments);
 
-       // Check for xclip errors.
-       if (!xclip.waitForStarted(5000)) {
-         logUser(LOG_ERROR, "Couldn't start xclip, maybe is not installed...");
-         logUser(LOG_ERROR, "  - Error: %s", QSTRING_TO_STRING(xclip.errorString()));
-         logUser(LOG_ERROR, "  - Executed command: xclip %s", QSTRING_TO_STRING(arguments.join(" ")));
-         xclip.kill();
-       } else if(!xclip.waitForFinished(-1))
-         logUser(LOG_ERROR, "An error occurred with xclip: %s", QSTRING_TO_STRING(xclip.errorString()));
-       else if(xclip.exitStatus() == QProcess::CrashExit)
-         logUser(LOG_ERROR, "Xclip crashed");
-       else if(xclip.exitCode() != 0)
-         logUser(LOG_ERROR, "Xclip failed. Exit code: %d", xclip.exitCode());
+         // Check for xclip errors.
+         if (!xclip.waitForStarted(5000)) {
+           logUser(LOG_ERROR, "Couldn't start xclip, maybe is not installed...");
+           logUser(LOG_ERROR, "  - Error: %s", QSTRING_TO_STRING(xclip.errorString()));
+           logUser(LOG_ERROR, "  - Executed command: xclip %s", QSTRING_TO_STRING(arguments.join(" ")));
+           xclip.kill();
+         } else if(!xclip.waitForFinished(-1))
+           logUser(LOG_ERROR, "An error occurred with xclip: %s", QSTRING_TO_STRING(xclip.errorString()));
+         else if(xclip.exitStatus() == QProcess::CrashExit)
+           logUser(LOG_ERROR, "Xclip crashed");
+         else if(xclip.exitCode() != 0)
+           logUser(LOG_ERROR, "Xclip failed. Exit code: %d", xclip.exitCode());
 
-       // If there's no errors, beep and exit
-       else {
-         logUser(LOG_INFO, "Saving with xclip was successful");
-         QApplication::beep();
-         break;
+         // If there's no errors, beep and exit
+         else {
+           logUser(LOG_INFO, "Saving with xclip was successful");
+           QApplication::beep();
+           break;
+         }
        }
 
        // If there's an error with 'xclip', copy the image path with Qt,
