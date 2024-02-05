@@ -2215,7 +2215,10 @@ void ZoomWidget::grabDesktop()
       return;
     }
 
-    logUser(LOG_ERROR_AND_EXIT, "Couldn't grab the desktop");
+    if(QGuiApplication::platformName() == QString("wayland"))
+      logUser(LOG_ERROR_AND_EXIT, "Couldn't grab the desktop. It seems you're using Wayland: try to use the '-l' flag (live mode)");
+    else
+      logUser(LOG_ERROR_AND_EXIT, "Couldn't grab the desktop");
   }
 
   // Paint the desktop over _desktopPixmap
