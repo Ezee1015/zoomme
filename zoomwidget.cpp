@@ -206,13 +206,10 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
 
     case ACTION_SAVE_TO_CLIPBOARD: {
 #ifdef Q_OS_LINUX
-       // Save the image in a temp folder and save its path.
-       // Some apps will not fully recognize the image, because there's not a
-       // standard way to save it in linux afaik (in example, Dolphin will copy
-       // the image, but Thunar and GIMP will not). Apparently in other systems
-       // the other way (copying the image directly to the clipboard) work just
-       // fine
-       QMimeData *mimeData = new QMimeData();
+       // Save the image in a temp folder and load it to the clipboard with
+       // xclip, because with QClipboard in linux, the image gets deleted when
+       // closing the app. Apparently in other systems the other way (copying
+       // the image directly to the clipboard) work just fine
        QDir tempFile(QStandardPaths::writableLocation(QStandardPaths::TempLocation));
        QString path(tempFile.absoluteFilePath(CLIPBOARD_TEMP_FILENAME));
 
@@ -221,18 +218,57 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
          break;
        }
 
+       logUser(LOG_INFO, "Trying to save the image to the clipboard with Xclip...");
+       QProcess xclip;
+       xclip.setProcessChannelMode(xclip.ForwardedChannels);
+       QList<QString> arguments;
+       arguments << "-selection" << "clipboard"
+                 << "-target"    << "image/png"
+                 << "-i"         << path;
+       xclip.start("xclip", arguments);
+
+       // Check for xclip errors.
+       if (!xclip.waitForStarted(5000)) {
+         logUser(LOG_ERROR, "Couldn't start xclip, maybe is not installed...");
+         logUser(LOG_ERROR, "  - Error: %s", QSTRING_TO_STRING(xclip.errorString()));
+         logUser(LOG_ERROR, "  - Executed command: xclip %s", QSTRING_TO_STRING(arguments.join(" ")));
+         xclip.kill();
+       } else if(!xclip.waitForFinished(-1))
+         logUser(LOG_ERROR, "An error occurred with xclip: %s", QSTRING_TO_STRING(xclip.errorString()));
+       else if(xclip.exitStatus() == QProcess::CrashExit)
+         logUser(LOG_ERROR, "Xclip crashed");
+       else if(xclip.exitCode() != 0)
+         logUser(LOG_ERROR, "Xclip failed. Exit code: %d", xclip.exitCode());
+
+       // If there's no errors, beep and exit
+       else {
+         logUser(LOG_INFO, "Saving with xclip was successful");
+         QApplication::beep();
+         break;
+       }
+
+       // If there's an error with 'xclip', copy the image path with Qt,
+       // not the image itself.
+       //
+       // Some apps will not fully recognize the image, because
+       // there's not a standard way to save a path in linux afaik (in example,
+       // Dolphin will copy the image, but Thunar and GIMP will not recognize it).
+       logUser(LOG_INFO, "Saving the image path to the clipboard");
+       QMimeData *mimeData = new QMimeData();
        QList<QUrl> urlList; urlList.append(QUrl::fromLocalFile(path));
        mimeData->setUrls(urlList);
        clipboard->setMimeData(mimeData);
-
+       QApplication::beep();
+       break;
 #else
        // Copy the image into clipboard (this causes some problems with the
        // clipboard manager in Linux, because when the app exits, the image gets
        // deleted with it. The clipboard only save a pointer to that image)
+       logUser(LOG_INFO, "Saving the image to the clipboard with Qt");
        clipboard->setPixmap(_drawnPixmap);
-#endif
        QApplication::beep();
        break;
+#endif
        }
 
     case ACTION_SAVE_PROJECT:
