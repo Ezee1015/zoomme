@@ -1092,8 +1092,8 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   switch(_state) {
     case STATE_MOVING:       break;
     case STATE_DRAWING:      break;
-    case STATE_TYPING:       text.append("\n-- TYPING --");   h += lineHeight; break;
-    case STATE_DELETING:     text.append("\n-- DELETING --"); h += lineHeight; break;
+    case STATE_TYPING:       text.append("\n-- TYPING --");     h += lineHeight; break;
+    case STATE_DELETING:     text.append("\n-- DELETING --");   h += lineHeight; break;
     case STATE_COLOR_PICKER: text.append("\n-- PICK COLOR --"); h += lineHeight; break;
     case STATE_TRIMMING:     text.append("\n-- TRIMMING --");   h += lineHeight; break;
   };
