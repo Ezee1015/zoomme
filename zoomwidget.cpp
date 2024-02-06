@@ -2227,6 +2227,20 @@ void ZoomWidget::setLiveMode(bool liveMode)
   _liveMode = liveMode;
 }
 
+void ZoomWidget::grabFromClipboard(FitImage config)
+{
+  QImage image;
+
+  if(!clipboard)
+    logUser(LOG_ERROR_AND_EXIT, "The clipboard is uninitialized");
+
+  image = clipboard->image();
+  if(image.isNull())
+    logUser(LOG_ERROR_AND_EXIT, "The clipboard doesn't contain an image or its format is not supported");
+
+  grabImage(QPixmap::fromImage(image), config);
+}
+
 void ZoomWidget::grabDesktop()
 {
   QPixmap desktop = _desktopScreen->grabWindow(0);

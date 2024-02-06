@@ -245,6 +245,7 @@ class ZoomWidget : public QWidget
     // By passing an empty QString, sets the argument to the default
     void initFileConfig(QString path, QString name, QString imgExt, QString vidExt);
 
+    void grabFromClipboard(FitImage config);
     void grabDesktop();
     void grabImage(QPixmap img, FitImage config);
 

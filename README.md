@@ -257,6 +257,22 @@ This will override the [file name, video extension and image extension configura
 </p></details>
 <!-- End 9 -->
 
+<!-- Start 10 -->
+<details id="from-clipboard">
+<summary><b>[ <code>-c</code> ] Use an image from the clipboard as the background (instead of the desktop)</b></summary><p>
+
+ You can use any image from the clipboard as the background
+
+```bash
+./zoomme {configurations} {-c [-w|h]}
+```
+
+##### Additional arguments:
+- You can force the image to fit the screen's width or height with `-w` or `-h`, like this: `./zoomme -c -w`, if you do not providing anything, it automatically detects the best option.
+
+</p></details>
+<!-- End 10 -->
+
 ## :suspect: Secret :suspect:
 > Shhh! Don't tell anybody... :zipper_mouth_face:
 >
