@@ -1920,21 +1920,30 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
 
 QString ZoomWidget::getFilePath(FileType type)
 {
-  // Generate Name
-  QString fileName;
-  const QString date = QDateTime::currentDateTime().toString(DATE_FORMAT_FOR_FILE);
-  fileName = (_fileConfig.name.isEmpty()) ? ("ZoomMe " + date) : _fileConfig.name;
+  int fileIndex = 0;
+  QString filePath;
 
-  // Select extension
-  fileName.append(".");
-  switch(type) {
-    case FILE_IMAGE:  fileName.append(_fileConfig.imageExt);  break;
-    case FILE_VIDEO:  fileName.append(_fileConfig.videoExt);  break;
-    case FILE_ZOOMME: fileName.append(_fileConfig.zoommeExt); break;
-  }
+  do {
+    // Generate Name
+    QString fileName;
+    const QString date = QDateTime::currentDateTime().toString(DATE_FORMAT_FOR_FILE);
+    fileName = (_fileConfig.name.isEmpty()) ? ("ZoomMe " + date) : _fileConfig.name;
+    if(fileIndex != 0)
+      fileName.append(FILE_INDEX_DIVIDER + QString::number(fileIndex));
 
-  // Path
-  QString filePath = _fileConfig.folder.absoluteFilePath(fileName);
+    // Select extension
+    fileName.append(".");
+    switch(type) {
+      case FILE_IMAGE:  fileName.append(_fileConfig.imageExt);  break;
+      case FILE_VIDEO:  fileName.append(_fileConfig.videoExt);  break;
+      case FILE_ZOOMME: fileName.append(_fileConfig.zoommeExt); break;
+    }
+
+    // Path
+    filePath = _fileConfig.folder.absoluteFilePath(fileName);
+
+    fileIndex++;
+  } while(QFile(filePath).exists());
 
   return filePath;
 }
