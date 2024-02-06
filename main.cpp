@@ -86,13 +86,13 @@ void modeAlreadySelected(QString backupFile, QString img, bool liveMode, bool fr
   if(isDefined(backupFile))
     printHelp("Mode already provided (Backup file provided)");
 
-  if(isDefined(img))
+  else if(isDefined(img))
     printHelp("Mode already provided (image provided)");
 
-  if(liveMode)
+  else if(liveMode)
     printHelp("Mode already provided (live mode)");
 
-  if(fromClipboard)
+  else if(fromClipboard)
     printHelp("Mode already provided (load from clipboard)");
 }
 
