@@ -218,44 +218,57 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
          break;
        }
 
-       // Xclip is a X11 tool, so if you're running wayland, don't use it
-       if(QGuiApplication::platformName() != QString("wayland")) {
-         logUser(LOG_INFO, "Trying to save the image to the clipboard with Xclip...");
-         QProcess xclip;
-         xclip.setProcessChannelMode(xclip.ForwardedChannels);
-         QList<QString> arguments;
-         arguments << "-selection" << "clipboard"
-                   << "-target"    << "image/png"
-                   << "-i"         << path;
-         xclip.start("xclip", arguments);
+       QProcess process;
+       QString appName;
+       if(QGuiApplication::platformName() == QString("wayland")) {
+         appName = "wl-copy";
 
-         // Check for xclip errors.
-         if (!xclip.waitForStarted(5000)) {
-           logUser(LOG_ERROR, "Couldn't start xclip, maybe is not installed...");
-           logUser(LOG_ERROR, "  - Error: %s", QSTRING_TO_STRING(xclip.errorString()));
-           logUser(LOG_ERROR, "  - Executed command: xclip %s", QSTRING_TO_STRING(arguments.join(" ")));
-           xclip.kill();
-         } else if(!xclip.waitForFinished(-1))
-           logUser(LOG_ERROR, "An error occurred with xclip: %s", QSTRING_TO_STRING(xclip.errorString()));
-         else if(xclip.exitStatus() == QProcess::CrashExit)
-           logUser(LOG_ERROR, "Xclip crashed");
-         else if(xclip.exitCode() != 0)
-           logUser(LOG_ERROR, "Xclip failed. Exit code: %d", xclip.exitCode());
+         process.setProgram("bash");
+         QList<QString> procArgs;
+         procArgs << "-c" << QString("wl-copy < " + path);
+         process.setArguments(procArgs);
+       } else { // X11
+         appName = "xclip";
+         process.setProgram(appName);
 
-         // If there's no errors, beep and exit
-         else {
-           logUser(LOG_INFO, "Saving with xclip was successful");
-           QApplication::beep();
-           break;
-         }
+         QList<QString> procArgs;
+         procArgs << "-selection" << "clipboard"
+                  << "-target"    << "image/png"
+                  << "-i"         << path;
+         process.setArguments(procArgs);
        }
 
-       // If there's an error with 'xclip', copy the image path with Qt,
-       // not the image itself.
+       logUser(LOG_INFO, "Trying to save the image to the clipboard with %s...", QSTRING_TO_STRING(appName));
+       process.start();
+       process.setProcessChannelMode(process.ForwardedChannels);
+
+       // Check for errors.
+       if (!process.waitForStarted(5000)) {
+         logUser(LOG_ERROR, "Couldn't start %s, maybe is not installed...", QSTRING_TO_STRING(appName));
+         logUser(LOG_ERROR, "  - Error: %s", QSTRING_TO_STRING(process.errorString()));
+         logUser(LOG_ERROR, "  - Executed command: %s %s", QSTRING_TO_STRING(process.program()), QSTRING_TO_STRING(process.arguments().join(" ")));
+         process.kill();
+       } else if(!process.waitForFinished(-1))
+         logUser(LOG_ERROR, "An error occurred with %s: %s", QSTRING_TO_STRING(appName), QSTRING_TO_STRING(process.errorString()));
+       else if(process.exitStatus() == QProcess::CrashExit)
+         logUser(LOG_ERROR, "%s crashed", QSTRING_TO_STRING(appName));
+       else if(process.exitCode() != 0)
+         logUser(LOG_ERROR, "%s failed. Exit code: %d", QSTRING_TO_STRING(appName), process.exitCode());
+
+       // If there's no errors, beep and exit
+       else {
+         logUser(LOG_INFO, "Saving with %s was successful", QSTRING_TO_STRING(appName));
+         QApplication::beep();
+         break;
+       }
+
+       // If there's an error with 'xclip' or 'wl-copy', copy the image path
+       // with Qt, not the image itself.
        //
        // Some apps will not fully recognize the image, because
        // there's not a standard way to save a path in linux afaik (in example,
-       // Dolphin will copy the image, but Thunar and GIMP will not recognize it).
+       // Dolphin will copy the image, but Thunar and GIMP will not recognize
+       // it).
        logUser(LOG_INFO, "Saving the image path to the clipboard");
        QMimeData *mimeData = new QMimeData();
        QList<QUrl> urlList; urlList.append(QUrl::fromLocalFile(path));
