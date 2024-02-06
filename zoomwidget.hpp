@@ -83,6 +83,8 @@
 #define IS_RECORDING (recordTimer->isActive())
 #define IS_FFMPEG_RUNNING (ffmpeg.state() != QProcess::NotRunning)
 
+#define IS_TRIMMING (_state == STATE_TRIMMING && _mousePressed)
+
 namespace Ui {
   class zoomwidget;
 }
@@ -134,12 +136,19 @@ enum FitImage {
   FIT_AUTO,
 };
 
+// Where to save the trimmed pixmap (from STATE_TRIMMING)
+enum TrimOptions {
+  TRIM_SAVE_TO_IMAGE,
+  TRIM_SAVE_TO_CLIPBOARD,
+};
+
 enum ZoomWidgetState {
   STATE_MOVING,
   STATE_DRAWING,
   STATE_TYPING,
   STATE_DELETING,
   STATE_COLOR_PICKER,
+  STATE_TRIMMING,
 };
 
 enum ZoomWidgetDrawMode {
@@ -170,7 +179,9 @@ enum ZoomWidgetAction {
   ACTION_DELETE,
   ACTION_CLEAR,
   ACTION_SAVE_TO_FILE,
+  ACTION_SAVE_TRIMMED_TO_IMAGE,
   ACTION_SAVE_TO_CLIPBOARD,
+  ACTION_SAVE_TRIMMED_TO_CLIPBOARD,
   ACTION_SAVE_PROJECT,
   ACTION_SCREEN_OPTS,
   ACTION_RECORDING,
@@ -343,6 +354,7 @@ class ZoomWidget : public QWidget
     bool _flashlightMode;
     int _flashlightRadius;
     bool _highlight;
+    TrimOptions _trimDestination;
 
     // IN TEXT MODE: If the user was pressing shift when the mouse released
     // (finished sizing the text rectangle), disable mouse tracking while writing
@@ -381,6 +393,9 @@ class ZoomWidget : public QWidget
     void drawToolBar(QPainter *screenPainter);
     void drawButton(QPainter *screenPainter, Button button);
     ArrowHead getArrowHead(int x, int y, int width, int height);
+    void drawTrimmed(QPainter *pixmapPainter);
+
+    void saveImage(QPixmap pixmap, bool toImage);
 
     // Tool bar
     void loadButtons();

@@ -195,110 +195,41 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        _activePen.setColor(GET_COLOR_UNDER_CURSOR());
        break;
 
-    case ACTION_SAVE_TO_FILE: {
-       QString path = getFilePath(FILE_IMAGE);
-       if(_drawnPixmap.save(path)){
-         QApplication::beep();
-         logUser(LOG_INFO, "Image saved correctly: %s", QSTRING_TO_STRING(path));
-       } else {
-         logUser(LOG_ERROR, "Couldn't save the picture to: %s", QSTRING_TO_STRING(path));
-       }
+    case ACTION_SAVE_TO_FILE:
+       saveImage(_drawnPixmap, true);
        break;
-    }
 
-    case ACTION_SAVE_TO_CLIPBOARD: {
-#ifdef Q_OS_LINUX
-       // Save the image in a temp folder and load it to the clipboard with
-       // xclip, because with QClipboard in linux, the image gets deleted when
-       // closing the app. Apparently in other systems the other way (copying
-       // the image directly to the clipboard) work just fine
-       QDir tempFile(QStandardPaths::writableLocation(QStandardPaths::TempLocation));
-       QString fileName(CLIPBOARD_TEMP_FILENAME); fileName.append(".png");
-       QString path(tempFile.absoluteFilePath(fileName));
-
-       if(!_drawnPixmap.save(path)) {
-         logUser(LOG_ERROR, "Couldn't save the image to the temp location for the clipboard: %s", QSTRING_TO_STRING(path));
-         break;
-       }
-
-       QProcess process;
-       QString appName;
-       if(QGuiApplication::platformName() == QString("wayland")) {
-         appName = "wl-copy";
-
-         process.setProgram("bash");
-         QList<QString> procArgs;
-         procArgs << "-c" << QString("wl-copy < " + path);
-         process.setArguments(procArgs);
-       } else { // X11
-         appName = "xclip";
-         process.setProgram(appName);
-
-         QList<QString> procArgs;
-         procArgs << "-selection" << "clipboard"
-                  << "-target"    << "image/png"
-                  << "-i"         << path;
-         process.setArguments(procArgs);
-       }
-
-       logUser(LOG_INFO, "Trying to save the image to the clipboard with %s...", QSTRING_TO_STRING(appName));
-       process.start();
-       process.setProcessChannelMode(process.ForwardedChannels);
-
-       // Check for errors.
-       if (!process.waitForStarted(5000)) {
-         logUser(LOG_ERROR, "Couldn't start %s, maybe is not installed...", QSTRING_TO_STRING(appName));
-         logUser(LOG_ERROR, "  - Error: %s", QSTRING_TO_STRING(process.errorString()));
-         logUser(LOG_ERROR, "  - Executed command: %s %s", QSTRING_TO_STRING(process.program()), QSTRING_TO_STRING(process.arguments().join(" ")));
-         process.kill();
-       } else if(!process.waitForFinished(-1))
-         logUser(LOG_ERROR, "An error occurred with %s: %s", QSTRING_TO_STRING(appName), QSTRING_TO_STRING(process.errorString()));
-       else if(process.exitStatus() == QProcess::CrashExit)
-         logUser(LOG_ERROR, "%s crashed", QSTRING_TO_STRING(appName));
-       else if(process.exitCode() != 0)
-         logUser(LOG_ERROR, "%s failed. Exit code: %d", QSTRING_TO_STRING(appName), process.exitCode());
-
-       // If there's no errors, beep and exit
-       else {
-         logUser(LOG_INFO, "Saving with %s was successful", QSTRING_TO_STRING(appName));
-         QApplication::beep();
-         break;
-       }
-
-       // If there's an error with 'xclip' or 'wl-copy', copy the image path
-       // with Qt, not the image itself.
-       //
-       // Some apps will not fully recognize the image, because
-       // there's not a standard way to save a path in linux afaik (in example,
-       // Dolphin will copy the image, but Thunar and GIMP will not recognize
-       // it).
-       if(!clipboard) {
-         logUser(LOG_ERROR, "There's no clipboard to save the image into");
-         break;
-       }
-
-       logUser(LOG_INFO, "Saving the image path to the clipboard");
-       QMimeData *mimeData = new QMimeData();
-       QList<QUrl> urlList; urlList.append(QUrl::fromLocalFile(path));
-       mimeData->setUrls(urlList);
-       clipboard->setMimeData(mimeData);
-       QApplication::beep();
+    case ACTION_SAVE_TO_CLIPBOARD:
+       saveImage(_drawnPixmap, false);
        break;
-#else
-       // Copy the image into clipboard (this causes some problems with the
-       // clipboard manager in Linux, because when the app exits, the image gets
-       // deleted with it. The clipboard only save a pointer to that image)
-       if(!clipboard) {
-         logUser(LOG_ERROR, "There's no clipboard to save the image into");
-         break;
-       }
 
-       logUser(LOG_INFO, "Saving the image to the clipboard with Qt");
-       clipboard->setPixmap(_drawnPixmap);
-       QApplication::beep();
-       break;
-#endif
-       }
+    case ACTION_SAVE_TRIMMED_TO_IMAGE:
+      // If the mode is active, disable it
+      if(_state == STATE_TRIMMING && _trimDestination == TRIM_SAVE_TO_IMAGE) {
+        _state = STATE_MOVING;
+        break;
+      }
+
+      if(_state != STATE_MOVING || _screenOpts == SCREENOPTS_HIDE_ALL)
+        break;
+
+      _state = STATE_TRIMMING;
+      _trimDestination = TRIM_SAVE_TO_IMAGE;
+      break;
+
+    case ACTION_SAVE_TRIMMED_TO_CLIPBOARD:
+      // If the mode is active, disable it
+      if(_state == STATE_TRIMMING && _trimDestination == TRIM_SAVE_TO_CLIPBOARD) {
+        _state = STATE_MOVING;
+        break;
+      }
+
+      if(_state != STATE_MOVING || _screenOpts == SCREENOPTS_HIDE_ALL)
+        break;
+
+      _state = STATE_TRIMMING;
+      _trimDestination = TRIM_SAVE_TO_CLIPBOARD;
+      break;
 
     case ACTION_SAVE_PROJECT:
        saveStateToFile();
@@ -442,6 +373,8 @@ void ZoomWidget::loadButtons()
 
   _toolBar.append(Button{ACTION_SAVE_TO_FILE,      "Export image",        3, nullRect});
   _toolBar.append(Button{ACTION_SAVE_TO_CLIPBOARD, "Export to clipboard", 3, nullRect});
+  _toolBar.append(Button{ACTION_SAVE_TRIMMED_TO_IMAGE,     "Export trimmed image",        3, nullRect});
+  _toolBar.append(Button{ACTION_SAVE_TRIMMED_TO_CLIPBOARD, "Export trimmed to clipboard", 3, nullRect});
   _toolBar.append(Button{ACTION_SAVE_PROJECT,      "Save project",        3, nullRect});
   _toolBar.append(Button{ACTION_RECORDING,         "Record",              3, nullRect});
 }
@@ -491,6 +424,15 @@ int ZoomWidget::isButtonActive(Button button)
     case ACTION_SAVE_TO_CLIPBOARD: return -1;
     case ACTION_SAVE_PROJECT:      return -1;
     case ACTION_RECORDING:         actionStatus = IS_RECORDING;                           break;
+    case ACTION_SAVE_TRIMMED_TO_IMAGE:
+                                   actionStatus = (_state == STATE_TRIMMING) &&
+                                                  (_trimDestination == TRIM_SAVE_TO_IMAGE);
+                                   break;
+
+    case ACTION_SAVE_TRIMMED_TO_CLIPBOARD:
+                                   actionStatus = (_state == STATE_TRIMMING) &&
+                                                  (_trimDestination == TRIM_SAVE_TO_CLIPBOARD);
+                                   break;
 
     case ACTION_ESCAPE:            actionStatus = _exitConfirm;                           break;
     case ACTION_ESCAPE_CANCEL:     return -1;                                             break;
@@ -1153,6 +1095,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
     case STATE_TYPING:       text.append("\n-- TYPING --");   h += lineHeight; break;
     case STATE_DELETING:     text.append("\n-- DELETING --"); h += lineHeight; break;
     case STATE_COLOR_PICKER: text.append("\n-- PICK COLOR --"); h += lineHeight; break;
+    case STATE_TRIMMING:     text.append("\n-- TRIMMING --");   h += lineHeight; break;
   };
   if(isInEditTextMode()){
     text += "\n-- SELECT --";
@@ -1383,6 +1326,9 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
 
 void ZoomWidget::drawFlashlightEffect(QPainter *painter, bool drawToScreen)
 {
+  if(IS_TRIMMING)
+    return;
+
   const int radius = _flashlightRadius;
   QPoint c = getCursorPos(false);
 
@@ -1401,6 +1347,19 @@ void ZoomWidget::drawFlashlightEffect(QPainter *painter, bool drawToScreen)
 
   QPainterPath flashlightArea = pixmapPath.subtracted(mouseFlashlight);
   painter->fillPath(flashlightArea, QColor(  0,  0,  0, 190));
+}
+
+void ZoomWidget::drawTrimmed(QPainter *pixmapPainter)
+{
+  QRect rect(_startDrawPoint, _endDrawPoint);
+  QPainterPath mouseFlashlight;
+  mouseFlashlight.addRect(rect);
+
+  QPainterPath pixmapPath;
+  pixmapPath.addRect(_drawnPixmap.rect());
+
+  QPainterPath opaqueArea = pixmapPath.subtracted(mouseFlashlight);
+  pixmapPainter->fillPath(opaqueArea, QColor(  0,  0,  0, 190));
 }
 
 void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
@@ -1609,6 +1568,8 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   QPainter screen; screen.begin(this);
 
   drawSavedForms(&pixmapPainter);
+  if(IS_TRIMMING)
+    drawTrimmed(&pixmapPainter);
 
   // By drawing the active form in the pixmap, it gives a better user feedback
   // (because the user can see how it would really look like when saved), but
@@ -1676,6 +1637,7 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
 {
   (void) event;
 
+  // Pre mouse processing
   if(isToolBarVisible()) {
     int buttonPos = buttonBehindCursor(getCursorPos(false));
     if(buttonPos==-1)
@@ -1690,6 +1652,7 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
   if(_screenOpts == SCREENOPTS_HIDE_ALL)
     return;
 
+  // Mouse processing
   _mousePressed = true;
 
   if(_state == STATE_COLOR_PICKER){
@@ -1724,19 +1687,143 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
   if(!_shiftPressed)
     _lastMousePos = getCursorPos(false);
 
-  _state = STATE_DRAWING;
+  if(_state != STATE_TRIMMING)
+    _state = STATE_DRAWING;
 
   _startDrawPoint = screenPointToPixmapPos(getCursorPos(false));
   _endDrawPoint = _startDrawPoint;
+}
+
+// If toImage it's true, then it's saved in a image file, otherwise, it gets
+// saved in the clipboard
+void ZoomWidget::saveImage(QPixmap pixmap, bool toImage)
+{
+  if(toImage) {
+     QString path = getFilePath(FILE_IMAGE);
+     if(pixmap.save(path)) {
+       QApplication::beep();
+       logUser(LOG_INFO, "Image saved correctly: %s", QSTRING_TO_STRING(path));
+     } else {
+       logUser(LOG_ERROR, "Couldn't save the picture to: %s", QSTRING_TO_STRING(path));
+     }
+     return;
+  }
+
+  // Clipboard
+#ifdef Q_OS_LINUX
+  // Save the image in a temp folder and load it to the clipboard with
+  // xclip, because with QClipboard in linux, the image gets deleted when
+  // closing the app. Apparently in other systems the other way (copying
+  // the image directly to the clipboard) work just fine
+  QDir tempFile(QStandardPaths::writableLocation(QStandardPaths::TempLocation));
+  QString fileName(CLIPBOARD_TEMP_FILENAME); fileName.append(".png");
+  QString path(tempFile.absoluteFilePath(fileName));
+
+  if(!pixmap.save(path)) {
+   logUser(LOG_ERROR, "Couldn't save the image to the temp location for the clipboard: %s", QSTRING_TO_STRING(path));
+   break;
+  }
+
+  QProcess process;
+  QString appName;
+  if(QGuiApplication::platformName() == QString("wayland")) {
+   appName = "wl-copy";
+
+   process.setProgram("bash");
+   QList<QString> procArgs;
+   procArgs << "-c" << QString("wl-copy < " + path);
+   process.setArguments(procArgs);
+  } else { // X11
+   appName = "xclip";
+   process.setProgram(appName);
+
+   QList<QString> procArgs;
+   procArgs << "-selection" << "clipboard"
+            << "-target"    << "image/png"
+            << "-i"         << path;
+   process.setArguments(procArgs);
+  }
+
+  logUser(LOG_INFO, "Trying to save the image to the clipboard with %s...", QSTRING_TO_STRING(appName));
+  process.start();
+  process.setProcessChannelMode(process.ForwardedChannels);
+
+  // Check for errors.
+  if (!process.waitForStarted(5000)) {
+   logUser(LOG_ERROR, "Couldn't start %s, maybe is not installed...", QSTRING_TO_STRING(appName));
+   logUser(LOG_ERROR, "  - Error: %s", QSTRING_TO_STRING(process.errorString()));
+   logUser(LOG_ERROR, "  - Executed command: %s %s", QSTRING_TO_STRING(process.program()), QSTRING_TO_STRING(process.arguments().join(" ")));
+   process.kill();
+  } else if(!process.waitForFinished(-1))
+   logUser(LOG_ERROR, "An error occurred with %s: %s", QSTRING_TO_STRING(appName), QSTRING_TO_STRING(process.errorString()));
+  else if(process.exitStatus() == QProcess::CrashExit)
+   logUser(LOG_ERROR, "%s crashed", QSTRING_TO_STRING(appName));
+  else if(process.exitCode() != 0)
+   logUser(LOG_ERROR, "%s failed. Exit code: %d", QSTRING_TO_STRING(appName), process.exitCode());
+
+  // If there's no errors, beep and exit
+  else {
+   logUser(LOG_INFO, "Saving with %s was successful", QSTRING_TO_STRING(appName));
+   QApplication::beep();
+   break;
+  }
+
+  // If there's an error with 'xclip' or 'wl-copy', copy the image path
+  // with Qt, not the image itself.
+  //
+  // Some apps will not fully recognize the image, because
+  // there's not a standard way to save a path in linux afaik (in example,
+  // Dolphin will copy the image, but Thunar and GIMP will not recognize
+  // it).
+  if(!clipboard) {
+   logUser(LOG_ERROR, "There's no clipboard to save the image into");
+   break;
+  }
+
+  logUser(LOG_INFO, "Saving the image path to the clipboard");
+  QMimeData *mimeData = new QMimeData();
+  QList<QUrl> urlList; urlList.append(QUrl::fromLocalFile(path));
+  mimeData->setUrls(urlList);
+  clipboard->setMimeData(mimeData);
+  QApplication::beep();
+  break;
+#else
+  // Copy the image into clipboard (this causes some problems with the
+  // clipboard manager in Linux, because when the app exits, the image gets
+  // deleted with it. The clipboard only save a pointer to that image)
+  if(!clipboard) {
+   logUser(LOG_ERROR, "There's no clipboard to save the image into");
+   return;
+  }
+
+  logUser(LOG_INFO, "Saving the image to the clipboard with Qt");
+  clipboard->setImage(pixmap.toImage());
+  QApplication::beep();
+#endif
 }
 
 void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
 {
   (void) event;
 
+  // Pre mouse processing
+  if(IS_TRIMMING) {
+    _endDrawPoint = screenPointToPixmapPos(getCursorPos(false));
+    QRect trimSize(_startDrawPoint, _endDrawPoint);
+    QPixmap trimmed = _drawnPixmap.copy(trimSize);
+    saveImage(trimmed, (_trimDestination == TRIM_SAVE_TO_IMAGE) ? true : false);
+
+    _state = STATE_MOVING;
+    _mousePressed = false;
+    updateCursorShape();
+    update();
+    return;
+  }
+
   if(_screenOpts == SCREENOPTS_HIDE_ALL)
     return;
 
+  // Mouse processing
   _mousePressed = false;
 
   if (_state != STATE_DRAWING)
@@ -1815,7 +1902,7 @@ void ZoomWidget::updateCursorShape()
   else if( isTextEditable(getCursorPos(false)) )
     setCursor(pointHand);
 
-  else if(_flashlightMode)
+  else if(_flashlightMode && !IS_TRIMMING)
     setCursor(blank);
 
   else
@@ -1881,7 +1968,7 @@ void ZoomWidget::updateAtMousePos(QPoint mousePos)
     _lastMousePos = mousePos;
   }
 
-  if (_state == STATE_DRAWING)
+  if (_state == STATE_DRAWING || _state == STATE_TRIMMING)
     _endDrawPoint = screenPointToPixmapPos(mousePos);
 }
 
