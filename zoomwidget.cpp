@@ -211,7 +211,8 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        // closing the app. Apparently in other systems the other way (copying
        // the image directly to the clipboard) work just fine
        QDir tempFile(QStandardPaths::writableLocation(QStandardPaths::TempLocation));
-       QString path(tempFile.absoluteFilePath(CLIPBOARD_TEMP_FILENAME));
+       QString fileName(CLIPBOARD_TEMP_FILENAME); fileName.append(".png");
+       QString path(tempFile.absoluteFilePath(fileName));
 
        if(!_drawnPixmap.save(path)) {
          logUser(LOG_ERROR, "Couldn't save the image to the temp location for the clipboard: %s", QSTRING_TO_STRING(path));

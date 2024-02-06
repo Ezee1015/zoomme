@@ -46,7 +46,7 @@
 #define RECORD_QUALITY 70 // 0-100
 #define RECORD_TEMP_FILENAME "ZoomMe_video_bytes"
 
-#define CLIPBOARD_TEMP_FILENAME "zoomme_clipboard.png"
+#define CLIPBOARD_TEMP_FILENAME "zoomme_clipboard"
 
 #define EXIT_CONFIRM_MSECS 1500
 
