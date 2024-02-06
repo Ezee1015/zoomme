@@ -25,13 +25,18 @@ void printHelp(const char *errorMsg)
     fprintf(output, "[ERROR] %s\n", errorMsg);
   }
 
-  fprintf(output, "\nUsage: zoomme [options]\n");
-  fprintf(output, "Options:\n");
+  fprintf(output, "\nUsage: zoomme [configurations] [mode]\n");
+
+  fprintf(output, "\nHelp page:\n");
   fprintf(output, "  --help                    Display this help message\n");
+
+  fprintf(output, "\nConfigurations:\n");
   fprintf(output, "  -p [path/to/folder]       Set the path where to save the exported files (default: Desktop folder)\n");
   fprintf(output, "  -n [file_name]            Specify the name of the exported files (default: Zoomme {date})\n");
   fprintf(output, "  -e:i [extension]          Specify the extension of the exported (saved) image (default: png)\n");
   fprintf(output, "  -e:v [extension]          Specify the extension of the exported (saved) video file (default: mp4)\n");
+
+  fprintf(output, "\nModes:\n");
   fprintf(output, "  -l                        Not use a background (transparent). In this mode zooming is disabled\n");
   fprintf(output, "  -i <image_path> [opts]    Specify the path to an image as the background, instead of the desktop. It will automatically fit it to the screen\n");
   fprintf(output, "       -w                        Force to fit it to the screen's width\n");
