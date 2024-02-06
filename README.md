@@ -131,6 +131,10 @@ The Escape key performs the following actions in a sequential order. If one cond
 - `qt6`
 - `libopengl-dev`
 
+### Optional
+- `xclip` (for Linux and X11)
+- `wl-clipboard` (for Linux and Wayland)
+
 ## Instalation (Compilation)
 
 
