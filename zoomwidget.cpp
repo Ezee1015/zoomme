@@ -48,6 +48,8 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _screenOpts = SCREENOPTS_SHOW_ALL;
 
   clipboard = QApplication::clipboard();
+  if(!clipboard)
+    logUser(LOG_ERROR, "Couldn't grab the clipboard");
 
   recordTimer = new QTimer(this);
   connect( recordTimer,
