@@ -272,6 +272,11 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        // there's not a standard way to save a path in linux afaik (in example,
        // Dolphin will copy the image, but Thunar and GIMP will not recognize
        // it).
+       if(!clipboard) {
+         logUser(LOG_ERROR, "There's no clipboard to save the image into");
+         break;
+       }
+
        logUser(LOG_INFO, "Saving the image path to the clipboard");
        QMimeData *mimeData = new QMimeData();
        QList<QUrl> urlList; urlList.append(QUrl::fromLocalFile(path));
@@ -283,6 +288,11 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        // Copy the image into clipboard (this causes some problems with the
        // clipboard manager in Linux, because when the app exits, the image gets
        // deleted with it. The clipboard only save a pointer to that image)
+       if(!clipboard) {
+         logUser(LOG_ERROR, "There's no clipboard to save the image into");
+         break;
+       }
+
        logUser(LOG_INFO, "Saving the image to the clipboard with Qt");
        clipboard->setPixmap(_drawnPixmap);
        QApplication::beep();
