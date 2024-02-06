@@ -230,7 +230,7 @@ You're ready. Now you can [run it](#running-flags).
 ```
 
 ##### Additional arguments:
-- You can force the image to fit the screen's width or height with `-w` or `-h` after providing the image path, like this: `./zoomme -i path/to/image -w`, if you do not providing anything, it automatically detect the best option.
+- You can force the image to fit the screen's width or height with `-w` or `-h` after providing the image path, like this: `./zoomme -i path/to/image -w`, if you do not providing anything, it automatically detects the best option.
 
 - You can overwrite the image provided when saving by doing this: `./zoomme -i path/to/image --replace-on-save`. This will autocomplete the `-p`, `-n` and `-e:i` arguments for you. How kind :)
 
@@ -252,7 +252,7 @@ This will override the [file name, video extension and image extension configura
 ```
 
 ##### Additional arguments:
-- If the resolutions differ, you can force the image to fit the screen's width or height with `-w` or `-h` after providing the image path, like this: `./zoomme -r path/to/file.zoomme -w`, if you do not providing anything, it automatically detect the best option.
+- If the resolutions differ, you can force the image to fit the screen's width or height with `-w` or `-h` after providing the image path, like this: `./zoomme -r path/to/file.zoomme -w`, if you do not providing anything, it automatically detects the best option.
 
 </p></details>
 <!-- End 9 -->
