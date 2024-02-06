@@ -34,12 +34,12 @@ void printHelp(const char *errorMsg)
   fprintf(output, "  -e:v [extension]          Specify the extension of the exported (saved) video file (default: mp4)\n");
   fprintf(output, "  -l                        Not use a background (transparent). In this mode zooming is disabled\n");
   fprintf(output, "  -i <image_path> [opts]    Specify the path to an image as the background, instead of the desktop. It will automatically fit it to the screen\n");
-  fprintf(output, "       -w                        Force to fit to the screen's width\n");
-  fprintf(output, "       -h                        Force to fit to the screen's height\n");
+  fprintf(output, "       -w                        Force to fit it to the screen's width\n");
+  fprintf(output, "       -h                        Force to fit it to the screen's height\n");
   fprintf(output, "       --replace-on-save         This will replace the source image (autocompletes -p, -e and -n flags).\n");
   fprintf(output, "  -r [path/to/file] [opts]  Load/Restore the state of the program saved in that file. It should be a '.zoomme' file\n");
-  fprintf(output, "       -w                        Force to fit to the screen's width if the recovered file doesn't have the same resolution\n");
-  fprintf(output, "       -h                        Force to fit to the screen's height if the recovered file doesn't have the same resolution\n");
+  fprintf(output, "       -w                        Force to fit it to the screen's width if the recovered file doesn't have the same resolution\n");
+  fprintf(output, "       -h                        Force to fit it to the screen's height if the recovered file doesn't have the same resolution\n");
   fprintf(output, "  -c [opts]                 Load an image from the clipboard as the background, instead of the desktop. It will automatically fit it to the screen\n");
   fprintf(output, "       -w                        Force to fit it to the screen's width\n");
   fprintf(output, "       -h                        Force to fit it to the screen's height\n");
