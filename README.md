@@ -39,7 +39,7 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 The Escape key performs the following actions in a sequential order. If one condition applies, it executes only that function.
 
 1. If you are writing text, it **finishes writing text**.
-2. If you are inside a mode (pick a color, delete a drawing or the flashlight effect), it **exits that mode**
+2. If you are inside a mode (pick a color, delete a drawing, trim or the flashlight effect), it **exits that mode**
 3. If you are in **'hide all' mode**, it restores to 'show all'
 4. If you are zoomed in, it **restores the zoom**
 5. If you are recording, it **stops recording**

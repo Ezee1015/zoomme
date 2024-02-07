@@ -287,6 +287,9 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
       } else if (_state == STATE_DELETING) {
         toggleAction(ACTION_DELETE);
 
+      } else if (_state == STATE_TRIMMING) {
+        _state = STATE_MOVING;
+
       } else if (_flashlightMode) {
         toggleAction(ACTION_FLASHLIGHT);
 
