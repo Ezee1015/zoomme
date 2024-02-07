@@ -1809,7 +1809,10 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
   // Pre mouse processing
   if(IS_TRIMMING) {
     _endDrawPoint = screenPointToPixmapPos(getCursorPos(false));
-    QRect trimSize(_startDrawPoint, _endDrawPoint);
+    const QPoint s = _startDrawPoint;
+    const QPoint e = _endDrawPoint;
+
+    QRect trimSize = fixQRect(s.x(), s.y(), e.x() - s.x(), e.y() - s.y());
     QPixmap trimmed = _drawnPixmap.copy(trimSize);
     saveImage(trimmed, (_trimDestination == TRIM_SAVE_TO_IMAGE) ? true : false);
 
