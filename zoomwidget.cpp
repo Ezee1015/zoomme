@@ -205,9 +205,13 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
 
     case ACTION_SAVE_TRIMMED_TO_IMAGE:
       // If the mode is active, disable it
-      if(_state == STATE_TRIMMING && _trimDestination == TRIM_SAVE_TO_IMAGE) {
-        _state = STATE_MOVING;
-        break;
+      if(_state == STATE_TRIMMING) {
+        if(_trimDestination == TRIM_SAVE_TO_IMAGE) {
+          _state = STATE_MOVING;
+          break;
+        }
+
+        _trimDestination = TRIM_SAVE_TO_IMAGE;
       }
 
       if(_state != STATE_MOVING || _screenOpts == SCREENOPTS_HIDE_ALL)
@@ -219,9 +223,13 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
 
     case ACTION_SAVE_TRIMMED_TO_CLIPBOARD:
       // If the mode is active, disable it
-      if(_state == STATE_TRIMMING && _trimDestination == TRIM_SAVE_TO_CLIPBOARD) {
-        _state = STATE_MOVING;
-        break;
+      if(_state == STATE_TRIMMING) {
+        if(_trimDestination == TRIM_SAVE_TO_CLIPBOARD) {
+          _state = STATE_MOVING;
+          break;
+        }
+
+        _trimDestination = TRIM_SAVE_TO_CLIPBOARD;
       }
 
       if(_state != STATE_MOVING || _screenOpts == SCREENOPTS_HIDE_ALL)
