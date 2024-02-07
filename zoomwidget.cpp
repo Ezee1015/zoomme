@@ -459,7 +459,7 @@ ButtonStatus ZoomWidget::isButtonActive(Button button)
 void ZoomWidget::generateToolBar()
 {
   const int margin = 20;
-  const int lineHeight = 55;
+  const int lineHeight = 60;
 
   // Get the number of lines
   int numberOfLines = 0;
