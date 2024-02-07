@@ -1729,7 +1729,7 @@ void ZoomWidget::saveImage(QPixmap pixmap, bool toImage)
 
   if(!pixmap.save(path)) {
    logUser(LOG_ERROR, "Couldn't save the image to the temp location for the clipboard: %s", QSTRING_TO_STRING(path));
-   break;
+   return;
   }
 
   QProcess process;
@@ -1773,7 +1773,7 @@ void ZoomWidget::saveImage(QPixmap pixmap, bool toImage)
   else {
    logUser(LOG_INFO, "Saving with %s was successful", QSTRING_TO_STRING(appName));
    QApplication::beep();
-   break;
+   return;
   }
 
   // If there's an error with 'xclip' or 'wl-copy', copy the image path
@@ -1785,7 +1785,7 @@ void ZoomWidget::saveImage(QPixmap pixmap, bool toImage)
   // it).
   if(!clipboard) {
    logUser(LOG_ERROR, "There's no clipboard to save the image into");
-   break;
+   return;
   }
 
   logUser(LOG_INFO, "Saving the image path to the clipboard");
@@ -1794,7 +1794,6 @@ void ZoomWidget::saveImage(QPixmap pixmap, bool toImage)
   mimeData->setUrls(urlList);
   clipboard->setMimeData(mimeData);
   QApplication::beep();
-  break;
 #else
   // Copy the image into clipboard (this causes some problems with the
   // clipboard manager in Linux, because when the app exits, the image gets
