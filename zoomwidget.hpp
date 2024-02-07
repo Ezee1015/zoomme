@@ -142,6 +142,13 @@ enum TrimOptions {
   TRIM_SAVE_TO_CLIPBOARD,
 };
 
+enum ButtonStatus {
+  BUTTON_ACTIVE,
+  BUTTON_INACTIVE,
+  BUTTON_NO_STATUS,
+  // TODO Implement a BUTTON_DISABLED
+};
+
 enum ZoomWidgetState {
   STATE_MOVING,
   STATE_DRAWING,
@@ -410,12 +417,7 @@ class ZoomWidget : public QWidget
     // use it to check the state of a variable in the app (like checking if the
     // state is in delete mode. Use: _state == STATE_DELETING, NOT
     // isToolActive(ACTION_DELETE)), for example.
-    //
-    // Return values...
-    //   -  1 --> Active
-    //   -  0 --> Inactive
-    //   - -1 --> No state
-    int isButtonActive(Button button);
+    ButtonStatus isButtonActive(Button button);
 
     void updateAtMousePos(QPoint mousePos);
     void shiftPixmap(const QPoint delta);

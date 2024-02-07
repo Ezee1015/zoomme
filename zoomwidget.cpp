@@ -387,7 +387,7 @@ void ZoomWidget::loadButtons()
   _toolBar.append(Button{ACTION_RECORDING,         "Record",              3, nullRect});
 }
 
-int ZoomWidget::isButtonActive(Button button)
+ButtonStatus ZoomWidget::isButtonActive(Button button)
 {
   bool actionStatus = false;
   switch(button.action) {
@@ -423,14 +423,14 @@ int ZoomWidget::isButtonActive(Button button)
     case ACTION_BLACKBOARD:        actionStatus = (_boardMode);                           break;
     case ACTION_PICK_COLOR:        actionStatus = (_state == STATE_COLOR_PICKER);         break;
     case ACTION_DELETE:            actionStatus = (_state == STATE_DELETING);             break;
-    case ACTION_UNDO:              return -1;
-    case ACTION_REDO:              return -1;
-    case ACTION_CLEAR:             return -1;
     case ACTION_SCREEN_OPTS:       actionStatus = (_screenOpts != SCREENOPTS_SHOW_ALL);   break;
+    case ACTION_UNDO:              return BUTTON_NO_STATUS;
+    case ACTION_REDO:              return BUTTON_NO_STATUS;
+    case ACTION_CLEAR:             return BUTTON_NO_STATUS;
 
-    case ACTION_SAVE_TO_FILE:      return -1;
-    case ACTION_SAVE_TO_CLIPBOARD: return -1;
-    case ACTION_SAVE_PROJECT:      return -1;
+    case ACTION_SAVE_TO_FILE:      return BUTTON_NO_STATUS;
+    case ACTION_SAVE_TO_CLIPBOARD: return BUTTON_NO_STATUS;
+    case ACTION_SAVE_PROJECT:      return BUTTON_NO_STATUS;
     case ACTION_RECORDING:         actionStatus = IS_RECORDING;                           break;
     case ACTION_SAVE_TRIMMED_TO_IMAGE:
                                    actionStatus = (_state == STATE_TRIMMING) &&
@@ -443,12 +443,14 @@ int ZoomWidget::isButtonActive(Button button)
                                    break;
 
     case ACTION_ESCAPE:            actionStatus = _exitConfirm;                           break;
-    case ACTION_ESCAPE_CANCEL:     return -1;                                             break;
+    case ACTION_ESCAPE_CANCEL:     return BUTTON_NO_STATUS;
 
-    case ACTION_SPACER:  logUser(LOG_ERROR, "You shouldn't check if a 'spacer' is active"); return -1;
+    case ACTION_SPACER:            logUser(LOG_ERROR, "You shouldn't check if a 'spacer' is active");
+                                   return BUTTON_NO_STATUS;
+
   }
 
-  return (actionStatus) ? 1 : 0;
+  return (actionStatus) ? BUTTON_ACTIVE : BUTTON_INACTIVE;
 }
 
 void ZoomWidget::generateToolBar()
@@ -1012,7 +1014,7 @@ void ZoomWidget::drawButton(QPainter *screenPainter, Button button)
 
   // Button
   const bool isUnderCursor = (button.rect.contains(getCursorPos(false)));
-  const bool isActive      = (isButtonActive(button) == 1);
+  const bool isActive      = (isButtonActive(button) == BUTTON_ACTIVE);
 
   screenPainter->setPen(QCOLOR_TOOL_BAR);
   if(isUnderCursor) {
