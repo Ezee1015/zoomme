@@ -442,6 +442,19 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
        return false;
 
     case ACTION_CLEAR:
+       if(_screenOpts == SCREENOPTS_HIDE_ALL)
+         return true;
+       if( _userLines.isEmpty()     &&
+           _userRects.isEmpty()     &&
+           _userArrows.isEmpty()    &&
+           _userEllipses.isEmpty()  &&
+           _userTexts.isEmpty()     &&
+           _userFreeForms.isEmpty()
+         ) {
+         return true;
+       }
+       return false;
+
     case ACTION_DELETE:
        if(_screenOpts == SCREENOPTS_HIDE_ALL)
          return true;
