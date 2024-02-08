@@ -390,8 +390,100 @@ void ZoomWidget::loadButtons()
   _toolBar.append(Button{ACTION_RECORDING,         "Record",              3, nullRect});
 }
 
+bool ZoomWidget::isButtonDisabled(Button button)
+{
+  switch(button.action) {
+    case ACTION_WIDTH_1:
+    case ACTION_WIDTH_2:
+    case ACTION_WIDTH_3:
+    case ACTION_WIDTH_4:
+    case ACTION_WIDTH_5:
+    case ACTION_WIDTH_6:
+    case ACTION_WIDTH_7:
+    case ACTION_WIDTH_8:
+    case ACTION_WIDTH_9:
+
+    case ACTION_COLOR_RED:
+    case ACTION_COLOR_GREEN:
+    case ACTION_COLOR_BLUE:
+    case ACTION_COLOR_YELLOW:
+    case ACTION_COLOR_ORANGE:
+    case ACTION_COLOR_MAGENTA:
+    case ACTION_COLOR_CYAN:
+    case ACTION_COLOR_WHITE:
+    case ACTION_COLOR_BLACK:
+
+    case ACTION_LINE:
+    case ACTION_RECTANGLE:
+    case ACTION_ARROW:
+    case ACTION_ELLIPSE:
+    case ACTION_FREEFORM:
+    case ACTION_TEXT:
+    case ACTION_HIGHLIGHT:
+      return false;
+
+    case ACTION_FLASHLIGHT:
+    case ACTION_BLACKBOARD:
+      return false;
+
+
+    case ACTION_SCREEN_OPTS:
+       if(_state != STATE_MOVING)
+         return true;
+       return false;
+
+    case ACTION_PICK_COLOR:
+       if( _state != STATE_MOVING && _state != STATE_COLOR_PICKER)
+         return true;
+       if(_screenOpts == SCREENOPTS_HIDE_ALL)
+         return true;
+       return false;
+
+    case ACTION_REDO:
+    case ACTION_UNDO:
+    case ACTION_CLEAR:
+    case ACTION_DELETE:
+       if(_screenOpts == SCREENOPTS_HIDE_ALL)
+         return true;
+       return false;
+
+
+    case ACTION_SAVE_TO_FILE:
+    case ACTION_SAVE_TO_CLIPBOARD:
+    case ACTION_SAVE_PROJECT:
+       return false;
+
+    case ACTION_RECORDING:
+       // In theory, ffmpeg blocks the thread, so it shouldn't be possible to toggle
+       // the recording while ffmpeg is running. But, just in case, we check it
+       if(IS_FFMPEG_RUNNING)
+         return true;
+       return false;
+
+    case ACTION_SAVE_TRIMMED_TO_IMAGE:
+    case ACTION_SAVE_TRIMMED_TO_CLIPBOARD:
+      if(_state != STATE_MOVING  && _state != STATE_TRIMMING)
+         return true;
+      if(_screenOpts == SCREENOPTS_HIDE_ALL)
+        return true;
+      return false;
+
+    case ACTION_ESCAPE:
+    case ACTION_ESCAPE_CANCEL:
+      return false;
+
+    case ACTION_SPACER:
+      logUser(LOG_ERROR, "You shouldn't check if a 'spacer' is disabled");
+      return false;
+  }
+  return false;
+}
+
 ButtonStatus ZoomWidget::isButtonActive(Button button)
 {
+  if(isButtonDisabled(button))
+    return BUTTON_DISABLED;
+
   bool actionStatus = false;
   switch(button.action) {
     case ACTION_WIDTH_1:           actionStatus = (_activePen.width() == 1);              break;
@@ -524,6 +616,7 @@ void ZoomWidget::generateToolBar()
   }
 }
 
+// Returns -1 if there's no button behind the cursor
 int ZoomWidget::buttonBehindCursor(QPoint cursor)
 {
   if(!_showToolBar)
@@ -537,15 +630,16 @@ int ZoomWidget::buttonBehindCursor(QPoint cursor)
   return -1;
 }
 
-bool ZoomWidget::isCursorOverButton()
+// It doesn't make any distinction between disabled and not disabled buttons
+bool ZoomWidget::isCursorOverButton(QPoint cursorPos)
 {
   if(!isToolBarVisible())
     return false;
 
-  const int button = buttonBehindCursor(getCursorPos(false));
+  const int button = buttonBehindCursor(cursorPos);
 
   const bool isOverAButton = button != -1;
-  const bool isNotASpacer = _toolBar.at(button).action != ACTION_SPACER;
+  const bool isNotASpacer  = _toolBar.at(button).action != ACTION_SPACER;
 
   return isOverAButton && isNotASpacer;
 }
@@ -1018,6 +1112,7 @@ void ZoomWidget::drawButton(QPainter *screenPainter, Button button)
   // Button
   const bool isUnderCursor = (button.rect.contains(getCursorPos(false)));
   const bool isActive      = (isButtonActive(button) == BUTTON_ACTIVE);
+  const bool isDisabled    = (isButtonActive(button) == BUTTON_DISABLED);
 
   screenPainter->setPen(QCOLOR_TOOL_BAR);
   if(isUnderCursor) {
@@ -1025,6 +1120,9 @@ void ZoomWidget::drawButton(QPainter *screenPainter, Button button)
   }
   if(isActive && !isUnderCursor) {
     screenPainter->setPen(QCOLOR_GREEN);
+  }
+  if(isDisabled) {
+    screenPainter->setPen(QCOLOR_TOOL_BAR_DISABLED);
   }
 
   screenPainter->drawRoundedRect(button.rect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
@@ -1655,6 +1753,8 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
     int buttonPos = buttonBehindCursor(getCursorPos(false));
     if(buttonPos==-1)
       return;
+    if(isButtonDisabled(_toolBar.at(buttonPos)))
+      return;
 
     toggleAction(_toolBar.at(buttonPos).action);
     update();
@@ -1894,34 +1994,43 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
 
 void ZoomWidget::updateCursorShape()
 {
-  QCursor pointHand = QCursor(Qt::PointingHandCursor);
-  QCursor blank     = QCursor(Qt::BlankCursor);
-  QCursor waiting   = QCursor(Qt::WaitCursor);
+  QCursor pointHand     = QCursor(Qt::PointingHandCursor);
+  QCursor blank         = QCursor(Qt::BlankCursor);
+  QCursor waiting       = QCursor(Qt::WaitCursor);
+  QCursor denied        = QCursor(Qt::ForbiddenCursor);
+  QCursor cursorDefault = QCursor(Qt::CrossCursor);
 
+  // Pick color
   QPixmap pickColorPixmap(":/resources/color-picker-16.png");
   if (pickColorPixmap.isNull()) logUser(LOG_ERROR, "Failed to load pixmap for custom cursor (color-picker)");
   QCursor pickColor = QCursor(pickColorPixmap, 0, pickColorPixmap.height()-1);
 
+  QPoint cursorPos = getCursorPos(false);
+
   if(IS_FFMPEG_RUNNING)
     setCursor(waiting);
 
-  else if(isCursorOverButton())
-    setCursor(pointHand);
+  else if(isCursorOverButton(cursorPos)) {
+    const Button button = _toolBar.at(buttonBehindCursor(cursorPos));
+    if(isButtonDisabled(button))
+      setCursor(denied);
+    else
+      setCursor(pointHand);
 
-  else if(_state == STATE_COLOR_PICKER)
+  } else if(_state == STATE_COLOR_PICKER)
     setCursor(pickColor);
 
   else if(_state == STATE_DELETING)
     setCursor(pointHand);
 
-  else if( isTextEditable(getCursorPos(false)) )
+  else if(isTextEditable(cursorPos))
     setCursor(pointHand);
 
   else if(_flashlightMode && !IS_TRIMMING)
     setCursor(blank);
 
   else
-    setCursor(QCursor(Qt::CrossCursor));
+    setCursor(cursorDefault);
 }
 
 void ZoomWidget::mouseMoveEvent(QMouseEvent *event)

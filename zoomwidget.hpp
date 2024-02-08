@@ -28,6 +28,7 @@
 
 #define BLACKBOARD_COLOR QColor( 33,  37,  41)
 #define QCOLOR_TOOL_BAR  QCOLOR_BLUE
+#define QCOLOR_TOOL_BAR_DISABLED QColor( 70, 70, 70)
 
 // Font size = (1 to 9) * FONT_SIZE_FACTOR
 #define FONT_SIZE_FACTOR 4
@@ -146,7 +147,7 @@ enum ButtonStatus {
   BUTTON_ACTIVE,
   BUTTON_INACTIVE,
   BUTTON_NO_STATUS,
-  // TODO Implement a BUTTON_DISABLED
+  BUTTON_DISABLED,
 };
 
 enum ZoomWidgetState {
@@ -409,7 +410,7 @@ class ZoomWidget : public QWidget
     void generateToolBar();
     void toggleAction(ZoomWidgetAction action);
     bool isToolBarVisible();
-    bool isCursorOverButton();
+    bool isCursorOverButton(QPoint cursorPos);
     // Returns the position in the vector of the buttons (_toolBar) that is behind
     // the cursor position. Returns -1 if there's no button under the cursor
     int buttonBehindCursor(QPoint cursor);
@@ -418,6 +419,7 @@ class ZoomWidget : public QWidget
     // state is in delete mode. Use: _state == STATE_DELETING, NOT
     // isToolActive(ACTION_DELETE)), for example.
     ButtonStatus isButtonActive(Button button);
+    bool isButtonDisabled(Button button);
 
     void updateAtMousePos(QPoint mousePos);
     void shiftPixmap(const QPoint delta);
