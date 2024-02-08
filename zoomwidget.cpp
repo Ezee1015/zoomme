@@ -1074,7 +1074,7 @@ bool ZoomWidget::isDrawingHovered(ZoomWidgetDrawMode drawType, int vectorPos)
 
   // This is the position of the form (in the current draw mode) in the vector,
   // that is behind the cursor.
-  int posFormBehindCursor = cursorOverForm(getCursorPos(false));
+  int posFormBehindCursor = cursorOverForm(GET_CURSOR_POS());
 
   return (_drawMode == drawType) && (posFormBehindCursor==vectorPos);
 }
@@ -1110,7 +1110,7 @@ void ZoomWidget::drawButton(QPainter *screenPainter, Button button)
   screenPainter->fillPath(buttonBg, color);
 
   // Button
-  const bool isUnderCursor = (button.rect.contains(getCursorPos(false)));
+  const bool isUnderCursor = (button.rect.contains(GET_CURSOR_POS()));
   const bool isActive      = (isButtonActive(button) == BUTTON_ACTIVE);
   const bool isDisabled    = (isButtonActive(button) == BUTTON_DISABLED);
 
@@ -1240,8 +1240,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
                             hitBox.y(),
                             hitBox.width(),
                             hitBox.height(),
-                            // The getCursorPos is not fixed to hdpi because the hitbox is not either relative to hdpi
-                            getCursorPos(false),
+                            GET_CURSOR_POS(),
                             true) ) {
     return;
   }
@@ -1441,7 +1440,7 @@ void ZoomWidget::drawFlashlightEffect(QPainter *painter, bool drawToScreen)
     return;
 
   const int radius = _flashlightRadius;
-  QPoint c = getCursorPos(false);
+  QPoint c = GET_CURSOR_POS();
 
   if(!drawToScreen)
     c = screenPointToPixmapPos(c);
@@ -1746,11 +1745,12 @@ void ZoomWidget::removeFormBehindCursor(QPoint cursorPos)
 
 void ZoomWidget::mousePressEvent(QMouseEvent *event)
 {
-  (void) event;
+  // The cursor pos is relative to the resolution of scaled monitor
+  const QPoint cursorPos = event->pos();
 
   // Pre mouse processing
   if(isToolBarVisible()) {
-    int buttonPos = buttonBehindCursor(getCursorPos(false));
+    int buttonPos = buttonBehindCursor(cursorPos);
     if(buttonPos==-1)
       return;
     if(isButtonDisabled(_toolBar.at(buttonPos)))
@@ -1780,15 +1780,15 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
     _userTexts.removeLast();
 
   if(_state == STATE_DELETING)
-    return removeFormBehindCursor(getCursorPos(false));
+    return removeFormBehindCursor(cursorPos);
 
   // If you're in text mode (without drawing nor writing) and you press a text
   // with shift pressed, you access it and you can modify it
-  if(isTextEditable(getCursorPos(false))) {
+  if(isTextEditable(cursorPos)) {
     _state = STATE_TYPING;
     updateCursorShape();
 
-    int formPosBehindCursor = cursorOverForm(getCursorPos(false));
+    int formPosBehindCursor = cursorOverForm(cursorPos);
     UserTextData textData = _userTexts.at(formPosBehindCursor);
     _userTexts.remove(formPosBehindCursor);
     _userTexts.append(textData);
@@ -1798,12 +1798,12 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
   }
 
   if(!_shiftPressed)
-    _lastMousePos = getCursorPos(false);
+    _lastMousePos = cursorPos;
 
   if(_state != STATE_TRIMMING)
     _state = STATE_DRAWING;
 
-  _startDrawPoint = screenPointToPixmapPos(getCursorPos(false));
+  _startDrawPoint = screenPointToPixmapPos(cursorPos);
   _endDrawPoint = _startDrawPoint;
 }
 
@@ -1916,11 +1916,12 @@ void ZoomWidget::saveImage(QPixmap pixmap, bool toImage)
 
 void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
 {
-  (void) event;
+  // The cursor pos is relative to the resolution of scaled monitor
+  const QPoint cursorPos = event->pos();
 
   // Pre mouse processing
   if(IS_TRIMMING) {
-    _endDrawPoint = screenPointToPixmapPos(getCursorPos(false));
+    _endDrawPoint = screenPointToPixmapPos(cursorPos);
     const QPoint s = _startDrawPoint;
     const QPoint e = _endDrawPoint;
 
@@ -1944,7 +1945,7 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
   if (_state != STATE_DRAWING)
     return;
 
-  _endDrawPoint = screenPointToPixmapPos(getCursorPos(false));
+  _endDrawPoint = screenPointToPixmapPos(cursorPos);
 
   UserObjectData data;
   data.pen = _activePen;
@@ -2005,7 +2006,7 @@ void ZoomWidget::updateCursorShape()
   if (pickColorPixmap.isNull()) logUser(LOG_ERROR, "Failed to load pixmap for custom cursor (color-picker)");
   QCursor pickColor = QCursor(pickColorPixmap, 0, pickColorPixmap.height()-1);
 
-  QPoint cursorPos = getCursorPos(false);
+  QPoint cursorPos = GET_CURSOR_POS();
 
   if(IS_FFMPEG_RUNNING)
     setCursor(waiting);
@@ -2035,7 +2036,8 @@ void ZoomWidget::updateCursorShape()
 
 void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 {
-  (void) event;
+  // The cursor pos is relative to the resolution of scaled monitor
+  const QPoint cursorPos = event->pos();
 
   // If the app lost focus, request it again
   if(!QWidget::isActiveWindow())
@@ -2043,7 +2045,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 
   updateCursorShape();
 
-  updateAtMousePos(getCursorPos(false));
+  updateAtMousePos(cursorPos);
 
   if(_screenOpts == SCREENOPTS_HIDE_ALL){
     update();
@@ -2058,7 +2060,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 
   // Register the position of the cursor for the FreeForm
   if(_state == STATE_DRAWING && _mousePressed && _drawMode == DRAWMODE_FREEFORM) {
-    QPoint curPos = screenPointToPixmapPos(getCursorPos(false));
+    QPoint curPos = screenPointToPixmapPos(cursorPos);
 
     if( _userFreeForms.isEmpty() || (!_userFreeForms.isEmpty() && !_userFreeForms.last().active) ) {
       UserFreeFormData data;
@@ -2123,7 +2125,7 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
   if (_desktopPixmapScale < 1.0f)
     _desktopPixmapScale = 1.0f;
 
-  scalePixmapAt(getCursorPos(false));
+  scalePixmapAt(GET_CURSOR_POS());
   checkPixmapPos();
 
   update();
@@ -2433,7 +2435,7 @@ void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
   if(event->key() == Qt::Key_Shift) {
     _shiftPressed = false;
     updateCursorShape();
-    updateAtMousePos(getCursorPos(false));
+    updateAtMousePos(GET_CURSOR_POS());
   }
 
   if(event->key() == Qt::Key_Control)
@@ -2581,19 +2583,6 @@ void ZoomWidget::checkPixmapPos()
   } else if ((_desktopPixmapSize.height() + _desktopPixmapPos.y()) < height()) {
     _desktopPixmapPos.setY(height() - _desktopPixmapSize.height());
   }
-}
-
-QPoint ZoomWidget::getCursorPos(bool hdpiScaling) {
-  // The screen point of the cursor is relative to the resolution of the scaled
-  // monitor
-  QPoint point = mapFromGlobal(QCursor::pos());
-
-  if(hdpiScaling){
-    point.setX(FIX_X_FOR_HDPI_SCALING(point.x()));
-    point.setY(FIX_Y_FOR_HDPI_SCALING(point.y()));
-  }
-
-  return point;
 }
 
 QPoint ZoomWidget::screenPointToPixmapPos(QPoint qpoint) {

@@ -62,7 +62,10 @@
 // CODE
 #define QSTRING_TO_STRING(string) string.toStdString().c_str()
 
-#define GET_COLOR_UNDER_CURSOR() _drawnPixmap.toImage().pixel( screenPointToPixmapPos(getCursorPos(false)) )
+// It will give the mouse position relative to the resolution of scaled monitor
+#define GET_CURSOR_POS() mapFromGlobal(QCursor::pos())
+
+#define GET_COLOR_UNDER_CURSOR() _drawnPixmap.toImage().pixel( screenPointToPixmapPos(GET_CURSOR_POS()) )
 
 // If there's no HDPI scaling, it will return the same value, because the real
 // and the scale resolution will be de same.
@@ -425,11 +428,6 @@ class ZoomWidget : public QWidget
     void shiftPixmap(const QPoint delta);
     void scalePixmapAt(const QPointF pos);
     void checkPixmapPos();
-    // If hdpiScaling is true, it will give the mouse position relative to the REAL
-    // screen resolution
-    // If hdpiScaling is false, it will give the mouse position relative to the
-    // scaled screen resolution
-    QPoint getCursorPos(bool hdpiScaling);
 
     // From a point in the screen (like the mouse cursor, because its position
     // is relative to the screen, not the pixmap), it returns the position in the
