@@ -419,12 +419,12 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
        if(_screenOpts == SCREENOPTS_HIDE_ALL)
          return true;
        switch(_drawMode) {
-         case DRAWMODE_LINE:      if(_deletedLines.isEmpty())     return true;
-         case DRAWMODE_RECT:      if(_deletedRects.isEmpty())     return true;
-         case DRAWMODE_ARROW:     if(_deletedArrows.isEmpty())    return true;
-         case DRAWMODE_ELLIPSE:   if(_deletedEllipses.isEmpty())  return true;
-         case DRAWMODE_TEXT:      if(_deletedTexts.isEmpty())     return true;
-         case DRAWMODE_FREEFORM:  if(_deletedFreeForms.isEmpty()) return true;
+         case DRAWMODE_LINE:      if(_deletedLines.isEmpty())     return true; break;
+         case DRAWMODE_RECT:      if(_deletedRects.isEmpty())     return true; break;
+         case DRAWMODE_ARROW:     if(_deletedArrows.isEmpty())    return true; break;
+         case DRAWMODE_ELLIPSE:   if(_deletedEllipses.isEmpty())  return true; break;
+         case DRAWMODE_TEXT:      if(_deletedTexts.isEmpty())     return true; break;
+         case DRAWMODE_FREEFORM:  if(_deletedFreeForms.isEmpty()) return true; break;
        }
        return false;
 
@@ -432,12 +432,12 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
        if(_screenOpts == SCREENOPTS_HIDE_ALL)
          return true;
        switch(_drawMode) {
-         case DRAWMODE_LINE:     if(_userLines.isEmpty())     return true;
-         case DRAWMODE_RECT:     if(_userRects.isEmpty())     return true;
-         case DRAWMODE_ARROW:    if(_userArrows.isEmpty())    return true;
-         case DRAWMODE_ELLIPSE:  if(_userEllipses.isEmpty())  return true;
-         case DRAWMODE_TEXT:     if(_userTexts.isEmpty())     return true;
-         case DRAWMODE_FREEFORM: if(_userFreeForms.isEmpty()) return true;
+         case DRAWMODE_LINE:     if(_userLines.isEmpty())     return true; break;
+         case DRAWMODE_RECT:     if(_userRects.isEmpty())     return true; break;
+         case DRAWMODE_ARROW:    if(_userArrows.isEmpty())    return true; break;
+         case DRAWMODE_ELLIPSE:  if(_userEllipses.isEmpty())  return true; break;
+         case DRAWMODE_TEXT:     if(_userTexts.isEmpty())     return true; break;
+         case DRAWMODE_FREEFORM: if(_userFreeForms.isEmpty()) return true; break;
        }
        return false;
 
