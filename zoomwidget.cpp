@@ -1672,7 +1672,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     _drawnPixmap.fill(Qt::transparent);
 
   if(_boardMode)
-    _drawnPixmap.fill(BLACKBOARD_COLOR);
+    _drawnPixmap.fill(QCOLOR_BLACKBOARD);
 
   QPainter pixmapPainter(&_drawnPixmap);
   QPainter screen; screen.begin(this);
@@ -2529,7 +2529,7 @@ void ZoomWidget::grabImage(QPixmap img, FitImage config)
 
   // Draw the image into the pixmap
   _desktopPixmap = QPixmap(width, height);
-  _desktopPixmap.fill(BLACKBOARD_COLOR);
+  _desktopPixmap.fill(QCOLOR_BLACKBOARD);
   QPainter painter(&_desktopPixmap);
   painter.drawPixmap(x, y, img);
   painter.end();
@@ -2585,6 +2585,7 @@ void ZoomWidget::checkPixmapPos()
   }
 }
 
+// TODO FORMAT CURLY BRACKET
 QPoint ZoomWidget::screenPointToPixmapPos(QPoint qpoint) {
   QPoint returnPoint = (qpoint - _desktopPixmapPos)/_desktopPixmapScale;
 

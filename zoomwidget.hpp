@@ -26,8 +26,8 @@
 #define QCOLOR_BLACK     QColor(  7,   7,   7)
 #define QCOLOR_WHITE     QColor(248, 249, 250)
 
-#define BLACKBOARD_COLOR QColor( 33,  37,  41)
-#define QCOLOR_TOOL_BAR  QCOLOR_BLUE
+#define QCOLOR_BLACKBOARD        QColor( 33,  37,  41)
+#define QCOLOR_TOOL_BAR          QCOLOR_BLUE
 #define QCOLOR_TOOL_BAR_DISABLED QColor( 70, 70, 70)
 
 // Font size = (1 to 9) * FONT_SIZE_FACTOR
