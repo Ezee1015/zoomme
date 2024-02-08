@@ -122,23 +122,23 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
 
     case ACTION_UNDO:
        switch(_drawMode) {
-         case DRAWMODE_LINE:      if(!_userLines.isEmpty())      _deletedLines.append(_userLines.takeLast());           break;
-         case DRAWMODE_RECT:      if(!_userRects.isEmpty())      _deletedRects.append(_userRects.takeLast());           break;
-         case DRAWMODE_ARROW:     if(!_userArrows.isEmpty())     _deletedArrows.append(_userArrows.takeLast());         break;
-         case DRAWMODE_ELLIPSE:   if(!_userEllipses.isEmpty())   _deletedEllipses.append(_userEllipses.takeLast());     break;
-         case DRAWMODE_TEXT:      if(!_userTexts.isEmpty())      _deletedTexts.append(_userTexts.takeLast());           break;
-         case DRAWMODE_FREEFORM:  if(!_userFreeForms.isEmpty())  _deletedFreeForms.append(_userFreeForms.takeLast());   break;
+         case DRAWMODE_LINE:     _deletedLines.append(_userLines.takeLast());           break;
+         case DRAWMODE_RECT:     _deletedRects.append(_userRects.takeLast());           break;
+         case DRAWMODE_ARROW:    _deletedArrows.append(_userArrows.takeLast());         break;
+         case DRAWMODE_ELLIPSE:  _deletedEllipses.append(_userEllipses.takeLast());     break;
+         case DRAWMODE_TEXT:     _deletedTexts.append(_userTexts.takeLast());           break;
+         case DRAWMODE_FREEFORM: _deletedFreeForms.append(_userFreeForms.takeLast());   break;
        }
        break;
 
     case ACTION_REDO:
        switch(_drawMode) {
-         case DRAWMODE_LINE:      if(!_deletedLines.isEmpty())      _userLines.append(_deletedLines.takeLast());           break;
-         case DRAWMODE_RECT:      if(!_deletedRects.isEmpty())      _userRects.append(_deletedRects.takeLast());           break;
-         case DRAWMODE_ARROW:     if(!_deletedArrows.isEmpty())     _userArrows.append(_deletedArrows.takeLast());         break;
-         case DRAWMODE_ELLIPSE:   if(!_deletedEllipses.isEmpty())   _userEllipses.append(_deletedEllipses.takeLast());     break;
-         case DRAWMODE_TEXT:      if(!_deletedTexts.isEmpty())      _userTexts.append(_deletedTexts.takeLast());           break;
-         case DRAWMODE_FREEFORM:  if(!_deletedFreeForms.isEmpty())  _userFreeForms.append(_deletedFreeForms.takeLast());   break;
+         case DRAWMODE_LINE:     _userLines.append(_deletedLines.takeLast());           break;
+         case DRAWMODE_RECT:     _userRects.append(_deletedRects.takeLast());           break;
+         case DRAWMODE_ARROW:    _userArrows.append(_deletedArrows.takeLast());         break;
+         case DRAWMODE_ELLIPSE:  _userEllipses.append(_deletedEllipses.takeLast());     break;
+         case DRAWMODE_TEXT:     _userTexts.append(_deletedTexts.takeLast());           break;
+         case DRAWMODE_FREEFORM: _userFreeForms.append(_deletedFreeForms.takeLast());   break;
        }
        break;
 
@@ -416,7 +416,31 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
        return false;
 
     case ACTION_REDO:
+       if(_screenOpts == SCREENOPTS_HIDE_ALL)
+         return true;
+       switch(_drawMode) {
+         case DRAWMODE_LINE:      if(_deletedLines.isEmpty())     return true;
+         case DRAWMODE_RECT:      if(_deletedRects.isEmpty())     return true;
+         case DRAWMODE_ARROW:     if(_deletedArrows.isEmpty())    return true;
+         case DRAWMODE_ELLIPSE:   if(_deletedEllipses.isEmpty())  return true;
+         case DRAWMODE_TEXT:      if(_deletedTexts.isEmpty())     return true;
+         case DRAWMODE_FREEFORM:  if(_deletedFreeForms.isEmpty()) return true;
+       }
+       return false;
+
     case ACTION_UNDO:
+       if(_screenOpts == SCREENOPTS_HIDE_ALL)
+         return true;
+       switch(_drawMode) {
+         case DRAWMODE_LINE:     if(_userLines.isEmpty())     return true;
+         case DRAWMODE_RECT:     if(_userRects.isEmpty())     return true;
+         case DRAWMODE_ARROW:    if(_userArrows.isEmpty())    return true;
+         case DRAWMODE_ELLIPSE:  if(_userEllipses.isEmpty())  return true;
+         case DRAWMODE_TEXT:     if(_userTexts.isEmpty())     return true;
+         case DRAWMODE_FREEFORM: if(_userFreeForms.isEmpty()) return true;
+       }
+       return false;
+
     case ACTION_CLEAR:
     case ACTION_DELETE:
        if(_screenOpts == SCREENOPTS_HIDE_ALL)
