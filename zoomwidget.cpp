@@ -344,11 +344,11 @@ void ZoomWidget::loadButtons()
   _toolBar.append(Button{ACTION_FLASHLIGHT,        "Flashlight",          2, nullRect});
   _toolBar.append(Button{ACTION_BLACKBOARD,        "Blackboard",          2, nullRect});
   _toolBar.append(Button{ACTION_PICK_COLOR,        "Pick color",          2, nullRect});
+  _toolBar.append(Button{ACTION_SCREEN_OPTS,       "Hide elements",       2, nullRect});
+  _toolBar.append(Button{ACTION_CLEAR,             "Clear",               2, nullRect});
+  _toolBar.append(Button{ACTION_DELETE,            "Delete",              2, nullRect});
   _toolBar.append(Button{ACTION_UNDO,              "Undo",                2, nullRect});
   _toolBar.append(Button{ACTION_REDO,              "Redo",                2, nullRect});
-  _toolBar.append(Button{ACTION_DELETE,            "Delete",              2, nullRect});
-  _toolBar.append(Button{ACTION_CLEAR,             "Clear",               2, nullRect});
-  _toolBar.append(Button{ACTION_SCREEN_OPTS,       "Hide elements",       2, nullRect});
 
   _toolBar.append(Button{ACTION_SPACER,            "",                    2, nullRect});
 
