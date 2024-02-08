@@ -458,8 +458,15 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
     case ACTION_DELETE:
        if(_screenOpts == SCREENOPTS_HIDE_ALL)
          return true;
+       switch(_drawMode) {
+         case DRAWMODE_LINE:     if(_userLines.isEmpty())     return true; break;
+         case DRAWMODE_RECT:     if(_userRects.isEmpty())     return true; break;
+         case DRAWMODE_ARROW:    if(_userArrows.isEmpty())    return true; break;
+         case DRAWMODE_ELLIPSE:  if(_userEllipses.isEmpty())  return true; break;
+         case DRAWMODE_TEXT:     if(_userTexts.isEmpty())     return true; break;
+         case DRAWMODE_FREEFORM: if(_userFreeForms.isEmpty()) return true; break;
+       }
        return false;
-
 
     case ACTION_SAVE_TO_FILE:
     case ACTION_SAVE_TO_CLIPBOARD:
