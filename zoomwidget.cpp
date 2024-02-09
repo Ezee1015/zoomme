@@ -1815,9 +1815,6 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
     return;
   }
 
-  if(!_shiftPressed)
-    _lastMousePos = cursorPos;
-
   if(_state != STATE_TRIMMING)
     _state = STATE_DRAWING;
 
@@ -2104,12 +2101,8 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 void ZoomWidget::updateAtMousePos(QPoint mousePos)
 {
   if(!isDisabledMouseTracking()) {
-    QPoint delta = mousePos - _lastMousePos;
-
-    shiftPixmap(delta);
+    shiftPixmap(mousePos);
     checkPixmapPos();
-
-    _lastMousePos = mousePos;
   }
 
   if (_state == STATE_DRAWING || _state == STATE_TRIMMING)
@@ -2558,12 +2551,17 @@ void ZoomWidget::grabImage(QPixmap img, FitImage config)
   if(!_liveMode) showFullScreen();
 }
 
-void ZoomWidget::shiftPixmap(const QPoint delta)
+void ZoomWidget::shiftPixmap(const QPoint cursorPos)
 {
-  int newY = _desktopPixmapPos.y() - delta.y() * (_desktopPixmapSize.height() / _screenSize.height());
-  int newX = _desktopPixmapPos.x() - delta.x() * (_desktopPixmapSize.width()  / _screenSize.width() );
-  _desktopPixmapPos.setX(newX);
-  _desktopPixmapPos.setY(newY);
+  // This is the maximum value for shifting the pixmap
+  const QSize availableMargin = -1 * (_desktopPixmapSize - _screenSize);
+
+  // The percentage of the cursor position relative to the screen size
+  const float percentageX = (float)cursorPos.x() / (float)_screenSize.width();
+  const float percentageY = (float)cursorPos.y() / (float)_screenSize.height();
+
+  _desktopPixmapPos.setX(availableMargin.width() * percentageX);
+  _desktopPixmapPos.setY(availableMargin.height() * percentageY);
 }
 
 void ZoomWidget::scalePixmapAt(const QPointF pos)

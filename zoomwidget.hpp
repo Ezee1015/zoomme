@@ -383,7 +383,6 @@ class ZoomWidget : public QWidget
     QFile *recordTempFile;
 
     ZoomWidgetState	_state;
-    QPoint		_lastMousePos;
 
     // Drawing properties.
     ZoomWidgetDrawMode	_drawMode;
@@ -425,7 +424,7 @@ class ZoomWidget : public QWidget
     bool isActionDisabled(ZoomWidgetAction action);
 
     void updateAtMousePos(QPoint mousePos);
-    void shiftPixmap(const QPoint delta);
+    void shiftPixmap(const QPoint cursorPos);
     void scalePixmapAt(const QPointF pos);
     void checkPixmapPos();
 
