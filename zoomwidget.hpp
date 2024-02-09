@@ -309,20 +309,20 @@ class ZoomWidget : public QWidget
     // monitor).
     QPixmap _desktopPixmap;
 
+    // Pixmap shown on the screen. This can either be _desktopPixmap, the
+    // blackboard, an image, etc. with the drawings on top.
+    QPixmap _drawnPixmap;
+
     // Zoom movement
-    QPoint _desktopPixmapPos;
+    QPoint _drawnPixmapPos;
 
     // Pixmap size for zooming (referenced with the resolution of the scaled
     // size of the monitor when capturing desktop)
-    QSize _desktopPixmapSize;
-    QSize _desktopPixmapOriginalSize;
+    QSize _drawnPixmapSize;
+    QSize _drawnPixmapOriginalSize;
 
     // Zooming scale
-    float _desktopPixmapScale;
-
-    // Pixmap shown on the screen. This can either be _desktopPixmap or the
-    // blackboard if _boardMode is activated, with the drawings on top.
-    QPixmap _drawnPixmap;
+    float _drawnPixmapScale;
 
     // For exporting files
     UserFileConfig _fileConfig;

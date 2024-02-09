@@ -30,10 +30,10 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
 
   _desktopScreen = QGuiApplication::screenAt(QCursor::pos());
   _screenSize = _desktopScreen->geometry().size();
-  _desktopPixmapPos = QPoint(0, 0);
-  _desktopPixmapSize = QApplication::screenAt(QCursor::pos())->geometry().size();
-  _desktopPixmapOriginalSize = _desktopPixmapSize;
-  _desktopPixmapScale = 1.0f;
+  _drawnPixmapPos = QPoint(0, 0);
+  _drawnPixmapSize = QApplication::screenAt(QCursor::pos())->geometry().size();
+  _drawnPixmapOriginalSize = _drawnPixmapSize;
+  _drawnPixmapScale = 1.0f;
 
   _scaleSensivity = 0.2f;
 
@@ -272,8 +272,8 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
       } else if (_screenOpts == SCREENOPTS_HIDE_ALL) {
         toggleAction(ACTION_SCREEN_OPTS);
 
-      } else if(_desktopPixmapSize != _desktopPixmapOriginalSize) {
-        _desktopPixmapScale = 1.0f;
+      } else if(_drawnPixmapSize != _desktopPixmapOriginalSize) {
+        _drawnPixmapScale = 1.0f;
         scalePixmapAt(QPoint(0,0));
         checkPixmapPos();
 
@@ -681,7 +681,7 @@ void ZoomWidget::saveStateToFile()
       // << _desktopPixmapPos
       // << _desktopPixmapSize
       // << _desktopPixmapScale
-      << _desktopPixmapOriginalSize
+      << _drawnPixmapOriginalSize
       // The save path is absolute, so it is bound to the PC, so it shouldn't
       // be saved
       // << _fileConfig.folder
@@ -785,8 +785,8 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
   int marginTop = 0, marginLeft = 0;
 
   if(savedScreenSize == _screenSize) {
-    _desktopPixmapOriginalSize = savedPixmapSize;
-    _desktopPixmapSize = savedPixmapSize;
+    _drawnPixmapOriginalSize = savedPixmapSize;
+    _drawnPixmapSize = savedPixmapSize;
     _desktopPixmap = savedPixmap;
   } else {
     if(config == FIT_AUTO)
@@ -1198,7 +1198,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   if(isDisabledMouseTracking())
     text.append(BLOCK_ICON);
   else
-    text.append( (_desktopPixmapScale == 1.0f) ? NO_ZOOM_ICON : ZOOM_ICON );
+    text.append( (_drawnPixmapScale == 1.0f) ? NO_ZOOM_ICON : ZOOM_ICON );
   text.append(" ");
 
   switch(_drawMode) {
@@ -2132,9 +2132,9 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
   if(_liveMode || isDisabledMouseTracking())
     return;
 
-  _desktopPixmapScale += sign * _scaleSensivity;
-  if (_desktopPixmapScale < 1.0f)
-    _desktopPixmapScale = 1.0f;
+  _drawnPixmapScale += sign * _scaleSensivity;
+  if (_drawnPixmapScale < 1.0f)
+    _drawnPixmapScale = 1.0f;
 
   scalePixmapAt(GET_CURSOR_POS());
   checkPixmapPos();
@@ -2210,7 +2210,7 @@ bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorP
   // Minimum size of the hit box
   int minimumSize =  25;
   if(!isFloating)
-    minimumSize *= _desktopPixmapScale;
+    minimumSize *= _drawnPixmapScale;
 
   if(abs(w) < minimumSize) {
     int direction = (w >= 0) ? 1 : -1;
@@ -2545,8 +2545,8 @@ void ZoomWidget::grabImage(QPixmap img, FitImage config)
   painter.drawPixmap(x, y, img);
   painter.end();
 
-  _desktopPixmapSize = _desktopPixmap.size();
-  _desktopPixmapOriginalSize = _desktopPixmapSize;
+  _drawnPixmapSize = _desktopPixmap.size();
+  _drawnPixmapOriginalSize = _drawnPixmapSize;
 
   if(!_liveMode) showFullScreen();
 }
@@ -2554,56 +2554,56 @@ void ZoomWidget::grabImage(QPixmap img, FitImage config)
 void ZoomWidget::shiftPixmap(const QPoint cursorPos)
 {
   // This is the maximum value for shifting the pixmap
-  const QSize availableMargin = -1 * (_desktopPixmapSize - _screenSize);
+  const QSize availableMargin = -1 * (_drawnPixmapSize - _screenSize);
 
   // The percentage of the cursor position relative to the screen size
   const float percentageX = (float)cursorPos.x() / (float)_screenSize.width();
   const float percentageY = (float)cursorPos.y() / (float)_screenSize.height();
 
-  _desktopPixmapPos.setX(availableMargin.width() * percentageX);
-  _desktopPixmapPos.setY(availableMargin.height() * percentageY);
+  _drawnPixmapPos.setX(availableMargin.width() * percentageX);
+  _drawnPixmapPos.setY(availableMargin.height() * percentageY);
 }
 
 void ZoomWidget::scalePixmapAt(const QPointF pos)
 {
-  int old_w = _desktopPixmapSize.width();
-  int old_h = _desktopPixmapSize.height();
+  int old_w = _drawnPixmapSize.width();
+  int old_h = _drawnPixmapSize.height();
 
-  int new_w = _desktopPixmapOriginalSize.width() * _desktopPixmapScale;
-  int new_h = _desktopPixmapOriginalSize.height() * _desktopPixmapScale;
-  _desktopPixmapSize = QSize(new_w, new_h);
+  int new_w = _drawnPixmapOriginalSize.width() * _drawnPixmapScale;
+  int new_h = _drawnPixmapOriginalSize.height() * _drawnPixmapScale;
+  _drawnPixmapSize = QSize(new_w, new_h);
 
   int dw = new_w - old_w;
   int dh = new_h - old_h;
 
-  int cur_x = pos.x() + abs(_desktopPixmapPos.x());
-  int cur_y = pos.y() + abs(_desktopPixmapPos.y());
+  int cur_x = pos.x() + abs(_drawnPixmapPos.x());
+  int cur_y = pos.y() + abs(_drawnPixmapPos.y());
 
   float cur_px = -((float)cur_x / old_w);
   float cur_py = -((float)cur_y / old_h);
 
-  _desktopPixmapPos.setX(_desktopPixmapPos.x() + dw*cur_px);
-  _desktopPixmapPos.setY(_desktopPixmapPos.y() + dh*cur_py);
+  _drawnPixmapPos.setX(_drawnPixmapPos.x() + dw*cur_px);
+  _drawnPixmapPos.setY(_drawnPixmapPos.y() + dh*cur_py);
 }
 
 void ZoomWidget::checkPixmapPos()
 {
-  if (_desktopPixmapPos.x() > 0) {
-    _desktopPixmapPos.setX(0);
-  } else if ((_desktopPixmapSize.width() + _desktopPixmapPos.x()) < width()) {
-    _desktopPixmapPos.setX(width() - _desktopPixmapSize.width());
+  if (_drawnPixmapPos.x() > 0) {
+    _drawnPixmapPos.setX(0);
+  } else if ((_drawnPixmapSize.width() + _drawnPixmapPos.x()) < width()) {
+    _drawnPixmapPos.setX(width() - _drawnPixmapSize.width());
   }
 
-  if (_desktopPixmapPos.y() > 0) {
-    _desktopPixmapPos.setY(0);
-  } else if ((_desktopPixmapSize.height() + _desktopPixmapPos.y()) < height()) {
-    _desktopPixmapPos.setY(height() - _desktopPixmapSize.height());
+  if (_drawnPixmapPos.y() > 0) {
+    _drawnPixmapPos.setY(0);
+  } else if ((_drawnPixmapSize.height() + _drawnPixmapPos.y()) < height()) {
+    _drawnPixmapPos.setY(height() - _drawnPixmapSize.height());
   }
 }
 
 // TODO FORMAT CURLY BRACKET
 QPoint ZoomWidget::screenPointToPixmapPos(QPoint qpoint) {
-  QPoint returnPoint = (qpoint - _desktopPixmapPos)/_desktopPixmapScale;
+  QPoint returnPoint = (qpoint - _drawnPixmapPos)/_drawnPixmapScale;
 
   returnPoint.setX( FIX_X_FOR_HDPI_SCALING(returnPoint.x()) );
   returnPoint.setY( FIX_Y_FOR_HDPI_SCALING(returnPoint.y()) );
@@ -2615,7 +2615,7 @@ QPoint ZoomWidget::pixmapPointToScreenPos(QPoint qpoint) {
   qpoint.setX( GET_X_FROM_HDPI_SCALING(qpoint.x()) );
   qpoint.setY( GET_Y_FROM_HDPI_SCALING(qpoint.y()) );
 
-  QPoint point = _desktopPixmapPos + qpoint * _desktopPixmapScale;
+  QPoint point = _drawnPixmapPos + qpoint * _drawnPixmapScale;
 
   return point;
 }
@@ -2624,15 +2624,15 @@ QSize ZoomWidget::pixmapSizeToScreenSize(QSize qsize){
   qsize.setWidth(  GET_X_FROM_HDPI_SCALING(qsize.width() ) );
   qsize.setHeight( GET_Y_FROM_HDPI_SCALING(qsize.height()) );
 
-  return qsize * _desktopPixmapScale;
+  return qsize * _drawnPixmapScale;
 }
 
 void ZoomWidget::drawDrawnPixmap(QPainter *painter)
 {
-  const int x = _desktopPixmapPos.x();
-  const int y = _desktopPixmapPos.y();
-  const int w = _desktopPixmapSize.width();
-  const int h = _desktopPixmapSize.height();
+  const int x = _drawnPixmapPos.x();
+  const int y = _drawnPixmapPos.y();
+  const int w = _drawnPixmapSize.width();
+  const int h = _drawnPixmapSize.height();
 
   painter->drawPixmap(x, y, w, h, _drawnPixmap);
 }
