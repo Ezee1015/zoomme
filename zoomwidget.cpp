@@ -1311,7 +1311,7 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
       QColor color = pixmapPainter->pen().color();
       color.setAlpha(HIGHLIGHT_ALPHA); // Transparency
       QPainterPath background;
-      background.addRoundedRect(x, y, w, h, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
+      background.addRoundedRect(x, y, w, h, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
       pixmapPainter->fillPath(background, color);
     }
 
@@ -1555,7 +1555,7 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
         painter->drawRoundedRect(fixQRect(x, y, width, height), RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
 
         if(_highlight) {
-          background.addRoundedRect(x, y, width, height, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
+          background.addRoundedRect(x, y, width, height, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
           painter->fillPath(background, color);
         }
         break;
