@@ -111,12 +111,12 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        break;
 
     case ACTION_CLEAR:
-       _userRects.clear();
-       _userLines.clear();
-       _userArrows.clear();
-       _userEllipses.clear();
-       _userTexts.clear();
-       _userFreeForms.clear();
+       _deletedRects.append(_userRects);         _userRects.clear();
+       _deletedLines.append(_userLines);         _userLines.clear();
+       _deletedArrows.append(_userArrows);       _userArrows.clear();
+       _deletedEllipses.append(_userEllipses);   _userEllipses.clear();
+       _deletedTexts.append(_userTexts);         _userTexts.clear();
+       _deletedFreeForms.append(_userFreeForms); _userFreeForms.clear();
        _state = STATE_MOVING;
        break;
 
