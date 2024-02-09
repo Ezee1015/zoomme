@@ -77,12 +77,12 @@
 // realScreenResolution   --------    x
 //
 // So 'x' = mousePos * (_desktopPixmap.size()/_desktopPixmapOriginalSize)
-#define FIX_X_FOR_HDPI_SCALING(point) (point * (_desktopPixmap.width()  / _desktopPixmapOriginalSize.width()) )
-#define FIX_Y_FOR_HDPI_SCALING(point) (point * (_desktopPixmap.height() / _desktopPixmapOriginalSize.height()))
+#define FIX_X_FOR_HDPI_SCALING(point) (point * (_desktopPixmap.width()  / _drawnPixmapOriginalSize.width()) )
+#define FIX_Y_FOR_HDPI_SCALING(point) (point * (_desktopPixmap.height() / _drawnPixmapOriginalSize.height()))
 // These macros revert the conversion that does FIX_Y_FOR_HDPI_SCALING and
 // FIX_X_FOR_HDPI_SCALING.
-#define GET_X_FROM_HDPI_SCALING(point) (point * (_desktopPixmapOriginalSize.width())  / _desktopPixmap.width() )
-#define GET_Y_FROM_HDPI_SCALING(point) (point * (_desktopPixmapOriginalSize.height()) / _desktopPixmap.height())
+#define GET_X_FROM_HDPI_SCALING(point) (point * (_drawnPixmapOriginalSize.width())  / _desktopPixmap.width() )
+#define GET_Y_FROM_HDPI_SCALING(point) (point * (_drawnPixmapOriginalSize.height()) / _desktopPixmap.height())
 
 #define IS_RECORDING (recordTimer->isActive())
 #define IS_FFMPEG_RUNNING (ffmpeg.state() != QProcess::NotRunning)

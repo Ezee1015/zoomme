@@ -272,7 +272,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
       } else if (_screenOpts == SCREENOPTS_HIDE_ALL) {
         toggleAction(ACTION_SCREEN_OPTS);
 
-      } else if(_drawnPixmapSize != _desktopPixmapOriginalSize) {
+      } else if(_drawnPixmapSize != _drawnPixmapOriginalSize) {
         _drawnPixmapScale = 1.0f;
         scalePixmapAt(QPoint(0,0));
         checkPixmapPos();
