@@ -124,12 +124,19 @@ struct ArrowHead {
   QPoint rightLineEnd;
 };
 
+enum FreezeCanvas {
+  FREEZE_BY_SHIFT,
+  FREEZE_BY_TEXT,
+  FREEZE_FALSE,
+};
+
 struct UserCanvas {
   // Pixmap shown on the screen. This can either be _sourcePixmap, the
   // blackboard or a transparent background, with the drawings on top.
   QPixmap pixmap;
   // Zoom movement
   QPoint pos;
+  FreezeCanvas freezePos;
   // Pixmap size for zooming (referenced with the resolution of the scaled
   // size of the monitor when capturing desktop)
   QSize size;
@@ -357,7 +364,6 @@ class ZoomWidget : public QWidget
     /////////////////////////
 
     // States
-    bool _shiftPressed;
     bool _mousePressed;
     bool _showToolBar;
     bool _exitConfirm;
@@ -462,7 +468,6 @@ class ZoomWidget : public QWidget
     void removeFormBehindCursor(QPoint cursorPos);
     void updateCursorShape();
     bool isDrawingHovered(ZoomWidgetDrawMode drawMode, int i);
-    bool isInEditTextMode();
     bool isDisabledMouseTracking();
     bool isTextEditable(QPoint cursorPos);
 

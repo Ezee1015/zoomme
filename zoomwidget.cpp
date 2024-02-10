@@ -34,10 +34,10 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _canvas.size = QApplication::screenAt(QCursor::pos())->geometry().size();
   _canvas.originalSize = _canvas.size;
   _canvas.scale = 1.0f;
+  _canvas.freezePos = FREEZE_FALSE;
 
   _lastMousePos = GET_CURSOR_POS();
 
-  _shiftPressed = false;
   _mousePressed = false;
   _showToolBar = false;
   _exitConfirm = false;
@@ -1090,7 +1090,7 @@ bool ZoomWidget::isDrawingHovered(ZoomWidgetDrawMode drawType, int vectorPos)
 {
   // Only if it's deleting or if it's trying to modify a text
   bool isDeleting = (_state == STATE_DELETING);
-  if(!isDeleting && !isInEditTextMode())
+  if(!isDeleting && !isTextEditable(GET_CURSOR_POS()))
     return false;
 
   // This is the position of the form (in the current draw mode) in the vector,
@@ -1229,7 +1229,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
     case STATE_COLOR_PICKER: text.append("\n-- PICK COLOR --"); h += lineHeight; break;
     case STATE_TRIMMING:     text.append("\n-- TRIMMING --");   h += lineHeight; break;
   };
-  if(isInEditTextMode()){
+  if(isTextEditable(GET_CURSOR_POS())){
     text += "\n-- SELECT --";
     h += lineHeight;
   }
@@ -1996,8 +1996,10 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
         textData.caretPos = 0;
         _userTexts.append(textData);
 
+        if (event->modifiers() == Qt::ShiftModifier)
+          _canvas.freezePos = FREEZE_BY_TEXT;
+
         _state = STATE_TYPING;
-        _freezeDesktopPosWhileWriting = _shiftPressed;
         update();
         return;
       }
@@ -2125,6 +2127,9 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 // The mouse pos shouldn't be fixed to the hdpi scaling
 void ZoomWidget::updateAtMousePos(QPoint mousePos)
 {
+  if(_canvas.freezePos == FREEZE_BY_TEXT && _state != STATE_TYPING)
+    _canvas.freezePos = FREEZE_FALSE;
+
   if(!isDisabledMouseTracking())
     shiftPixmap(mousePos);
 
@@ -2144,10 +2149,11 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
   if (_state == STATE_DRAWING || _state == STATE_TYPING)
     return;
 
-  int sign = (event->angleDelta().y() > 0) ? 1 : -1;
+  const int sign = (event->angleDelta().y() > 0) ? 1 : -1;
+  const bool shiftPressed = (event->modifiers() == Qt::ShiftModifier);
 
   // Adjust flashlight radius
-  if(_flashlightMode && _shiftPressed) {
+  if(_flashlightMode && shiftPressed) {
     _flashlightRadius -= sign * SCALE_SENSIVITY * 50;
 
     if( _flashlightRadius < 20)
@@ -2336,17 +2342,19 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos)
 
 void ZoomWidget::keyPressEvent(QKeyEvent *event)
 {
-  int key = event->key();
+  const int key = event->key();
+  const bool shiftPressed = (event->modifiers() == Qt::ShiftModifier) || (key == Qt::Key_Shift);
+  const bool controlPressed = (event->modifiers() == Qt::ControlModifier) || (event->key() == Qt::Key_Control);
 
-  if(key == Qt::Key_Shift)
-    _shiftPressed = true;
+  if(shiftPressed && _state != STATE_TYPING)
+    _canvas.freezePos = FREEZE_BY_SHIFT;
 
-  if(key == Qt::Key_Control)
+  if(controlPressed)
     _showToolBar = true;
 
   if(_state == STATE_TYPING) {
     // If it's pressed Enter (without Shift) or Escape
-    if ((!_shiftPressed && key == Qt::Key_Return) || key == Qt::Key_Escape) {
+    if ((!shiftPressed && key == Qt::Key_Return) || key == Qt::Key_Escape) {
       if( _userTexts.last().text.isEmpty() )
         _userTexts.removeLast();
       _state = STATE_MOVING;
@@ -2415,7 +2423,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     case Qt::Key_W: action = ACTION_COLOR_WHITE;   break;
     case Qt::Key_D: action = ACTION_COLOR_BLACK;   break;
     case Qt::Key_R:
-                    if(_shiftPressed)
+                    if(shiftPressed)
                       action = ACTION_REDO;
                     else
                       action = ACTION_COLOR_RED;
@@ -2429,14 +2437,14 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     case Qt::Key_H: action = ACTION_HIGHLIGHT;     break;
 
     case Qt::Key_E:
-                    if(_shiftPressed)
+                    if(shiftPressed)
                       action = ACTION_SAVE_PROJECT;
                     else
                       action = ACTION_ELLIPSE;
                     break;
 
     case Qt::Key_S:
-                    if(_shiftPressed)
+                    if(shiftPressed)
                       action = ACTION_SAVE_TO_CLIPBOARD;
                     else
                       action = ACTION_SAVE_TO_FILE;
@@ -2473,15 +2481,18 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 
 void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
 {
-  if(event->key() == Qt::Key_Shift) {
-    _shiftPressed = false;
-    updateCursorShape();
+  const bool shiftReleased = (event->modifiers() == Qt::ShiftModifier) || (event->key() == Qt::Key_Shift);
+  const bool controlReleased = (event->modifiers() == Qt::ControlModifier) || (event->key() == Qt::Key_Control);
+
+  if(shiftReleased && _canvas.freezePos == FREEZE_BY_SHIFT) {
+    _canvas.freezePos = FREEZE_FALSE;
     updateAtMousePos(GET_CURSOR_POS());
   }
 
-  if(event->key() == Qt::Key_Control)
+  if(controlReleased)
     _showToolBar = false;
 
+  updateCursorShape();
   update();
 }
 
@@ -2672,26 +2683,22 @@ void ZoomWidget::drawDrawnPixmap(QPainter *painter)
   painter->drawPixmap(x, y, w, h, _canvas.pixmap);
 }
 
-bool ZoomWidget::isInEditTextMode()
-{
-  return (_state == STATE_MOVING) &&
-         (_drawMode == DRAWMODE_TEXT) &&
-         (_shiftPressed) &&
-         (_screenOpts != SCREENOPTS_HIDE_ALL);
-}
-
 bool ZoomWidget::isDisabledMouseTracking()
 {
-  return (_state != STATE_TYPING && _shiftPressed)                 ||
-         (_state == STATE_TYPING && _freezeDesktopPosWhileWriting) ||
-         (isToolBarVisible())                                      ||
+  return (_canvas.freezePos == FREEZE_BY_TEXT)  ||
+         (_canvas.freezePos == FREEZE_BY_SHIFT) ||
+         (isToolBarVisible())                   ||
          (_draggingCanvas);
 }
 
 // The cursor pos shouln't be fixed to hdpi scaling
 bool ZoomWidget::isTextEditable(QPoint cursorPos)
 {
-  return (isInEditTextMode()) &&
+  const bool isInEditTextMode = (_state == STATE_MOVING)     &&
+                                (_drawMode == DRAWMODE_TEXT) &&
+                                (_screenOpts != SCREENOPTS_HIDE_ALL);
+
+  return (isInEditTextMode) &&
          (cursorOverForm(cursorPos) != -1);
 }
 
