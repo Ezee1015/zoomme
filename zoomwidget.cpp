@@ -2159,7 +2159,7 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
     return;
   }
 
-  if(_liveMode || isDisabledMouseTracking())
+  if(_liveMode)
     return;
 
   _canvas.scale += sign * SCALE_SENSIVITY;
