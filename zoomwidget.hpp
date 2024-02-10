@@ -255,7 +255,7 @@ struct ToolBarProperties {
   QRect rect;
 };
 
-// When modifying this enum, don't forget to modify the cycleScreenOpts function
+// When modifying this enum, don't forget to modify the toggleAction function
 enum ZoomWidgetScreenOpts {
   SCREENOPTS_HIDE_ALL, // Only show the background. This disables some functions
                        // too (like the mouse actions and changing modes)
