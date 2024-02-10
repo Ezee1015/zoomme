@@ -30,7 +30,7 @@
 #define QCOLOR_TOOL_BAR          QCOLOR_BLUE
 #define QCOLOR_TOOL_BAR_DISABLED QColor( 70, 70, 70)
 
-// Font size = (1 to 9) * FONT_SIZE_FACTOR
+// Font size = (1 to 9 -keys-) * FONT_SIZE_FACTOR
 #define FONT_SIZE_FACTOR 4
 
 #define DEFAULT_FOLDER QStandardPaths::DesktopLocation // QStandardPaths::PicturesLocation
