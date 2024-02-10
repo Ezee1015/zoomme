@@ -30,12 +30,10 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
 
   _desktopScreen = QGuiApplication::screenAt(QCursor::pos());
   _screenSize = _desktopScreen->geometry().size();
-  _drawnPixmapPos = QPoint(0, 0);
-  _drawnPixmapSize = QApplication::screenAt(QCursor::pos())->geometry().size();
-  _drawnPixmapOriginalSize = _drawnPixmapSize;
-  _drawnPixmapScale = 1.0f;
-
-  _scaleSensivity = 0.2f;
+  _canvas.pos = QPoint(0, 0);
+  _canvas.size = QApplication::screenAt(QCursor::pos())->geometry().size();
+  _canvas.originalSize = _canvas.size;
+  _canvas.scale = 1.0f;
 
   _shiftPressed = false;
   _mousePressed = false;
@@ -180,11 +178,11 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        break;
 
     case ACTION_SAVE_TO_FILE:
-       saveImage(_drawnPixmap, true);
+       saveImage(_canvas.pixmap, true);
        break;
 
     case ACTION_SAVE_TO_CLIPBOARD:
-       saveImage(_drawnPixmap, false);
+       saveImage(_canvas.pixmap, false);
        break;
 
     case ACTION_SAVE_TRIMMED_TO_IMAGE:
@@ -272,8 +270,8 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
       } else if (_screenOpts == SCREENOPTS_HIDE_ALL) {
         toggleAction(ACTION_SCREEN_OPTS);
 
-      } else if(_drawnPixmapSize != _drawnPixmapOriginalSize) {
-        _drawnPixmapScale = 1.0f;
+      } else if(_canvas.size != _canvas.originalSize) {
+        _canvas.scale = 1.0f;
         scalePixmapAt(QPoint(0,0));
         checkPixmapPos();
 
@@ -676,12 +674,12 @@ void ZoomWidget::saveStateToFile()
   QDataStream out(&file);
   // There should be the same arguments that the restoreStateToFile()
   out << _screenSize
-      << _desktopPixmap
+      << _sourcePixmap
       // I don't want to be zoomed in when restoring
-      // << _desktopPixmapPos
-      // << _desktopPixmapSize
-      // << _desktopPixmapScale
-      << _drawnPixmapOriginalSize
+      // << _canvas.pos
+      // << _canvas.size
+      // << _canvas.scale
+      << _canvas.originalSize
       // The save path is absolute, so it is bound to the PC, so it shouldn't
       // be saved
       // << _fileConfig.folder
@@ -785,9 +783,9 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
   int marginTop = 0, marginLeft = 0;
 
   if(savedScreenSize == _screenSize) {
-    _drawnPixmapOriginalSize = savedPixmapSize;
-    _drawnPixmapSize = savedPixmapSize;
-    _desktopPixmap = savedPixmap;
+    _canvas.originalSize = savedPixmapSize;
+    _canvas.size = savedPixmapSize;
+    _sourcePixmap = savedPixmap;
   } else {
     if(config == FIT_AUTO)
       config = (savedPixmap.width() > savedPixmap.height()) ? FIT_TO_HEIGHT : FIT_TO_WIDTH;
@@ -918,9 +916,9 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
 void ZoomWidget::createVideoFFmpeg()
 {
   QString resolution;
-  resolution.append(QString::number(_drawnPixmap.width()));
+  resolution.append(QString::number(_canvas.pixmap.width()));
   resolution.append("x");
-  resolution.append(QString::number(_drawnPixmap.height()));
+  resolution.append(QString::number(_canvas.pixmap.height()));
 
   // Read the video bytes and pipe it to FFmpeg...
   // Arguments for FFmpeg taken from:
@@ -984,7 +982,7 @@ void ZoomWidget::createVideoFFmpeg()
 
 void ZoomWidget::saveFrameToFile()
 {
-  QImage image = _drawnPixmap.toImage();
+  QImage image = _canvas.pixmap.toImage();
 
   // Save the image as jpeg into a byte array (is not a raw image, it's
   // compressed)
@@ -1198,7 +1196,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   if(isDisabledMouseTracking())
     text.append(BLOCK_ICON);
   else
-    text.append( (_drawnPixmapScale == 1.0f) ? NO_ZOOM_ICON : ZOOM_ICON );
+    text.append( (_canvas.scale == 1.0f) ? NO_ZOOM_ICON : ZOOM_ICON );
   text.append(" ");
 
   switch(_drawMode) {
@@ -1473,7 +1471,7 @@ void ZoomWidget::drawFlashlightEffect(QPainter *painter, bool drawToScreen)
   // painter->drawEllipse( mouseFlashlightBorder );
 
   QPainterPath pixmapPath;
-  pixmapPath.addRect(_drawnPixmap.rect());
+  pixmapPath.addRect(_canvas.pixmap.rect());
 
   QPainterPath flashlightArea = pixmapPath.subtracted(mouseFlashlight);
   painter->fillPath(flashlightArea, QColor(  0,  0,  0, 190));
@@ -1486,7 +1484,7 @@ void ZoomWidget::drawTrimmed(QPainter *pixmapPainter)
   mouseFlashlight.addRect(rect);
 
   QPainterPath pixmapPath;
-  pixmapPath.addRect(_drawnPixmap.rect());
+  pixmapPath.addRect(_canvas.pixmap.rect());
 
   QPainterPath opaqueArea = pixmapPath.subtracted(mouseFlashlight);
   pixmapPainter->fillPath(opaqueArea, QColor(  0,  0,  0, 190));
@@ -1682,19 +1680,19 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 {
   (void) event;
 
-  // Exit if the _desktopPixmap is not initialized (not ready)
-  if(_desktopPixmap.isNull())
+  // Exit if the _sourcePixmap is not initialized (not ready)
+  if(_sourcePixmap.isNull())
     logUser(LOG_ERROR_AND_EXIT, "The desktop pixmap is null. Can't paint over a null pixmap");
 
-  _drawnPixmap = _desktopPixmap;
+  _canvas.pixmap = _sourcePixmap;
 
   if(_liveMode)
-    _drawnPixmap.fill(Qt::transparent);
+    _canvas.pixmap.fill(Qt::transparent);
 
   if(_boardMode)
-    _drawnPixmap.fill(QCOLOR_BLACKBOARD);
+    _canvas.pixmap.fill(QCOLOR_BLACKBOARD);
 
-  QPainter pixmapPainter(&_drawnPixmap);
+  QPainter pixmapPainter(&_canvas.pixmap);
   QPainter screen; screen.begin(this);
 
   drawSavedForms(&pixmapPainter);
@@ -1941,7 +1939,7 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
     const QPoint e = _endDrawPoint;
 
     QRect trimSize = fixQRect(s.x(), s.y(), e.x() - s.x(), e.y() - s.y());
-    QPixmap trimmed = _drawnPixmap.copy(trimSize);
+    QPixmap trimmed = _canvas.pixmap.copy(trimSize);
     saveImage(trimmed, (_trimDestination == TRIM_SAVE_TO_IMAGE) ? true : false);
 
     _state = STATE_MOVING;
@@ -2118,7 +2116,7 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
 
   // Adjust flashlight radius
   if(_flashlightMode && _shiftPressed) {
-    _flashlightRadius -= sign * _scaleSensivity * 50;
+    _flashlightRadius -= sign * SCALE_SENSIVITY * 50;
 
     if( _flashlightRadius < 20)
       _flashlightRadius=20;
@@ -2132,9 +2130,9 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
   if(_liveMode || isDisabledMouseTracking())
     return;
 
-  _drawnPixmapScale += sign * _scaleSensivity;
-  if (_drawnPixmapScale < 1.0f)
-    _drawnPixmapScale = 1.0f;
+  _canvas.scale += sign * SCALE_SENSIVITY;
+  if (_canvas.scale < 1.0f)
+    _canvas.scale = 1.0f;
 
   scalePixmapAt(GET_CURSOR_POS());
   checkPixmapPos();
@@ -2210,7 +2208,7 @@ bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorP
   // Minimum size of the hit box
   int minimumSize =  25;
   if(!isFloating)
-    minimumSize *= _drawnPixmapScale;
+    minimumSize *= _canvas.scale;
 
   if(abs(w) < minimumSize) {
     int direction = (w >= 0) ? 1 : -1;
@@ -2483,8 +2481,8 @@ void ZoomWidget::grabDesktop()
   // grabbing
   if(desktop.isNull()){
     if(_liveMode){
-      _desktopPixmap = QPixmap(_screenSize);
-      _desktopPixmap.fill(Qt::transparent);
+      _sourcePixmap = QPixmap(_screenSize);
+      _sourcePixmap.fill(Qt::transparent);
       return;
     }
 
@@ -2494,11 +2492,11 @@ void ZoomWidget::grabDesktop()
       logUser(LOG_ERROR_AND_EXIT, "Couldn't grab the desktop");
   }
 
-  // Paint the desktop over _desktopPixmap
+  // Paint the desktop over _sourcePixmap
   // Fixes the issue with hdpi scaling (now the size of the image is the real
   // resolution of the screen)
-  _desktopPixmap = QPixmap(desktop.size());
-  QPainter painter(&_desktopPixmap);
+  _sourcePixmap = QPixmap(desktop.size());
+  QPainter painter(&_sourcePixmap);
   painter.drawPixmap(0, 0, desktop.width(), desktop.height(), desktop);
   painter.end();
 
@@ -2539,14 +2537,14 @@ void ZoomWidget::grabImage(QPixmap img, FitImage config)
   }
 
   // Draw the image into the pixmap
-  _desktopPixmap = QPixmap(width, height);
-  _desktopPixmap.fill(QCOLOR_BLACKBOARD);
-  QPainter painter(&_desktopPixmap);
+  _sourcePixmap = QPixmap(width, height);
+  _sourcePixmap.fill(QCOLOR_BLACKBOARD);
+  QPainter painter(&_sourcePixmap);
   painter.drawPixmap(x, y, img);
   painter.end();
 
-  _drawnPixmapSize = _desktopPixmap.size();
-  _drawnPixmapOriginalSize = _drawnPixmapSize;
+  _canvas.size = _sourcePixmap.size();
+  _canvas.originalSize = _canvas.size;
 
   if(!_liveMode) showFullScreen();
 }
@@ -2554,56 +2552,56 @@ void ZoomWidget::grabImage(QPixmap img, FitImage config)
 void ZoomWidget::shiftPixmap(const QPoint cursorPos)
 {
   // This is the maximum value for shifting the pixmap
-  const QSize availableMargin = -1 * (_drawnPixmapSize - _screenSize);
+  const QSize availableMargin = -1 * (_canvas.size - _screenSize);
 
   // The percentage of the cursor position relative to the screen size
   const float percentageX = (float)cursorPos.x() / (float)_screenSize.width();
   const float percentageY = (float)cursorPos.y() / (float)_screenSize.height();
 
-  _drawnPixmapPos.setX(availableMargin.width() * percentageX);
-  _drawnPixmapPos.setY(availableMargin.height() * percentageY);
+  _canvas.pos.setX(availableMargin.width() * percentageX);
+  _canvas.pos.setY(availableMargin.height() * percentageY);
 }
 
 void ZoomWidget::scalePixmapAt(const QPointF pos)
 {
-  int old_w = _drawnPixmapSize.width();
-  int old_h = _drawnPixmapSize.height();
+  int old_w = _canvas.size.width();
+  int old_h = _canvas.size.height();
 
-  int new_w = _drawnPixmapOriginalSize.width() * _drawnPixmapScale;
-  int new_h = _drawnPixmapOriginalSize.height() * _drawnPixmapScale;
-  _drawnPixmapSize = QSize(new_w, new_h);
+  int new_w = _canvas.originalSize.width() * _canvas.scale;
+  int new_h = _canvas.originalSize.height() * _canvas.scale;
+  _canvas.size = QSize(new_w, new_h);
 
   int dw = new_w - old_w;
   int dh = new_h - old_h;
 
-  int cur_x = pos.x() + abs(_drawnPixmapPos.x());
-  int cur_y = pos.y() + abs(_drawnPixmapPos.y());
+  int cur_x = pos.x() + abs(_canvas.pos.x());
+  int cur_y = pos.y() + abs(_canvas.pos.y());
 
   float cur_px = -((float)cur_x / old_w);
   float cur_py = -((float)cur_y / old_h);
 
-  _drawnPixmapPos.setX(_drawnPixmapPos.x() + dw*cur_px);
-  _drawnPixmapPos.setY(_drawnPixmapPos.y() + dh*cur_py);
+  _canvas.pos.setX(_canvas.pos.x() + dw*cur_px);
+  _canvas.pos.setY(_canvas.pos.y() + dh*cur_py);
 }
 
 void ZoomWidget::checkPixmapPos()
 {
-  if (_drawnPixmapPos.x() > 0) {
-    _drawnPixmapPos.setX(0);
-  } else if ((_drawnPixmapSize.width() + _drawnPixmapPos.x()) < width()) {
-    _drawnPixmapPos.setX(width() - _drawnPixmapSize.width());
+  if (_canvas.pos.x() > 0) {
+    _canvas.pos.setX(0);
+  } else if ((_canvas.size.width() + _canvas.pos.x()) < width()) {
+    _canvas.pos.setX(width() - _canvas.size.width());
   }
 
-  if (_drawnPixmapPos.y() > 0) {
-    _drawnPixmapPos.setY(0);
-  } else if ((_drawnPixmapSize.height() + _drawnPixmapPos.y()) < height()) {
-    _drawnPixmapPos.setY(height() - _drawnPixmapSize.height());
+  if (_canvas.pos.y() > 0) {
+    _canvas.pos.setY(0);
+  } else if ((_canvas.size.height() + _canvas.pos.y()) < height()) {
+    _canvas.pos.setY(height() - _canvas.size.height());
   }
 }
 
 // TODO FORMAT CURLY BRACKET
 QPoint ZoomWidget::screenPointToPixmapPos(QPoint qpoint) {
-  QPoint returnPoint = (qpoint - _drawnPixmapPos)/_drawnPixmapScale;
+  QPoint returnPoint = (qpoint - _canvas.pos)/_canvas.scale;
 
   returnPoint.setX( FIX_X_FOR_HDPI_SCALING(returnPoint.x()) );
   returnPoint.setY( FIX_Y_FOR_HDPI_SCALING(returnPoint.y()) );
@@ -2615,7 +2613,7 @@ QPoint ZoomWidget::pixmapPointToScreenPos(QPoint qpoint) {
   qpoint.setX( GET_X_FROM_HDPI_SCALING(qpoint.x()) );
   qpoint.setY( GET_Y_FROM_HDPI_SCALING(qpoint.y()) );
 
-  QPoint point = _drawnPixmapPos + qpoint * _drawnPixmapScale;
+  QPoint point = _canvas.pos + qpoint * _canvas.scale;
 
   return point;
 }
@@ -2624,17 +2622,17 @@ QSize ZoomWidget::pixmapSizeToScreenSize(QSize qsize){
   qsize.setWidth(  GET_X_FROM_HDPI_SCALING(qsize.width() ) );
   qsize.setHeight( GET_Y_FROM_HDPI_SCALING(qsize.height()) );
 
-  return qsize * _drawnPixmapScale;
+  return qsize * _canvas.scale;
 }
 
 void ZoomWidget::drawDrawnPixmap(QPainter *painter)
 {
-  const int x = _drawnPixmapPos.x();
-  const int y = _drawnPixmapPos.y();
-  const int w = _drawnPixmapSize.width();
-  const int h = _drawnPixmapSize.height();
+  const int x = _canvas.pos.x();
+  const int y = _canvas.pos.y();
+  const int w = _canvas.size.width();
+  const int h = _canvas.size.height();
 
-  painter->drawPixmap(x, y, w, h, _drawnPixmap);
+  painter->drawPixmap(x, y, w, h, _canvas.pixmap);
 }
 
 bool ZoomWidget::isInEditTextMode()

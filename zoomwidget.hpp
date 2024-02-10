@@ -57,6 +57,8 @@
 
 #define POPUP_ROUNDNESS_FACTOR 12.0f
 #define RECT_ROUNDNESS_FACTOR 5.0f
+
+#define SCALE_SENSIVITY 0.2f // For the sensibility of the mouse wheel
 // END OF CUSTOMIZATION
 
 // CODE
@@ -65,7 +67,7 @@
 // It will give the mouse position relative to the resolution of scaled monitor
 #define GET_CURSOR_POS() mapFromGlobal(QCursor::pos())
 
-#define GET_COLOR_UNDER_CURSOR() _drawnPixmap.toImage().pixel( screenPointToPixmapPos(GET_CURSOR_POS()) )
+#define GET_COLOR_UNDER_CURSOR() _canvas.pixmap.toImage().pixel( screenPointToPixmapPos(GET_CURSOR_POS()) )
 
 // If there's no HDPI scaling, it will return the same value, because the real
 // and the scale resolution will be de same.
@@ -76,13 +78,13 @@
 // scaledScreenResolution -------- mousePos
 // realScreenResolution   --------    x
 //
-// So 'x' = mousePos * (_desktopPixmap.size()/_desktopPixmapOriginalSize)
-#define FIX_X_FOR_HDPI_SCALING(point) (point * (_desktopPixmap.width()  / _drawnPixmapOriginalSize.width()) )
-#define FIX_Y_FOR_HDPI_SCALING(point) (point * (_desktopPixmap.height() / _drawnPixmapOriginalSize.height()))
+// So 'x' = mousePos * (_sourcePixmap.size()/_canvas.originalSize)
+#define FIX_X_FOR_HDPI_SCALING(point) (point * (_sourcePixmap.width()  / _canvas.originalSize.width()) )
+#define FIX_Y_FOR_HDPI_SCALING(point) (point * (_sourcePixmap.height() / _canvas.originalSize.height()))
 // These macros revert the conversion that does FIX_Y_FOR_HDPI_SCALING and
 // FIX_X_FOR_HDPI_SCALING.
-#define GET_X_FROM_HDPI_SCALING(point) (point * (_drawnPixmapOriginalSize.width())  / _desktopPixmap.width() )
-#define GET_Y_FROM_HDPI_SCALING(point) (point * (_drawnPixmapOriginalSize.height()) / _desktopPixmap.height())
+#define GET_X_FROM_HDPI_SCALING(point) (point * (_canvas.originalSize.width())  / _sourcePixmap.width() )
+#define GET_Y_FROM_HDPI_SCALING(point) (point * (_canvas.originalSize.height()) / _sourcePixmap.height())
 
 #define IS_RECORDING (recordTimer->isActive())
 #define IS_FFMPEG_RUNNING (ffmpeg.state() != QProcess::NotRunning)
@@ -118,6 +120,20 @@ struct ArrowHead {
   QPoint startPoint;
   QPoint leftLineEnd;
   QPoint rightLineEnd;
+};
+
+struct UserCanvas {
+  // Pixmap shown on the screen. This can either be _sourcePixmap, the
+  // blackboard or a transparent background, with the drawings on top.
+  QPixmap pixmap;
+  // Zoom movement
+  QPoint pos;
+  // Pixmap size for zooming (referenced with the resolution of the scaled
+  // size of the monitor when capturing desktop)
+  QSize size;
+  QSize originalSize;
+  // Zooming scale
+  float scale;
 };
 
 struct UserFileConfig {
@@ -291,38 +307,26 @@ class ZoomWidget : public QWidget
     QClipboard *clipboard;
 
     // Note: When scaling is enabled (such as HiDPI with Graphic Server scaling
-    // in X11 or Wayland), _desktopPixmap works with the REAL size of the
-    // screen, while other variables work with the SCALED size.
+    // in X11 or Wayland), if you grab the desktop, _sourcePixmap works with the
+    // REAL size of the screen, while other variables in the canvas work with
+    // the SCALED size.
 
-    // This program operates with the scaled size of the screen. However,
-    // _desktopPixmap, to maintain image quality, is saved with the original
-    // resolution (REAL size of the screen). When painting _desktopPixmap, it
+    // This program operates with the scaled size of the screen. However, if you
+    // grab the desktop with HiDPI scaling, the _sourcePixmap and
+    // _canvas.pixmap, to maintain image quality, are saved with the original
+    // resolution (REAL size of the screen) when painting _canvas.pixmap, it
     // overlays the REAL size image on the SCALED size monitor without losing
     // quality.
-
-    // Desktop pixmap properties.
-    QScreen *_desktopScreen;
-    QSize _screenSize;                // Resolution of the scaled monitor
+    UserCanvas _canvas;
 
     // The size of the pixmap should be the REAL size of the monitor when
     // capturing the desktop image (instead of taking the size of the scaled
     // monitor).
-    QPixmap _desktopPixmap;
+    QPixmap _sourcePixmap; // This can be the desktop or an image
 
-    // Pixmap shown on the screen. This can either be _desktopPixmap, the
-    // blackboard, an image, etc. with the drawings on top.
-    QPixmap _drawnPixmap;
-
-    // Zoom movement
-    QPoint _drawnPixmapPos;
-
-    // Pixmap size for zooming (referenced with the resolution of the scaled
-    // size of the monitor when capturing desktop)
-    QSize _drawnPixmapSize;
-    QSize _drawnPixmapOriginalSize;
-
-    // Zooming scale
-    float _drawnPixmapScale;
+    QScreen *_desktopScreen;
+    // Resolution of the scaled monitor
+    QSize _screenSize;
 
     // For exporting files
     UserFileConfig _fileConfig;
@@ -349,9 +353,6 @@ class ZoomWidget : public QWidget
     // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
     // QVector<UserObjectData>    _userTests;
     /////////////////////////
-
-    // Moving properties.
-    float		_scaleSensivity;
 
     // States
     bool _shiftPressed;
