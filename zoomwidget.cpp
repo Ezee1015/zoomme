@@ -35,10 +35,13 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _canvas.originalSize = _canvas.size;
   _canvas.scale = 1.0f;
 
+  _lastMousePos = GET_CURSOR_POS();
+
   _shiftPressed = false;
   _mousePressed = false;
   _showToolBar = false;
   _exitConfirm = false;
+  _draggingCanvas = false;
   _boardMode = false;
   _highlight = false;
   _flashlightMode = false;
@@ -1778,6 +1781,14 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
     return;
   }
 
+  // Drag the pixmap
+  if(event->button() == DRAG_MOUSE_BUTTON && isDisabledMouseTracking()) {
+    _draggingCanvas = true;
+    updateCursorShape();
+    update();
+    return;
+  }
+
   if(_screenOpts == SCREENOPTS_HIDE_ALL)
     return;
 
@@ -1949,6 +1960,13 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
     return;
   }
 
+  if(_draggingCanvas) {
+    _draggingCanvas = false;
+    updateCursorShape();
+    update();
+    return;
+  }
+
   if(_screenOpts == SCREENOPTS_HIDE_ALL)
     return;
 
@@ -2012,6 +2030,7 @@ void ZoomWidget::updateCursorShape()
   QCursor blank         = QCursor(Qt::BlankCursor);
   QCursor waiting       = QCursor(Qt::WaitCursor);
   QCursor denied        = QCursor(Qt::ForbiddenCursor);
+  QCursor drag          = QCursor(Qt::ClosedHandCursor);
   QCursor cursorDefault = QCursor(Qt::CrossCursor);
 
   // Pick color
@@ -2031,7 +2050,10 @@ void ZoomWidget::updateCursorShape()
     else
       setCursor(pointHand);
 
-  } else if(_state == STATE_COLOR_PICKER)
+  } else if(_draggingCanvas)
+    setCursor(drag);
+
+  else if(_state == STATE_COLOR_PICKER)
     setCursor(pickColor);
 
   else if(_state == STATE_DELETING)
@@ -2059,6 +2081,11 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
   updateCursorShape();
 
   updateAtMousePos(cursorPos);
+
+  if(_draggingCanvas) {
+    update();
+    return;
+  }
 
   if(_screenOpts == SCREENOPTS_HIDE_ALL){
     update();
@@ -2098,10 +2125,15 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 // The mouse pos shouldn't be fixed to the hdpi scaling
 void ZoomWidget::updateAtMousePos(QPoint mousePos)
 {
-  if(!isDisabledMouseTracking()) {
+  if(!isDisabledMouseTracking())
     shiftPixmap(mousePos);
-    checkPixmapPos();
-  }
+
+  if(_draggingCanvas)
+    dragPixmap(mousePos - _lastMousePos);
+
+  checkPixmapPos();
+
+  _lastMousePos = mousePos;
 
   if (_state == STATE_DRAWING || _state == STATE_TRIMMING)
     _endDrawPoint = screenPointToPixmapPos(mousePos);
@@ -2547,6 +2579,11 @@ void ZoomWidget::grabImage(QPixmap img, FitImage config)
   _canvas.originalSize = _canvas.size;
 
   if(!_liveMode) showFullScreen();
+}
+
+void ZoomWidget::dragPixmap(QPoint delta)
+{
+  _canvas.pos += delta;
 }
 
 void ZoomWidget::shiftPixmap(const QPoint cursorPos)

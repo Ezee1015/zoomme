@@ -49,6 +49,8 @@
 
 #define CLIPBOARD_TEMP_FILENAME "zoomme_clipboard"
 
+#define DRAG_MOUSE_BUTTON Qt::RightButton
+
 #define EXIT_CONFIRM_MSECS 1500
 
 #define HIGHLIGHT_ALPHA 75
@@ -359,6 +361,7 @@ class ZoomWidget : public QWidget
     bool _mousePressed;
     bool _showToolBar;
     bool _exitConfirm;
+    bool _draggingCanvas;
 
     // Modes
     bool _boardMode;
@@ -384,6 +387,7 @@ class ZoomWidget : public QWidget
     QFile *recordTempFile;
 
     ZoomWidgetState	_state;
+    QPoint _lastMousePos;
 
     // Drawing properties.
     ZoomWidgetDrawMode	_drawMode;
@@ -425,6 +429,7 @@ class ZoomWidget : public QWidget
     bool isActionDisabled(ZoomWidgetAction action);
 
     void updateAtMousePos(QPoint mousePos);
+    void dragPixmap(QPoint delta);
     void shiftPixmap(const QPoint cursorPos);
     void scalePixmapAt(const QPointF pos);
     void checkPixmapPos();
