@@ -1819,6 +1819,8 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
     UserTextData textData = _userTexts.at(formPosBehindCursor);
     _userTexts.remove(formPosBehindCursor);
     _userTexts.append(textData);
+    if(event->modifiers() == Qt::ShiftModifier)
+      _canvas.freezePos = FREEZE_BY_TEXT;
 
     update();
     return;
