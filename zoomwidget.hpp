@@ -137,6 +137,7 @@ struct UserCanvas {
   // Zoom movement
   QPoint pos;
   FreezeCanvas freezePos;
+  bool dragging;
   // Pixmap size for zooming (referenced with the resolution of the scaled
   // size of the monitor when capturing desktop)
   QSize size;
@@ -367,7 +368,6 @@ class ZoomWidget : public QWidget
     bool _mousePressed;
     bool _showToolBar;
     bool _exitConfirm;
-    bool _draggingCanvas;
 
     // Modes
     bool _boardMode;

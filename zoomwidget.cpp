@@ -35,13 +35,13 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _canvas.originalSize = _canvas.size;
   _canvas.scale = 1.0f;
   _canvas.freezePos = FREEZE_FALSE;
+  _canvas.dragging = false;
 
   _lastMousePos = GET_CURSOR_POS();
 
   _mousePressed = false;
   _showToolBar = false;
   _exitConfirm = false;
-  _draggingCanvas = false;
   _boardMode = false;
   _highlight = false;
   _flashlightMode = false;
@@ -1783,7 +1783,7 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
 
   // Drag the pixmap
   if(event->button() == DRAG_MOUSE_BUTTON && isDisabledMouseTracking()) {
-    _draggingCanvas = true;
+    _canvas.dragging = true;
     updateCursorShape();
     update();
     return;
@@ -1960,8 +1960,8 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
     return;
   }
 
-  if(_draggingCanvas) {
-    _draggingCanvas = false;
+  if(_canvas.dragging) {
+    _canvas.dragging = false;
     updateCursorShape();
     update();
     return;
@@ -2052,7 +2052,7 @@ void ZoomWidget::updateCursorShape()
     else
       setCursor(pointHand);
 
-  } else if(_draggingCanvas)
+  } else if(_canvas.dragging)
     setCursor(drag);
 
   else if(_state == STATE_COLOR_PICKER)
@@ -2084,7 +2084,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 
   updateAtMousePos(cursorPos);
 
-  if(_draggingCanvas) {
+  if(_canvas.dragging) {
     update();
     return;
   }
@@ -2133,7 +2133,7 @@ void ZoomWidget::updateAtMousePos(QPoint mousePos)
   if(!isDisabledMouseTracking())
     shiftPixmap(mousePos);
 
-  if(_draggingCanvas)
+  if(_canvas.dragging)
     dragPixmap(mousePos - _lastMousePos);
 
   checkPixmapPos();
@@ -2688,7 +2688,7 @@ bool ZoomWidget::isDisabledMouseTracking()
   return (_canvas.freezePos == FREEZE_BY_TEXT)  ||
          (_canvas.freezePos == FREEZE_BY_SHIFT) ||
          (isToolBarVisible())                   ||
-         (_draggingCanvas);
+         (_canvas.dragging);
 }
 
 // The cursor pos shouln't be fixed to hdpi scaling
