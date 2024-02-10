@@ -32,7 +32,7 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 |      **`Mouse Wheel`**     | To zoom in and zoom out                                                                                                                                                                                                                     |
 |         **`Shift`**        | When it's zoomed in, if you press and hold the key, the screen will not follow the mouse, so you can freely move it around in that part of the screen (for drawing, for example). When you release it, it will continue following the mouse |
 |  **`Shift + Mouse Wheel`** | **When the flashlight effect is turn on**, this will increase/decrease the size of the "light"                                                                                                                                              |
-| **`Shift + Right Button`** | Drag the canvas around                                                                                                                                                                                                                      |
+|  **`Right Mouse Button`**  | When the mouse tracking is disabled, you can drag the canvas around                                                                                                                                                                         |
 |          **`ESC`**         | The function of the Escape key is described [in here](#escape-key-functions)...                                                                                                                                                             |
 
 #### Escape key functions
