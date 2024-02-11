@@ -48,6 +48,7 @@ void printHelp(const char *errorMsg)
   fprintf(output, "  -c [opts]                 Load an image from the clipboard as the background, instead of the desktop. It will automatically fit it to the screen\n");
   fprintf(output, "       -w                        Force to fit it to the screen's width\n");
   fprintf(output, "       -h                        Force to fit it to the screen's height\n");
+  fprintf(output, "  --empty [width] [height]  Create an empty blackboard with the given size\n");
 
   fprintf(output, "\n  For more information, visit https://github.com/Ezee1015/zoomme\n");
 
@@ -62,6 +63,11 @@ bool isDefined(QString mode)
 bool isDefined(FitImage mode)
 {
   return mode != FIT_AUTO;
+}
+
+bool isDefined(QSize mode)
+{
+  return mode != QSize();
 }
 
 bool isDefinedFitSource(QString img, QString backupFile, bool fromClipboard)
@@ -81,7 +87,7 @@ QString nextToken(int argc, char *argv[], int *pos, QString type)
   return argv[*pos];
 }
 
-void modeAlreadySelected(QString backupFile, QString img, bool liveMode, bool fromClipboard)
+void modeAlreadySelected(QString backupFile, QString img, bool liveMode, bool fromClipboard, QSize emptyPixmap)
 {
   if(isDefined(backupFile))
     printHelp("Mode already provided (Backup file provided)");
@@ -94,6 +100,9 @@ void modeAlreadySelected(QString backupFile, QString img, bool liveMode, bool fr
 
   else if(fromClipboard)
     printHelp("Mode already provided (load from clipboard)");
+
+  else if(isDefined(emptyPixmap))
+    printHelp("Mode already provided (empty blackboard)");
 }
 
 int main(int argc, char *argv[])
@@ -115,6 +124,7 @@ int main(int argc, char *argv[])
   bool liveMode = false;
   bool fromClipboard = false;
   FitImage fitOption = FIT_AUTO;
+  QSize emptyPixmap;
 
   // Parsing arguments
   for(int i=1; i<argc ; ++i){
@@ -122,13 +132,13 @@ int main(int argc, char *argv[])
       printHelp("");
 
     else if(strcmp(argv[i], "-l") == 0){
-      modeAlreadySelected(backupFile, img, liveMode, fromClipboard);
+      modeAlreadySelected(backupFile, img, liveMode, fromClipboard, emptyPixmap);
 
       liveMode=true;
     }
 
     else if(strcmp(argv[i], "-i") == 0) {
-      modeAlreadySelected(backupFile, img, liveMode, fromClipboard);
+      modeAlreadySelected(backupFile, img, liveMode, fromClipboard, emptyPixmap);
 
       img = nextToken(argc, argv, &i, "Image path");
     }
@@ -191,7 +201,7 @@ int main(int argc, char *argv[])
     }
 
     else if(strcmp(argv[i], "-r") == 0) {
-      modeAlreadySelected(backupFile, img, liveMode, fromClipboard);
+      modeAlreadySelected(backupFile, img, liveMode, fromClipboard, emptyPixmap);
 
       backupFile = nextToken(argc, argv, &i, "Backup file path");
 
@@ -200,9 +210,27 @@ int main(int argc, char *argv[])
     }
 
     else if(strcmp(argv[i], "-c") == 0) {
-      modeAlreadySelected(backupFile, img, liveMode, fromClipboard);
+      modeAlreadySelected(backupFile, img, liveMode, fromClipboard, emptyPixmap);
 
       fromClipboard = true;
+    }
+
+    else if(strcmp(argv[i], "--empty") == 0) {
+      modeAlreadySelected(backupFile, img, liveMode, fromClipboard, emptyPixmap);
+
+      bool widthCorrect = false, heightCorrect=false;
+      emptyPixmap.setWidth(nextToken(argc, argv, &i, "Width for the blackboard").toInt(&widthCorrect));
+      emptyPixmap.setHeight(nextToken(argc, argv, &i, "Height for the blackboard").toInt(&heightCorrect));
+
+      if(!widthCorrect)
+        printHelp("The given width is not a number");
+      if(!heightCorrect)
+        printHelp("The given height is not a number");
+
+      if(emptyPixmap.width() < 1)
+        printHelp("The given width is not a positive number");
+      if(emptyPixmap.height() < 1)
+        printHelp("The given height is not a positive number");
     }
 
     else {
@@ -232,6 +260,9 @@ int main(int argc, char *argv[])
   } else if(isDefined(img)) {
     w.setLiveMode(false);
     w.grabImage(QPixmap(img), fitOption);
+
+  } else if(isDefined(emptyPixmap)) {
+    w.createBlackboard(emptyPixmap);
 
   } else if(fromClipboard) {
     w.grabFromClipboard(fitOption);

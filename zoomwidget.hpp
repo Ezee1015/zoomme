@@ -305,6 +305,7 @@ class ZoomWidget : public QWidget
     void grabFromClipboard(FitImage config);
     void grabDesktop();
     void grabImage(QPixmap img, FitImage config);
+    void createBlackboard(QSize size);
 
   protected:
     virtual void paintEvent(QPaintEvent *event);

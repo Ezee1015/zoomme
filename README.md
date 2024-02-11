@@ -278,6 +278,19 @@ This will override the [file name, video extension and image extension configura
 </p></details>
 <!-- End 10 -->
 
+<!-- Start 11 -->
+<details id="empty">
+<summary><b>[ <code>--empty</code> ] Create an empty blackboard</b></summary><p>
+
+ You can create an empty blackboard with the given size.
+
+```bash
+./zoomme {configurations} {--empty [width] [height]}
+```
+
+</p></details>
+<!-- End 11 -->
+
 ## :suspect: Secret :suspect:
 > Shhh! Don't tell anybody... :zipper_mouth_face:
 >

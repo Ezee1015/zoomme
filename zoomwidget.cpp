@@ -2522,6 +2522,24 @@ void ZoomWidget::grabFromClipboard(FitImage config)
   grabImage(QPixmap::fromImage(image), config);
 }
 
+void ZoomWidget::createBlackboard(QSize size)
+{
+  if(size.width() < _screenSize.width()) {
+    logUser(LOG_INFO, "The given width is less than the screen's width, so the width is now the screen's width");
+    size.setWidth(_screenSize.width());
+  }
+
+  if(size.height() < _screenSize.height()) {
+    logUser(LOG_INFO, "The given height is less than the screen's height, so the height is now the screen's height");
+    size.setHeight(_screenSize.height());
+  }
+
+  _sourcePixmap = QPixmap(size);
+  _sourcePixmap.fill(QCOLOR_BLACKBOARD);
+  _canvas.size = size;
+  _canvas.originalSize = size;
+}
+
 void ZoomWidget::grabDesktop()
 {
   QPixmap desktop = _desktopScreen->grabWindow(0);
