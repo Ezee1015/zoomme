@@ -2687,13 +2687,16 @@ void ZoomWidget::drawDrawnPixmap(QPainter *painter)
 
 bool ZoomWidget::isDisabledMouseTracking()
 {
+  if(DISABLE_MOUSE_TRACKING)
+    return true;
+
   return (_canvas.freezePos == FREEZE_BY_TEXT)  ||
          (_canvas.freezePos == FREEZE_BY_SHIFT) ||
          (isToolBarVisible())                   ||
          (_canvas.dragging);
 }
 
-// The cursor pos shouln't be fixed to hdpi scaling
+// The cursor pos shouldn't be fixed to HDPI scaling
 bool ZoomWidget::isTextEditable(QPoint cursorPos)
 {
   const bool isInEditTextMode = (_state == STATE_MOVING)     &&

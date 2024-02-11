@@ -61,6 +61,8 @@
 #define RECT_ROUNDNESS_FACTOR 5.0f
 
 #define SCALE_SENSIVITY 0.2f // For the sensibility of the mouse wheel
+
+#define DISABLE_MOUSE_TRACKING false
 // END OF CUSTOMIZATION
 
 // CODE
