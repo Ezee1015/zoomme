@@ -40,7 +40,6 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _lastMousePos = GET_CURSOR_POS();
 
   _mousePressed = false;
-  _showToolBar = false;
   _exitConfirm = false;
   _boardMode = false;
   _highlight = false;
@@ -69,6 +68,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _activePen.setColor(QCOLOR_RED);
   _activePen.setWidth(4);
 
+  _toolBar.show = false;
   loadButtons();
   generateToolBar();
 }
@@ -80,7 +80,7 @@ ZoomWidget::~ZoomWidget()
 
 bool ZoomWidget::isToolBarVisible()
 {
-  return _showToolBar                  &&
+  return _toolBar.show                 &&
          _state != STATE_COLOR_PICKER  &&
          _state != STATE_TYPING        &&
          _state != STATE_DRAWING;
@@ -640,7 +640,7 @@ void ZoomWidget::generateToolBar()
 // Returns -1 if there's no button behind the cursor
 int ZoomWidget::buttonBehindCursor(QPoint cursor)
 {
-  if(!_showToolBar)
+  if(!_toolBar.show)
     logUser(LOG_ERROR, "cursorOverButton() was called, but the tool box is not visible");
 
   for(int i=0; i<_toolBar.buttons.size(); i++) {
@@ -2352,7 +2352,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     _canvas.freezePos = FREEZE_BY_SHIFT;
 
   if(controlPressed)
-    _showToolBar = true;
+    _toolBar.show = true;
 
   if(_state == STATE_TYPING) {
     // If it's pressed Enter (without Shift) or Escape
@@ -2492,7 +2492,7 @@ void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
   }
 
   if(controlReleased)
-    _showToolBar = false;
+    _toolBar.show = false;
 
   updateCursorShape();
   update();

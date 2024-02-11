@@ -260,7 +260,9 @@ struct Button {
 
 struct ToolBar {
   QVector<Button> buttons;
+  bool show;
 
+  // Configuration
   int lineHeight;
   int margin;
   int numberOfLines;
@@ -367,7 +369,6 @@ class ZoomWidget : public QWidget
 
     // States
     bool _mousePressed;
-    bool _showToolBar;
     bool _exitConfirm;
 
     // Modes
