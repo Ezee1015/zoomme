@@ -49,13 +49,13 @@ The Escape key performs the following actions in a sequential order. If one cond
 
 #### Text Mode Mappings
 
-|              Key             | Function                                                                                                                                                  |
-|:----------------------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-|          **`Enter`**         | To finish writing text                                                                                                                                    |
-|       **`Shift+Enter`**      | To make a new line when writing text                                                                                                                      |
-|     **`Left/Right keys`**    | To go to the previous/next character when writing text                                                                                                    |
-|      **`Up/Down keys`**      | To go to the previous/next line break when writing text                                                                                                   |
-| **`Shift and click a text`** | You can access and modify the text by clicking on it when you're in insert text mode. However, you cannot be writing or drawing a new text while clicking |
+|          Key          | Function                                                                                                                                                  |
+|:---------------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+|      **`Enter`**      | To finish writing text                                                                                                                                    |
+|   **`Shift+Enter`**   | To make a new line when writing text                                                                                                                      |
+| **`Left/Right keys`** | To go to the previous/next character when writing text                                                                                                    |
+|   **`Up/Down keys`**  | To go to the previous/next line break when writing text                                                                                                   |
+|   **`Click a text`**  | You can access and modify the text by clicking on it when you're in text mode. However, you cannot be writing or drawing a new text while clicking |
 
 ---
 
