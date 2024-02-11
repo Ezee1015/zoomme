@@ -126,6 +126,8 @@ struct ArrowHead {
 
 enum FreezeCanvas {
   FREEZE_BY_SHIFT,
+  // IN TEXT MODE: If the user was pressing shift when the mouse released
+  // (finished sizing the text rectangle), disable mouse tracking while writing
   FREEZE_BY_TEXT,
   FREEZE_FALSE,
 };
@@ -376,10 +378,6 @@ class ZoomWidget : public QWidget
     int _flashlightRadius;
     bool _highlight;
     TrimOptions _trimDestination;
-
-    // IN TEXT MODE: If the user was pressing shift when the mouse released
-    // (finished sizing the text rectangle), disable mouse tracking while writing
-    bool _freezeDesktopPosWhileWriting;
 
     ZoomWidgetScreenOpts _screenOpts;
 
