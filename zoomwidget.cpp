@@ -39,7 +39,6 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
 
   _lastMousePos = GET_CURSOR_POS();
 
-  _mousePressed = false;
   _exitConfirm = false;
   _boardMode = false;
   _highlight = false;
@@ -190,7 +189,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
 
     case ACTION_SAVE_TRIMMED_TO_IMAGE:
       // If the mode is active, disable it
-      if(_state == STATE_TRIMMING) {
+      if(_state == STATE_TO_TRIM) {
         if(_trimDestination == TRIM_SAVE_TO_IMAGE) {
           _state = STATE_MOVING;
           break;
@@ -199,13 +198,15 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
         _trimDestination = TRIM_SAVE_TO_IMAGE;
       }
 
-      _state = STATE_TRIMMING;
+      _state = STATE_TO_TRIM;
       _trimDestination = TRIM_SAVE_TO_IMAGE;
+      _startDrawPoint = QPoint(0,0);
+      _endDrawPoint = QPoint(0,0);
       break;
 
     case ACTION_SAVE_TRIMMED_TO_CLIPBOARD:
       // If the mode is active, disable it
-      if(_state == STATE_TRIMMING) {
+      if(_state == STATE_TO_TRIM) {
         if(_trimDestination == TRIM_SAVE_TO_CLIPBOARD) {
           _state = STATE_MOVING;
           break;
@@ -214,8 +215,10 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
         _trimDestination = TRIM_SAVE_TO_CLIPBOARD;
       }
 
-      _state = STATE_TRIMMING;
+      _state = STATE_TO_TRIM;
       _trimDestination = TRIM_SAVE_TO_CLIPBOARD;
+      _startDrawPoint = QPoint(0,0);
+      _endDrawPoint = QPoint(0,0);
       break;
 
     case ACTION_SAVE_PROJECT:
@@ -264,7 +267,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
       } else if (_state == STATE_DELETING) {
         toggleAction(ACTION_DELETE);
 
-      } else if (_state == STATE_TRIMMING) {
+      } else if (_state == STATE_TRIMMING || _state == STATE_TO_TRIM) {
         _state = STATE_MOVING;
 
       } else if (_flashlightMode) {
@@ -483,7 +486,10 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
 
     case ACTION_SAVE_TRIMMED_TO_IMAGE:
     case ACTION_SAVE_TRIMMED_TO_CLIPBOARD:
-      if(_state != STATE_MOVING  && _state != STATE_TRIMMING)
+      if( _state != STATE_MOVING   &&
+          _state != STATE_TRIMMING &&
+          _state != STATE_TO_TRIM
+        )
          return true;
       if(_screenOpts == SCREENOPTS_HIDE_ALL)
         return true;
@@ -549,12 +555,12 @@ ButtonStatus ZoomWidget::isButtonActive(Button button)
     case ACTION_SAVE_PROJECT:      return BUTTON_NO_STATUS;
     case ACTION_RECORDING:         actionStatus = IS_RECORDING;                           break;
     case ACTION_SAVE_TRIMMED_TO_IMAGE:
-                                   actionStatus = (_state == STATE_TRIMMING) &&
+                                   actionStatus = (_state == STATE_TRIMMING || _state == STATE_TO_TRIM) &&
                                                   (_trimDestination == TRIM_SAVE_TO_IMAGE);
                                    break;
 
     case ACTION_SAVE_TRIMMED_TO_CLIPBOARD:
-                                   actionStatus = (_state == STATE_TRIMMING) &&
+                                   actionStatus = (_state == STATE_TRIMMING || _state == STATE_TO_TRIM) &&
                                                   (_trimDestination == TRIM_SAVE_TO_CLIPBOARD);
                                    break;
 
@@ -1227,6 +1233,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
     case STATE_TYPING:       text.append("\n-- TYPING --");     h += lineHeight; break;
     case STATE_DELETING:     text.append("\n-- DELETING --");   h += lineHeight; break;
     case STATE_COLOR_PICKER: text.append("\n-- PICK COLOR --"); h += lineHeight; break;
+    case STATE_TO_TRIM:
     case STATE_TRIMMING:     text.append("\n-- TRIMMING --");   h += lineHeight; break;
   };
   if(isTextEditable(GET_CURSOR_POS())){
@@ -1457,7 +1464,7 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
 
 void ZoomWidget::drawFlashlightEffect(QPainter *painter, bool drawToScreen)
 {
-  if(IS_TRIMMING)
+  if(_state == STATE_TRIMMING)
     return;
 
   const int radius = _flashlightRadius;
@@ -1699,7 +1706,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   QPainter screen; screen.begin(this);
 
   drawSavedForms(&pixmapPainter);
-  if(IS_TRIMMING)
+  if(_state == STATE_TRIMMING)
     drawTrimmed(&pixmapPainter);
 
   // By drawing the active form in the pixmap, it gives a better user feedback
@@ -1793,8 +1800,6 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
     return;
 
   // Mouse processing
-  _mousePressed = true;
-
   if(_state == STATE_COLOR_PICKER){
     _activePen.setColor(GET_COLOR_UNDER_CURSOR());
     _state = STATE_MOVING;
@@ -1826,7 +1831,9 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
     return;
   }
 
-  if(_state != STATE_TRIMMING)
+  if(_state == STATE_TO_TRIM)
+    _state = STATE_TRIMMING;
+  else
     _state = STATE_DRAWING;
 
   _startDrawPoint = screenPointToPixmapPos(cursorPos);
@@ -1946,7 +1953,7 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
   const QPoint cursorPos = event->pos();
 
   // Pre mouse processing
-  if(IS_TRIMMING) {
+  if(_state == STATE_TRIMMING) {
     _endDrawPoint = screenPointToPixmapPos(cursorPos);
     const QPoint s = _startDrawPoint;
     const QPoint e = _endDrawPoint;
@@ -1956,7 +1963,6 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
     saveImage(trimmed, (_trimDestination == TRIM_SAVE_TO_IMAGE) ? true : false);
 
     _state = STATE_MOVING;
-    _mousePressed = false;
     updateCursorShape();
     update();
     return;
@@ -1973,8 +1979,6 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
     return;
 
   // Mouse processing
-  _mousePressed = false;
-
   if (_state != STATE_DRAWING)
     return;
 
@@ -2066,7 +2070,7 @@ void ZoomWidget::updateCursorShape()
   else if(isTextEditable(cursorPos))
     setCursor(pointHand);
 
-  else if(_flashlightMode && !IS_TRIMMING)
+  else if(_flashlightMode && _state != STATE_TRIMMING)
     setCursor(blank);
 
   else
@@ -2077,6 +2081,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 {
   // The cursor pos is relative to the resolution of scaled monitor
   const QPoint cursorPos = event->pos();
+  const bool buttonPressed = (event->buttons() != Qt::NoButton);
 
   // If the app lost focus, request it again
   if(!QWidget::isActiveWindow())
@@ -2103,7 +2108,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
   }
 
   // Register the position of the cursor for the FreeForm
-  if(_state == STATE_DRAWING && _mousePressed && _drawMode == DRAWMODE_FREEFORM) {
+  if(_state == STATE_DRAWING && buttonPressed && _drawMode == DRAWMODE_FREEFORM) {
     QPoint curPos = screenPointToPixmapPos(cursorPos);
 
     if( _userFreeForms.isEmpty() || (!_userFreeForms.isEmpty() && !_userFreeForms.last().active) ) {

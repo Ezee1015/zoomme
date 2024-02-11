@@ -93,8 +93,6 @@
 #define IS_RECORDING (recordTimer->isActive())
 #define IS_FFMPEG_RUNNING (ffmpeg.state() != QProcess::NotRunning)
 
-#define IS_TRIMMING (_state == STATE_TRIMMING && _mousePressed)
-
 namespace Ui {
   class zoomwidget;
 }
@@ -187,6 +185,7 @@ enum ZoomWidgetState {
   STATE_TYPING,
   STATE_DELETING,
   STATE_COLOR_PICKER,
+  STATE_TO_TRIM,  // State before trimming
   STATE_TRIMMING,
 };
 
@@ -369,11 +368,8 @@ class ZoomWidget : public QWidget
 
     ToolBar _toolBar;
 
-    // States
-    bool _mousePressed;
-    bool _exitConfirm;
-
     // Modes
+    bool _exitConfirm;
     bool _boardMode;
     bool _liveMode;
     bool _flashlightMode;
