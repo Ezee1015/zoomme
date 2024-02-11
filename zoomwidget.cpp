@@ -2350,10 +2350,10 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos)
 void ZoomWidget::keyPressEvent(QKeyEvent *event)
 {
   const int key = event->key();
-  const bool shiftPressed = (key == Qt::Key_Shift);
+  const bool shiftPressed = (event->modifiers() == Qt::ShiftModifier);
   const bool controlPressed = (event->key() == Qt::Key_Control);
 
-  if(shiftPressed && _state != STATE_TYPING)
+  if(key == Qt::Key_Shift && _state != STATE_TYPING)
     _canvas.freezePos = FREEZE_BY_SHIFT;
 
   if(controlPressed)
