@@ -2130,22 +2130,22 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
   }
 
   // Register the position of the cursor for the FreeForm
-  if(_state == STATE_DRAWING && buttonPressed && _drawMode == DRAWMODE_FREEFORM) {
-    QPoint curPos = screenPointToPixmapPos(cursorPos);
+  if(_state == STATE_DRAWING && _drawMode == DRAWMODE_FREEFORM && buttonPressed) {
+    const QPoint cursorInPixmap = screenPointToPixmapPos(cursorPos);
 
     if( _freeForms.isEmpty() || (!_freeForms.isEmpty() && !_freeForms.last().active) ) {
       UserFreeFormData data;
       data.pen = _activePen;
       data.active = true;
       data.highlight = _highlight;
-      data.points.append(curPos);
+      data.points.append(cursorInPixmap);
       _freeForms.add(data);
-    }
 
-    else if(!_freeForms.isEmpty() && _freeForms.last().points.last()!=curPos) {
+    // It's not empty and the last is active
+    } else if(_freeForms.last().points.last() != cursorInPixmap) {
       UserFreeFormData data = _freeForms.last();
       _freeForms.destroyLast();
-      data.points.append(curPos);
+      data.points.append(cursorInPixmap);
       _freeForms.add(data);
     }
   }
