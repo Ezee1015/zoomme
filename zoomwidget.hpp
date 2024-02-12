@@ -262,7 +262,7 @@ struct Button {
 };
 
 struct ToolBar {
-  QVector<Button> buttons;
+  QList<Button> buttons;
   bool show;
 
   // Configuration
@@ -285,6 +285,74 @@ enum Log_Urgency {
   LOG_ERROR,
   LOG_ERROR_AND_EXIT,
   LOG_TEXT
+};
+
+template<typename T>
+class Drawing {
+  private:
+    QList<T> forms;
+    QList<T> deleted;
+
+  public:
+    Drawing() {}
+
+    void add(const T item) {
+      forms.append(item);
+    }
+
+    T at(const qsizetype i) {
+      return forms.at(i);
+    }
+
+    T last() {
+      return forms.last();
+    }
+
+    qsizetype size() {
+      return forms.size();
+    }
+
+    bool isEmpty() {
+      return forms.isEmpty();
+    }
+
+    void clear() {
+      deleted.append(forms);
+      forms.clear();
+    }
+
+    void remove(const int itemPos) {
+      if(itemPos >= forms.size()) return;
+      deleted.append(forms.takeAt(itemPos));
+    }
+
+    // Removes the form. It DOESN'T put it in the deleted list.
+    // Useful for editing the last form
+    void destroyLast() {
+      if(forms.size() == 0) return;
+      forms.removeLast();
+    }
+
+    // Move the form to the top of the list (e.g., for editing texts you edit
+    // the last created -top of the list- text)
+    void moveToTop(const int itemPos) {
+      if(itemPos >= forms.size()) return;
+      forms.append(forms.takeAt(itemPos));
+    }
+
+    void undo() {
+      if(forms.isEmpty()) return;
+      deleted.append(forms.takeLast());
+    }
+
+    void redo() {
+      if(deleted.isEmpty()) return;
+      forms.append(deleted.takeLast());
+    }
+
+    bool isDeletedEmpty() {
+      return deleted.isEmpty();
+    }
 };
 
 class ZoomWidget : public QWidget
@@ -350,24 +418,16 @@ class ZoomWidget : public QWidget
     UserFileConfig _fileConfig;
 
     // User objects.
-    QVector<UserObjectData>    _userRects;
-    QVector<UserObjectData>    _userLines;
-    QVector<UserObjectData>    _userArrows;
-    QVector<UserObjectData>    _userEllipses;
-    QVector<UserTextData>      _userTexts;
-    QVector<UserFreeFormData>  _userFreeForms;
+    Drawing<UserObjectData>    _rects;
+    Drawing<UserObjectData>    _lines;
+    Drawing<UserObjectData>    _arrows;
+    Drawing<UserObjectData>    _ellipses;
+    Drawing<UserTextData>      _texts;
+    Drawing<UserFreeFormData>  _freeForms;
 
     // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
-    // QVector<UserObjectData>    _userTests;
+    // QList<UserObjectData>    _userTests;
     /////////////////////////
-
-    // Undo/Delete history
-    QVector<UserObjectData>    _deletedRects;
-    QVector<UserObjectData>    _deletedLines;
-    QVector<UserObjectData>    _deletedArrows;
-    QVector<UserObjectData>    _deletedEllipses;
-    QVector<UserTextData>      _deletedTexts;
-    QVector<UserFreeFormData>  _deletedFreeForms;
 
     ToolBar _toolBar;
 
