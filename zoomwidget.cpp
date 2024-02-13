@@ -67,6 +67,12 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _activePen.setColor(QCOLOR_RED);
   _activePen.setWidth(4);
 
+  _popupUpdateTimer = new QTimer(this);
+  connect( _popupUpdateTimer,
+           &QTimer::timeout,
+           this,
+           &ZoomWidget::updateForPopups );
+
   _toolBar.show = false;
   loadButtons();
   generateToolBar();
@@ -1206,7 +1212,7 @@ void ZoomWidget::drawToolBar(QPainter *screenPainter)
   }
 }
 
-void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const int margin)
+void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const int margin, const float alphaPercentage)
 {
   const int fontSize = 16;
   const int penWidth = 5;
@@ -1236,6 +1242,7 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const int
 
   // Painter configurations
   QFont font; font.setPixelSize(fontSize); screenPainter->setFont(font);
+  color.setAlpha(255 * alphaPercentage);
   screenPainter->setPen(color);
   changePenWidth(screenPainter, penWidth);
 
@@ -1243,10 +1250,10 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const int
   background.addRoundedRect(popupRect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
   // Contrast
   QColor contrast = QCOLOR_BLACK;
-  contrast.setAlpha(175); // Transparency
+  contrast.setAlpha(175 * alphaPercentage); // Transparency
   screenPainter->fillPath(background, contrast);
   // Highlight
-  color.setAlpha(65); // Transparency
+  color.setAlpha(65 * alphaPercentage); // Transparency
   screenPainter->fillPath(background, color);
 
   screenPainter->drawRoundedRect(popupRect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
@@ -1269,24 +1276,6 @@ void ZoomWidget::drawPopupTray(QPainter *screenPainter)
   const qint64 time = QDateTime::currentMSecsSinceEpoch();
   const int margin  = 20;
 
-  // Remove old popups
-  for(int i=_popupTray.size()-1; i>=0; i--) {
-    int lifetime = 0;
-    switch (_popupTray.at(i).urgency) {
-      case LOG_SUCCESS: lifetime = POPUP_SUCCESS_MSEC; break;
-      case LOG_INFO:    lifetime = POPUP_INFO_MSEC;    break;
-      case LOG_ERROR:   lifetime = POPUP_ERROR_MSEC;   break;
-
-      case LOG_TEXT:
-      case LOG_ERROR_AND_EXIT:
-        logUser(LOG_ERROR_AND_EXIT, "", "You shouldn't be here either...");
-        break;
-    }
-
-    if((time-_popupTray.at(i).timeCreated) >= lifetime)
-      _popupTray.removeAt(i);
-  }
-
   if(isCursorInsideHitBox(margin,
                           margin,
                           POPUP_WIDTH,
@@ -1297,8 +1286,25 @@ void ZoomWidget::drawPopupTray(QPainter *screenPainter)
     return;
   }
 
-  for(int i=_popupTray.size()-1; i>=0; i--)
-      drawPopup(screenPainter, i, margin);
+  for(int i=_popupTray.size()-1; i>=0; i--) {
+    Popup p = _popupTray.at(i);
+
+    // lt = lifetime
+    // 0     lt/2      lt
+    // |------||=======||
+    //        0.0      1.0  --> percentageInSecondHalf
+    const int timeConsumed = time-p.timeCreated;
+    const float lifeInSecondHalf = (timeConsumed - (float)p.lifetime/2.0);
+    const float percentageInSecondHalf = lifeInSecondHalf / ((float)p.lifetime/2.0); // 0.0 to 1.0
+
+    // First half, normal alpha,
+    // After second half, increase transparency
+    const float alphaPercentage = (timeConsumed <= p.lifetime/2)
+                                  ? 1.0
+                                  : 1-percentageInSecondHalf;
+
+    drawPopup(screenPainter, i, margin, alphaPercentage);
+  }
 }
 
 void ZoomWidget::drawStatus(QPainter *screenPainter)
@@ -2890,7 +2896,6 @@ void ZoomWidget::logUser(Log_Urgency type, QString popupMsg, const char *fmt, ..
     return;
 
   // Popup
-  const int delay = 200; // Delay to ensure that the message gets passed the lifetime
   if(popupMsg.isEmpty()) popupMsg=QString(msg);
   int lifetime = 0;
   switch (type) {
@@ -2905,8 +2910,27 @@ void ZoomWidget::logUser(Log_Urgency type, QString popupMsg, const char *fmt, ..
   }
 
   const qint64 time = QDateTime::currentMSecsSinceEpoch();
-  _popupTray.append(Popup{ time, popupMsg, type });
-  QTimer::singleShot(lifetime+delay, this, [=]() { update(); });
+  _popupTray.append(Popup{ time, lifetime, popupMsg, type });
+  if(!_popupUpdateTimer->isActive())
+    _popupUpdateTimer->start(POPUP_UPDATE_MSEC);
+  update();
+}
+
+void ZoomWidget::updateForPopups()
+{
+  if(_popupTray.size() == 0)
+    _popupUpdateTimer->stop();
+
+  const qint64 time = QDateTime::currentMSecsSinceEpoch();
+
+  // Remove old pop-ups
+  for(int i=_popupTray.size()-1; i>=0; i--) {
+    Popup p = _popupTray.at(i);
+
+    if((time-p.timeCreated) >= p.lifetime)
+      _popupTray.removeAt(i);
+  }
+
   update();
 }
 

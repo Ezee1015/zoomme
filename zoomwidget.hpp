@@ -64,9 +64,10 @@
 
 #define DISABLE_MOUSE_TRACKING false
 
-#define POPUP_ERROR_MSEC 3000
-#define POPUP_INFO_MSEC 1500
-#define POPUP_SUCCESS_MSEC 1000
+#define POPUP_ERROR_MSEC 4000
+#define POPUP_INFO_MSEC 3000
+#define POPUP_SUCCESS_MSEC 3000
+#define POPUP_UPDATE_MSEC 100
 #define POPUP_WIDTH 300
 #define POPUP_HEIGHT 100
 // END OF CUSTOMIZATION
@@ -298,6 +299,7 @@ enum Log_Urgency {
 
 struct Popup {
   qint64 timeCreated;
+  int lifetime;
   QString message;
   Log_Urgency urgency;
 };
@@ -446,6 +448,7 @@ class ZoomWidget : public QWidget
 
     ToolBar _toolBar;
     QList<Popup> _popupTray;
+    QTimer *_popupUpdateTimer;
 
     // Modes
     bool _exitConfirm;
@@ -491,7 +494,9 @@ class ZoomWidget : public QWidget
     ArrowHead getArrowHead(int x, int y, int width, int height);
     void drawTrimmed(QPainter *pixmapPainter);
     void drawPopupTray(QPainter *screenPainter);
-    void drawPopup(QPainter *screenPainter, const int listPos, const int margin);
+    void drawPopup(QPainter *screenPainter, const int listPos, const int margin, const float alpha);
+
+    void updateForPopups(); // Timer function
 
     void saveImage(QPixmap pixmap, bool toImage);
 
