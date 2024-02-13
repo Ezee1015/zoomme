@@ -48,7 +48,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
 
   clipboard = QApplication::clipboard();
   if(!clipboard)
-    logUser(LOG_ERROR, "Couldn't grab the clipboard");
+    logUser(LOG_ERROR, "", "Couldn't grab the clipboard");
 
   recordTimer = new QTimer(this);
   connect( recordTimer,
@@ -151,13 +151,13 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        }
 
        // Start recording
-       logUser(LOG_INFO, "Temporary record file path: %s", QSTRING_TO_STRING(recordTempFile->fileName()));
+       logUser(LOG_TEXT, "", "Temporary record file path: %s", QSTRING_TO_STRING(recordTempFile->fileName()));
 
        recordTempFile->remove(); // Just in case for if it already exists
 
        bool openTempFile = recordTempFile->open(QIODevice::ReadWrite);
        if (!openTempFile) {
-         logUser(LOG_ERROR, "Couldn't open the temp file for the bytes output");
+         logUser(LOG_ERROR, "", "Couldn't open the temp file for the bytes output");
          recordTempFile->close();
          break;
        }
@@ -227,9 +227,9 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
 
     case ACTION_SCREEN_OPTS:
        switch(_screenOpts) {
-         case SCREENOPTS_HIDE_ALL:    _screenOpts = SCREENOPTS_SHOW_ALL;    break;
-         case SCREENOPTS_HIDE_STATUS: _screenOpts = SCREENOPTS_HIDE_ALL;    break;
-         case SCREENOPTS_SHOW_ALL:    _screenOpts = SCREENOPTS_HIDE_STATUS; break;
+         case SCREENOPTS_HIDE_ALL:      _screenOpts = SCREENOPTS_SHOW_ALL;    break;
+         case SCREENOPTS_HIDE_FLOATING: _screenOpts = SCREENOPTS_HIDE_ALL;    break;
+         case SCREENOPTS_SHOW_ALL:      _screenOpts = SCREENOPTS_HIDE_FLOATING; break;
        }
        break;
 
@@ -500,7 +500,7 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
       return false;
 
     case ACTION_SPACER:
-      logUser(LOG_ERROR, "You shouldn't check if a 'spacer' is disabled");
+      logUser(LOG_ERROR, "", "You shouldn't check if a 'spacer' is disabled");
       return false;
   }
   return false;
@@ -567,7 +567,7 @@ ButtonStatus ZoomWidget::isButtonActive(Button button)
     case ACTION_ESCAPE:            actionStatus = _exitConfirm;                           break;
     case ACTION_ESCAPE_CANCEL:     return BUTTON_NO_STATUS;
 
-    case ACTION_SPACER:            logUser(LOG_ERROR, "You shouldn't check if a 'spacer' is active");
+    case ACTION_SPACER:            logUser(LOG_ERROR, "", "You shouldn't check if a 'spacer' is active");
                                    return BUTTON_NO_STATUS;
 
   }
@@ -647,7 +647,7 @@ void ZoomWidget::generateToolBar()
 int ZoomWidget::buttonBehindCursor(QPoint cursor)
 {
   if(!_toolBar.show)
-    logUser(LOG_ERROR, "cursorOverButton() was called, but the tool box is not visible");
+    logUser(LOG_ERROR, "Source code error", "cursorOverButton() was called, but the tool box is not visible");
 
   for(int i=0; i<_toolBar.buttons.size(); i++) {
     if(_toolBar.buttons.at(i).rect.contains(cursor))
@@ -676,7 +676,7 @@ void ZoomWidget::saveStateToFile()
   QString filePath = getFilePath(FILE_ZOOMME);
   QFile file(filePath);
   if (!file.open(QIODevice::WriteOnly)){
-    logUser(LOG_ERROR, "Couldn't create the file: %s", QSTRING_TO_STRING(filePath));
+    logUser(LOG_ERROR, "", "Couldn't create the file: %s", QSTRING_TO_STRING(filePath));
     return;
   }
 
@@ -755,14 +755,14 @@ void ZoomWidget::saveStateToFile()
   }
 
   QApplication::beep();
-  logUser(LOG_INFO, "Project saved correctly: %s", QSTRING_TO_STRING(filePath));
+  logUser(LOG_SUCCESS, "", "Project saved correctly: %s", QSTRING_TO_STRING(filePath));
 }
 
 void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
 {
   QFile file(path);
   if (!file.open(QIODevice::ReadOnly))
-    logUser(LOG_ERROR_AND_EXIT, "Couldn't restore the state from the file");
+    logUser(LOG_ERROR_AND_EXIT, "", "Couldn't restore the state from the file");
 
   long long userRectsCount      = 0,
             userLinesCount      = 0,
@@ -823,11 +823,11 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
     else
       scaledPixmap = scaledPixmap.scaledToHeight(_screenSize.height());
 
-    logUser(LOG_INFO, "Scaling ZoomMe recover file...");
-    logUser(LOG_INFO, "  - Recovered screen size: %dx%d", savedScreenSize.width(), savedScreenSize.height());
-    logUser(LOG_INFO, "  - Actual screen size: %dx%d", _screenSize.width(), _screenSize.height());
-    logUser(LOG_INFO, "  - Recovered image size: %dx%d", savedPixmapSize.width(), savedPixmapSize.height());
-    logUser(LOG_INFO, "  - Scaled (actual) image size: %dx%d", scaledPixmap.width(), scaledPixmap.height());
+    logUser(LOG_INFO, "The ZoomMe recovery file was scaled!", "Scaling ZoomMe recover file...");
+    logUser(LOG_TEXT, "", "  - Recovered screen size: %dx%d", savedScreenSize.width(), savedScreenSize.height());
+    logUser(LOG_TEXT, "", "  - Actual screen size: %dx%d", _screenSize.width(), _screenSize.height());
+    logUser(LOG_TEXT, "", "  - Recovered image size: %dx%d", savedPixmapSize.width(), savedPixmapSize.height());
+    logUser(LOG_TEXT, "", "  - Scaled (actual) image size: %dx%d", scaledPixmap.width(), scaledPixmap.height());
 
     // With 'The Rule of Three'...
     // oldPixmapSize --> pointOfDrawing
@@ -937,9 +937,9 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
   }
 
   if(in.atEnd())
-    logUser(LOG_INFO, "Recovery finished successfully (reached EOF)");
+    logUser(LOG_SUCCESS, "", "Recovery finished successfully (reached EOF)");
   else
-    logUser(LOG_ERROR_AND_EXIT, "There is data left in the ZoomMe file that was not loaded by the recovery algorithm (because it ended before the EOF). Please check the saving and the recovery algorithm: There may be some variables missing in the recovery and not in the saving or some variables added in the saving but not in the recovery...");
+    logUser(LOG_ERROR_AND_EXIT, "", "There is data left in the ZoomMe file that was not loaded by the recovery algorithm (because it ended before the EOF). Please check the saving and the recovery algorithm: There may be some variables missing in the recovery and not in the saving or some variables added in the saving but not in the recovery...");
 }
 
 void ZoomWidget::createVideoFFmpeg()
@@ -984,28 +984,30 @@ void ZoomWidget::createVideoFFmpeg()
 
   const int timeout = 10000;
   if (!ffmpeg.waitForStarted(timeout)){
-    logUser(LOG_ERROR, "Couldn't start ffmpeg or timeout occurred (10 sec.). Maybe FFmpeg is not installed. Killing the ffmpeg process...");
-    logUser(LOG_ERROR, "  - Error: %s", QSTRING_TO_STRING(ffmpeg.errorString()));
-    logUser(LOG_ERROR, "  - Executed command: ffmpeg %s", QSTRING_TO_STRING(arguments.join(" ")));
+    logUser(LOG_ERROR, "Couldn't start FFmpeg. Maybe it is not installed...",
+                       "Couldn't start ffmpeg or timeout occurred (%.1f sec.). Maybe FFmpeg is not installed. Killing the ffmpeg process...", ((float)timeout/1000.0));
+    logUser(LOG_TEXT, "", "  - Error: %s", QSTRING_TO_STRING(ffmpeg.errorString()));
+    logUser(LOG_TEXT, "", "  - Executed command: ffmpeg %s", QSTRING_TO_STRING(arguments.join(" ")));
     ffmpeg.kill();
     return;
   }
 
   if(!ffmpeg.waitForFinished(-1)){
-    logUser(LOG_ERROR, "An error occurred with FFmpeg: %s", QSTRING_TO_STRING(ffmpeg.errorString()));
+    logUser(LOG_ERROR, "", "An error occurred with FFmpeg: %s", QSTRING_TO_STRING(ffmpeg.errorString()));
     return;
   }
 
   if(ffmpeg.exitStatus() == QProcess::CrashExit) {
-    logUser(LOG_ERROR, "FFmpeg crashed");
+    logUser(LOG_ERROR, "","FFmpeg crashed");
     return;
   }
 
   if(ffmpeg.exitCode() != 0) {
-    logUser(LOG_ERROR, "FFmpeg failed. Exit code: %d", ffmpeg.exitCode());
+    logUser(LOG_ERROR, "", "FFmpeg failed. Exit code: %d", ffmpeg.exitCode());
     return;
   }
 
+  logUser(LOG_SUCCESS, "", "Video encoding was successful: %s", QSTRING_TO_STRING(getFilePath(FILE_VIDEO)));
   QApplication::beep();
 }
 
@@ -1204,9 +1206,104 @@ void ZoomWidget::drawToolBar(QPainter *screenPainter)
   }
 }
 
+void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const int margin)
+{
+  const int fontSize = 16;
+  const int penWidth = 5;
+  const int textPadding = 10;
+  // Invert the position for the calculation of the 'y' axis: newest at the top
+  const int popupLevel = (_popupTray.size()-1) - listPos;
+  const QRect popupRect(
+                          margin,
+                          margin + popupLevel * (margin+POPUP_HEIGHT),
+                          POPUP_WIDTH,
+                          POPUP_HEIGHT
+                       );
+
+  // Main color
+  QColor color;
+  switch(_popupTray.at(listPos).urgency) {
+    case LOG_INFO:    color = QCOLOR_CYAN; break;
+    case LOG_SUCCESS: color = QCOLOR_GREEN; break;
+    case LOG_ERROR:   color = QCOLOR_RED;  break;
+
+    case LOG_TEXT:
+      logUser(LOG_ERROR_AND_EXIT, "", "An error happened. You shouldn't be able to print a popup with LOG_TEXT, as it's only designed to print it to the stdout");
+    case LOG_ERROR_AND_EXIT:
+      logUser(LOG_ERROR_AND_EXIT, "", "An error happened. You shouldn't be able to print a popup if you're going to exit the application");
+      break;
+  }
+
+  // Painter configurations
+  QFont font; font.setPixelSize(fontSize); screenPainter->setFont(font);
+  screenPainter->setPen(color);
+  changePenWidth(screenPainter, penWidth);
+
+  QPainterPath background;
+  background.addRoundedRect(popupRect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
+  // Contrast
+  QColor contrast = QCOLOR_BLACK;
+  contrast.setAlpha(175); // Transparency
+  screenPainter->fillPath(background, contrast);
+  // Highlight
+  color.setAlpha(65); // Transparency
+  screenPainter->fillPath(background, color);
+
+  screenPainter->drawRoundedRect(popupRect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
+  screenPainter->drawText(popupRect.x()+textPadding,
+                          popupRect.y()+textPadding,
+                          popupRect.width()-2*textPadding,
+                          popupRect.height()-2*textPadding,
+                          Qt::AlignCenter | Qt::TextWordWrap,
+                          _popupTray.at(listPos).message);
+}
+
+void ZoomWidget::drawPopupTray(QPainter *screenPainter)
+{
+  if(_screenOpts == SCREENOPTS_HIDE_ALL || _screenOpts == SCREENOPTS_HIDE_FLOATING)
+    return;
+
+  if(_popupTray.size() == 0)
+    return;
+
+  const qint64 time = QDateTime::currentMSecsSinceEpoch();
+  const int margin  = 20;
+
+  // Remove old popups
+  for(int i=_popupTray.size()-1; i>=0; i--) {
+    int lifetime = 0;
+    switch (_popupTray.at(i).urgency) {
+      case LOG_SUCCESS: lifetime = POPUP_SUCCESS_MSEC; break;
+      case LOG_INFO:    lifetime = POPUP_INFO_MSEC;    break;
+      case LOG_ERROR:   lifetime = POPUP_ERROR_MSEC;   break;
+
+      case LOG_TEXT:
+      case LOG_ERROR_AND_EXIT:
+        logUser(LOG_ERROR_AND_EXIT, "", "You shouldn't be here either...");
+        break;
+    }
+
+    if((time-_popupTray.at(i).timeCreated) >= lifetime)
+      _popupTray.removeAt(i);
+  }
+
+  if(isCursorInsideHitBox(margin,
+                          margin,
+                          POPUP_WIDTH,
+                          POPUP_HEIGHT * _popupTray.size(),
+                          GET_CURSOR_POS(),
+                          true)
+    ) {
+    return;
+  }
+
+  for(int i=_popupTray.size()-1; i>=0; i--)
+      drawPopup(screenPainter, i, margin);
+}
+
 void ZoomWidget::drawStatus(QPainter *screenPainter)
 {
-  if(_screenOpts == SCREENOPTS_HIDE_ALL || _screenOpts == SCREENOPTS_HIDE_STATUS)
+  if(_screenOpts == SCREENOPTS_HIDE_ALL || _screenOpts == SCREENOPTS_HIDE_FLOATING)
     return;
 
   const int lineHeight        = 25;
@@ -1714,7 +1811,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 
   // Exit if the _sourcePixmap is not initialized (not ready)
   if(_sourcePixmap.isNull())
-    logUser(LOG_ERROR_AND_EXIT, "The desktop pixmap is null. Can't paint over a null pixmap");
+    logUser(LOG_ERROR_AND_EXIT, "", "The desktop pixmap is null. Can't paint over a null pixmap");
 
   _canvas.pixmap = _sourcePixmap;
 
@@ -1752,6 +1849,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   }
 
   drawStatus(&screen);
+  drawPopupTray(&screen);
   if(isToolBarVisible())
     drawToolBar(&screen);
 
@@ -1870,9 +1968,9 @@ void ZoomWidget::saveImage(QPixmap pixmap, bool toImage)
      QString path = getFilePath(FILE_IMAGE);
      if(pixmap.save(path)) {
        QApplication::beep();
-       logUser(LOG_INFO, "Image saved correctly: %s", QSTRING_TO_STRING(path));
+       logUser(LOG_SUCCESS, "", "Image saved correctly: %s", QSTRING_TO_STRING(path));
      } else {
-       logUser(LOG_ERROR, "Couldn't save the picture to: %s", QSTRING_TO_STRING(path));
+       logUser(LOG_ERROR, "", "Couldn't save the picture to: %s", QSTRING_TO_STRING(path));
      }
      return;
   }
@@ -1888,7 +1986,7 @@ void ZoomWidget::saveImage(QPixmap pixmap, bool toImage)
   QString path(tempFile.absoluteFilePath(fileName));
 
   if(!pixmap.save(path)) {
-   logUser(LOG_ERROR, "Couldn't save the image to the temp location for the clipboard: %s", QSTRING_TO_STRING(path));
+   logUser(LOG_ERROR, "", "Couldn't save the image to the temp location for the clipboard: %s", QSTRING_TO_STRING(path));
    return;
   }
 
@@ -1912,26 +2010,26 @@ void ZoomWidget::saveImage(QPixmap pixmap, bool toImage)
    process.setArguments(procArgs);
   }
 
-  logUser(LOG_INFO, "Trying to save the image to the clipboard with %s...", QSTRING_TO_STRING(appName));
+  logUser(LOG_TEXT, "", "Trying to save the image to the clipboard with %s...", QSTRING_TO_STRING(appName));
   process.start();
   process.setProcessChannelMode(process.ForwardedChannels);
 
   // Check for errors.
   if (!process.waitForStarted(5000)) {
-   logUser(LOG_ERROR, "Couldn't start %s, maybe is not installed...", QSTRING_TO_STRING(appName));
-   logUser(LOG_ERROR, "  - Error: %s", QSTRING_TO_STRING(process.errorString()));
-   logUser(LOG_ERROR, "  - Executed command: %s %s", QSTRING_TO_STRING(process.program()), QSTRING_TO_STRING(process.arguments().join(" ")));
+   logUser(LOG_ERROR, "", "Couldn't start %s, maybe is not installed...", QSTRING_TO_STRING(appName));
+   logUser(LOG_TEXT, "", "  - Error: %s", QSTRING_TO_STRING(process.errorString()));
+   logUser(LOG_TEXT, "", "  - Executed command: %s %s", QSTRING_TO_STRING(process.program()), QSTRING_TO_STRING(process.arguments().join(" ")));
    process.kill();
   } else if(!process.waitForFinished(-1))
-   logUser(LOG_ERROR, "An error occurred with %s: %s", QSTRING_TO_STRING(appName), QSTRING_TO_STRING(process.errorString()));
+   logUser(LOG_ERROR, "", "An error occurred with %s: %s", QSTRING_TO_STRING(appName), QSTRING_TO_STRING(process.errorString()));
   else if(process.exitStatus() == QProcess::CrashExit)
-   logUser(LOG_ERROR, "%s crashed", QSTRING_TO_STRING(appName));
+   logUser(LOG_ERROR, "", "%s crashed", QSTRING_TO_STRING(appName));
   else if(process.exitCode() != 0)
-   logUser(LOG_ERROR, "%s failed. Exit code: %d", QSTRING_TO_STRING(appName), process.exitCode());
+   logUser(LOG_ERROR, "", "%s failed. Exit code: %d", QSTRING_TO_STRING(appName), process.exitCode());
 
   // If there's no errors, beep and exit
   else {
-   logUser(LOG_INFO, "Saving with %s was successful", QSTRING_TO_STRING(appName));
+   logUser(LOG_SUCCESS, "","Saving image to clipboard with %s was successful", QSTRING_TO_STRING(appName));
    QApplication::beep();
    return;
   }
@@ -1944,27 +2042,29 @@ void ZoomWidget::saveImage(QPixmap pixmap, bool toImage)
   // Dolphin will copy the image, but Thunar and GIMP will not recognize
   // it).
   if(!clipboard) {
-   logUser(LOG_ERROR, "There's no clipboard to save the image into");
+   logUser(LOG_ERROR, "", "There's no clipboard to save the image into");
    return;
   }
 
-  logUser(LOG_INFO, "Saving the image path to the clipboard");
+  logUser(LOG_TEXT, "", "Saving the image path to the clipboard");
   QMimeData *mimeData = new QMimeData();
   QList<QUrl> urlList; urlList.append(QUrl::fromLocalFile(path));
   mimeData->setUrls(urlList);
   clipboard->setMimeData(mimeData);
+  logUser(LOG_SUCCESS, "", "Image saved to clipboard successfully");
   QApplication::beep();
 #else
   // Copy the image into clipboard (this causes some problems with the
   // clipboard manager in Linux, because when the app exits, the image gets
   // deleted with it. The clipboard only save a pointer to that image)
   if(!clipboard) {
-   logUser(LOG_ERROR, "There's no clipboard to save the image into");
+   logUser(LOG_ERROR, "", "There's no clipboard to save the image into");
    return;
   }
 
-  logUser(LOG_INFO, "Saving the image to the clipboard with Qt");
+  logUser(LOG_TEXT, "", "Saving the image to the clipboard with Qt");
   clipboard->setImage(pixmap.toImage());
+  logUser(LOG_SUCCESS, "", "Image saved to clipboard successfully");
   QApplication::beep();
 #endif
 }
@@ -2065,7 +2165,7 @@ void ZoomWidget::updateCursorShape()
 
   // Pick color
   QPixmap pickColorPixmap(":/resources/color-picker-16.png");
-  if (pickColorPixmap.isNull()) logUser(LOG_ERROR, "Failed to load pixmap for custom cursor (color-picker)");
+  if (pickColorPixmap.isNull()) logUser(LOG_ERROR, "", "Failed to load pixmap for custom cursor (color-picker)");
   QCursor pickColor = QCursor(pickColorPixmap, 0, pickColorPixmap.height()-1);
 
   QPoint cursorPos = GET_CURSOR_POS();
@@ -2246,7 +2346,7 @@ void ZoomWidget::initFileConfig(QString path, QString name, QString imgExt, QStr
   } else {
     _fileConfig.folder = QDir(path);
     if(!_fileConfig.folder.exists())
-      logUser(LOG_ERROR_AND_EXIT,  "The given path doesn't exits or it's a file");
+      logUser(LOG_ERROR_AND_EXIT, "", "The given path doesn't exits or it's a file");
   }
 
   // Name
@@ -2255,7 +2355,7 @@ void ZoomWidget::initFileConfig(QString path, QString name, QString imgExt, QStr
   // Check if image extension is supported
   QList supportedExtensions = QImageWriter::supportedImageFormats();
   if( (!imgExt.isEmpty()) && (!supportedExtensions.contains(imgExt)) )
-    logUser(LOG_ERROR_AND_EXIT, "Image extension not supported");
+    logUser(LOG_ERROR_AND_EXIT, "", "Image extension not supported");
 
   // Extension
   const char* defaultImgExt = "png";
@@ -2535,11 +2635,11 @@ void ZoomWidget::grabFromClipboard(FitImage config)
   QImage image;
 
   if(!clipboard)
-    logUser(LOG_ERROR_AND_EXIT, "The clipboard is uninitialized");
+    logUser(LOG_ERROR_AND_EXIT, "", "The clipboard is uninitialized");
 
   image = clipboard->image();
   if(image.isNull())
-    logUser(LOG_ERROR_AND_EXIT, "The clipboard doesn't contain an image or its format is not supported");
+    logUser(LOG_ERROR_AND_EXIT, "", "The clipboard doesn't contain an image or its format is not supported");
 
   grabImage(QPixmap::fromImage(image), config);
 }
@@ -2547,12 +2647,12 @@ void ZoomWidget::grabFromClipboard(FitImage config)
 void ZoomWidget::createBlackboard(QSize size)
 {
   if(size.width() < _screenSize.width()) {
-    logUser(LOG_INFO, "The given width is less than the screen's width, so the width is now the screen's width");
+    logUser(LOG_INFO, "", "The given width is less than the screen's width, so the width is now the screen's width");
     size.setWidth(_screenSize.width());
   }
 
   if(size.height() < _screenSize.height()) {
-    logUser(LOG_INFO, "The given height is less than the screen's height, so the height is now the screen's height");
+    logUser(LOG_INFO, "", "The given height is less than the screen's height, so the height is now the screen's height");
     size.setHeight(_screenSize.height());
   }
 
@@ -2577,9 +2677,9 @@ void ZoomWidget::grabDesktop()
     }
 
     if(QGuiApplication::platformName() == QString("wayland"))
-      logUser(LOG_ERROR_AND_EXIT, "Couldn't grab the desktop. It seems you're using Wayland: try to use the '-l' flag (live mode)");
+      logUser(LOG_ERROR_AND_EXIT, "", "Couldn't grab the desktop. It seems you're using Wayland: try to use the '-l' flag (live mode)");
     else
-      logUser(LOG_ERROR_AND_EXIT, "Couldn't grab the desktop");
+      logUser(LOG_ERROR_AND_EXIT, "", "Couldn't grab the desktop");
   }
 
   // Paint the desktop over _sourcePixmap
@@ -2596,7 +2696,7 @@ void ZoomWidget::grabDesktop()
 void ZoomWidget::grabImage(QPixmap img, FitImage config)
 {
   if(img.isNull())
-    logUser(LOG_ERROR_AND_EXIT, "Couldn't open the image");
+    logUser(LOG_ERROR_AND_EXIT, "", "Couldn't open the image");
 
   // Auto detect the fit config
   if(config == FIT_AUTO){
@@ -2754,35 +2854,60 @@ bool ZoomWidget::isTextEditable(QPoint cursorPos)
 
 // Function taken from https://github.com/tsoding/musializer/blob/master/src/nob.h
 // inside the nob_log function
-void ZoomWidget::logUser(Log_Urgency type, const char *fmt, ...)
+void ZoomWidget::logUser(Log_Urgency type, QString popupMsg, const char *fmt, ...)
 {
-  FILE *output = stderr;
+  FILE *output;
   bool exitApp = false;
+  char msg[1000] = {0};
 
   switch (type) {
-    case LOG_INFO:
-      fprintf(stderr, "[INFO] ");
-      break;
-    case LOG_ERROR:
-      fprintf(stderr, "[ERROR] ");
-      break;
-    case LOG_ERROR_AND_EXIT:
-      fprintf(stderr, "[ERROR] ");
-      exitApp = true;
-      break;
     case LOG_TEXT:
+    case LOG_SUCCESS:
+    case LOG_INFO:
       output = stdout;
+      fprintf(output, "[INFO] ");
+      break;
+
+    case LOG_ERROR_AND_EXIT:
+      exitApp = true;
+    case LOG_ERROR:
+      output = stderr;
+      fprintf(output, "[ERROR] ");
       break;
   }
 
   va_list args;
   va_start(args, fmt);
-  vfprintf(output, fmt, args);
-  fprintf(output, "\n");
+  vsnprintf(msg, 1000, fmt, args);
   va_end(args);
+
+  fprintf(output, "%s\n", msg);
 
   if(exitApp)
     exit(EXIT_FAILURE);
+
+  if(type == LOG_TEXT)
+    return;
+
+  // Popup
+  const int delay = 200; // Delay to ensure that the message gets passed the lifetime
+  if(popupMsg.isEmpty()) popupMsg=QString(msg);
+  int lifetime = 0;
+  switch (type) {
+    case LOG_SUCCESS: lifetime = POPUP_SUCCESS_MSEC; break;
+    case LOG_INFO:    lifetime = POPUP_INFO_MSEC;    break;
+    case LOG_ERROR:   lifetime = POPUP_ERROR_MSEC;   break;
+
+    case LOG_TEXT:
+    case LOG_ERROR_AND_EXIT:
+      logUser(LOG_ERROR_AND_EXIT, "", "You shouldn't be here...");
+      break;
+  }
+
+  const qint64 time = QDateTime::currentMSecsSinceEpoch();
+  _popupTray.append(Popup{ time, popupMsg, type });
+  QTimer::singleShot(lifetime+delay, this, [=]() { update(); });
+  update();
 }
 
 void ZoomWidget::getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h, bool posRelativeToScreen)

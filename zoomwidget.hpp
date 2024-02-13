@@ -63,6 +63,12 @@
 #define SCALE_SENSIVITY 0.2f // For the sensibility of the mouse wheel
 
 #define DISABLE_MOUSE_TRACKING false
+
+#define POPUP_ERROR_MSEC 3000
+#define POPUP_INFO_MSEC 1500
+#define POPUP_SUCCESS_MSEC 1000
+#define POPUP_WIDTH 300
+#define POPUP_HEIGHT 100
 // END OF CUSTOMIZATION
 
 // CODE
@@ -276,15 +282,24 @@ struct ToolBar {
 enum ZoomWidgetScreenOpts {
   SCREENOPTS_HIDE_ALL, // Only show the background. This disables some functions
                        // too (like the mouse actions and changing modes)
-  SCREENOPTS_HIDE_STATUS,
+  SCREENOPTS_HIDE_FLOATING, // Hides the status and the popups
   SCREENOPTS_SHOW_ALL,
 };
 
 enum Log_Urgency {
+  // With popup
   LOG_INFO,
+  LOG_SUCCESS,
   LOG_ERROR,
+  // No popup
+  LOG_TEXT,            // To just print to stdout
   LOG_ERROR_AND_EXIT,
-  LOG_TEXT
+};
+
+struct Popup {
+  qint64 timeCreated;
+  QString message;
+  Log_Urgency urgency;
 };
 
 template<typename T>
@@ -430,6 +445,7 @@ class ZoomWidget : public QWidget
     /////////////////////////
 
     ToolBar _toolBar;
+    QList<Popup> _popupTray;
 
     // Modes
     bool _exitConfirm;
@@ -474,6 +490,8 @@ class ZoomWidget : public QWidget
     void drawButton(QPainter *screenPainter, Button button);
     ArrowHead getArrowHead(int x, int y, int width, int height);
     void drawTrimmed(QPainter *pixmapPainter);
+    void drawPopupTray(QPainter *screenPainter);
+    void drawPopup(QPainter *screenPainter, const int listPos, const int margin);
 
     void saveImage(QPixmap pixmap, bool toImage);
 
@@ -545,7 +563,9 @@ class ZoomWidget : public QWidget
 
     void saveStateToFile(); // Create a .zoomme file
 
-    void logUser(Log_Urgency type, const char *fmt, ...);
+    // If the popupMsg is empty, the *fmt will be the popupMsg (if the type
+    // accepts popups)
+    void logUser(Log_Urgency type, QString popupMsg, const char *fmt, ...);
 };
 
 #endif // ZOOMWIDGET_HPP
