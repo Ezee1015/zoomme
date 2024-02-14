@@ -761,7 +761,7 @@ void ZoomWidget::saveStateToFile()
   }
 
   QApplication::beep();
-  logUser(LOG_SUCCESS, "", "Project saved correctly: %s", QSTRING_TO_STRING(filePath));
+  logUser(LOG_SUCCESS, "Project file saved correctly!", "Project saved correctly: %s", QSTRING_TO_STRING(filePath));
 }
 
 void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
@@ -829,7 +829,7 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
     else
       scaledPixmap = scaledPixmap.scaledToHeight(_screenSize.height());
 
-    logUser(LOG_INFO, "The ZoomMe recovery file was scaled!", "Scaling ZoomMe recover file...");
+    logUser(LOG_INFO, "The ZoomMe recovery file was scaled! This may cause loss of quality...", "Scaling ZoomMe recover file...");
     logUser(LOG_TEXT, "", "  - Recovered screen size: %dx%d", savedScreenSize.width(), savedScreenSize.height());
     logUser(LOG_TEXT, "", "  - Actual screen size: %dx%d", _screenSize.width(), _screenSize.height());
     logUser(LOG_TEXT, "", "  - Recovered image size: %dx%d", savedPixmapSize.width(), savedPixmapSize.height());
@@ -943,7 +943,7 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
   }
 
   if(in.atEnd())
-    logUser(LOG_SUCCESS, "", "Recovery finished successfully (reached EOF)");
+    logUser(LOG_SUCCESS, "", "Recovery algorithm finished successfully (reached End Of File)");
   else
     logUser(LOG_ERROR_AND_EXIT, "", "There is data left in the ZoomMe file that was not loaded by the recovery algorithm (because it ended before the EOF). Please check the saving and the recovery algorithm: There may be some variables missing in the recovery and not in the saving or some variables added in the saving but not in the recovery...");
 }
@@ -1013,7 +1013,7 @@ void ZoomWidget::createVideoFFmpeg()
     return;
   }
 
-  logUser(LOG_SUCCESS, "", "Video encoding was successful: %s", QSTRING_TO_STRING(getFilePath(FILE_VIDEO)));
+  logUser(LOG_SUCCESS, "", "Video encoding was successful! FFmpeg finished without any error...", QSTRING_TO_STRING(getFilePath(FILE_VIDEO)));
   QApplication::beep();
 }
 
@@ -2021,7 +2021,7 @@ void ZoomWidget::saveImage(QPixmap pixmap, bool toImage)
      QString path = getFilePath(FILE_IMAGE);
      if(pixmap.save(path)) {
        QApplication::beep();
-       logUser(LOG_SUCCESS, "", "Image saved correctly: %s", QSTRING_TO_STRING(path));
+       logUser(LOG_SUCCESS, "Image saved correctly!", "Image saved correctly: %s", QSTRING_TO_STRING(path));
      } else {
        logUser(LOG_ERROR, "", "Couldn't save the picture to: %s", QSTRING_TO_STRING(path));
      }
@@ -2082,7 +2082,7 @@ void ZoomWidget::saveImage(QPixmap pixmap, bool toImage)
 
   // If there's no errors, beep and exit
   else {
-   logUser(LOG_SUCCESS, "","Saving image to clipboard with %s was successful", QSTRING_TO_STRING(appName));
+   logUser(LOG_SUCCESS, "","Saving image to clipboard with %s was successful!", QSTRING_TO_STRING(appName));
    QApplication::beep();
    return;
   }
@@ -2104,7 +2104,7 @@ void ZoomWidget::saveImage(QPixmap pixmap, bool toImage)
   QList<QUrl> urlList; urlList.append(QUrl::fromLocalFile(path));
   mimeData->setUrls(urlList);
   clipboard->setMimeData(mimeData);
-  logUser(LOG_SUCCESS, "", "Image saved to clipboard successfully");
+  logUser(LOG_SUCCESS, "", "Image path saved to clipboard successfully!");
   QApplication::beep();
 #else
   // Copy the image into clipboard (this causes some problems with the
@@ -2117,7 +2117,7 @@ void ZoomWidget::saveImage(QPixmap pixmap, bool toImage)
 
   logUser(LOG_TEXT, "", "Saving the image to the clipboard with Qt");
   clipboard->setImage(pixmap.toImage());
-  logUser(LOG_SUCCESS, "", "Image saved to clipboard successfully");
+  logUser(LOG_SUCCESS, "", "Image saved to clipboard successfully!");
   QApplication::beep();
 #endif
 }
@@ -2218,7 +2218,7 @@ void ZoomWidget::updateCursorShape()
 
   // Pick color
   QPixmap pickColorPixmap(":/resources/color-picker-16.png");
-  if (pickColorPixmap.isNull()) logUser(LOG_ERROR, "", "Failed to load pixmap for custom cursor (color-picker)");
+  if (pickColorPixmap.isNull()) logUser(LOG_ERROR, "", "Failed to load pixmap for the color-picker cursor");
   QCursor pickColor = QCursor(pickColorPixmap, 0, pickColorPixmap.height()-1);
 
   QPoint cursorPos = GET_CURSOR_POS();
