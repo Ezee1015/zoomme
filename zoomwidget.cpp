@@ -1306,6 +1306,7 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const int
         startDivider.y()
       );
     // Title text
+  font.setBold(true); screenPainter->setFont(font);
   screenPainter->drawText(
         popupRect.x(),     popupRect.y(),
         popupRect.width(), titleHeight,
