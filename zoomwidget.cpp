@@ -1216,6 +1216,7 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const int
 {
   const Popup p = _popupTray.at(listPos);
   const qint64 time = QDateTime::currentMSecsSinceEpoch();
+  const int timeConsumed = time - p.timeCreated;
   const int fontSize   = 16;
   const int penWidth   = 5;
   const int progressCircleRadius = 4;
@@ -1225,30 +1226,30 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const int
 
   // Invert the position for the calculation of the 'y' axis: newest at the top
   const int popupLevel = (_popupTray.size()-1) - listPos;
-  const QRect popupRect(
+
+  QRect popupRect(
         margin,
         margin + popupLevel * (margin+POPUP_HEIGHT),
         POPUP_WIDTH,
         POPUP_HEIGHT
       );
 
-  ////////// FADE OUT Pop-up
-  // First section, normal alpha,
-  // After section, increase transparency
-  // lt = lifetime
-  // s  = section
-  //            |-0.2-| ---> section
-  // 0        lt*s   lt
-  // |---------||====||
-  //           0.0   1.0  --> percentageInSection --> fading out
-  const float section = 0.2; // (the last 1/5 of the lifetime)
-  const int timeConsumed = time - p.timeCreated;
-  const float lifeInSection = timeConsumed - (float)p.lifetime * (1-section);
-  float percentageInSection = lifeInSection / ((float)p.lifetime * section); // 0.0 to 1.0
-  if(percentageInSection > 1) percentageInSection = 1;
-  if(percentageInSection < 0) percentageInSection = 0;
-  const float alphaPercentage = 1-percentageInSection;
-  //////////
+  // FADE OUT Pop-up
+  const float lastSection = 0.2; // (the last 1/5 of the lifetime)
+  const float lifeInLastSection = timeConsumed - (float)p.lifetime * (1-lastSection);
+  float percentageInLastSection = lifeInLastSection / ((float)p.lifetime * lastSection); // 0.0 to 1.0
+  if(percentageInLastSection > 1) percentageInLastSection = 1;
+  if(percentageInLastSection < 0) percentageInLastSection = 0;
+  const float alphaPercentage = 1-percentageInLastSection;
+
+  // FADE IN Pop-up
+  const float firstSection = 0.08; // (the first 2/25 of the lifetime)
+  float percentageInFirstSection = timeConsumed / ((float)p.lifetime * firstSection); // 0.0 to 1.0
+  if(percentageInFirstSection > 0 && percentageInFirstSection < 1) {
+    const int fadeIn = (popupRect.x() + popupRect.width()) * (1-percentageInFirstSection);
+    popupRect.setX(popupRect.x() - fadeIn);
+    popupRect.setWidth(popupRect.width() - fadeIn);
+  }
 
   // MAIN COLOR AND TITLE TEXT
   QColor color;
