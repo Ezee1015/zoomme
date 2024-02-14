@@ -2713,6 +2713,8 @@ void ZoomWidget::createBlackboard(QSize size)
   _sourcePixmap.fill(QCOLOR_BLACKBOARD);
   _canvas.size = size;
   _canvas.originalSize = size;
+
+  showFullScreen();
 }
 
 void ZoomWidget::grabDesktop()
