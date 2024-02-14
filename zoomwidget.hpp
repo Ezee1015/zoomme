@@ -67,7 +67,7 @@
 #define POPUP_ERROR_MSEC 4000
 #define POPUP_INFO_MSEC 3000
 #define POPUP_SUCCESS_MSEC 3000
-#define POPUP_UPDATE_MSEC 100
+#define POPUP_UPDATE_MSEC 20
 #define POPUP_WIDTH 300
 #define POPUP_HEIGHT 100
 // END OF CUSTOMIZATION
@@ -494,7 +494,7 @@ class ZoomWidget : public QWidget
     ArrowHead getArrowHead(int x, int y, int width, int height);
     void drawTrimmed(QPainter *pixmapPainter);
     void drawPopupTray(QPainter *screenPainter);
-    void drawPopup(QPainter *screenPainter, const int listPos, const int margin, const float alpha);
+    void drawPopup(QPainter *screenPainter, const int listPos, const int margin);
 
     void updateForPopups(); // Timer function
 

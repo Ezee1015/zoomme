@@ -1212,57 +1212,119 @@ void ZoomWidget::drawToolBar(QPainter *screenPainter)
   }
 }
 
-void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const int margin, const float alphaPercentage)
+void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const int margin)
 {
-  const int fontSize = 16;
-  const int penWidth = 5;
+  const Popup p = _popupTray.at(listPos);
+  const qint64 time = QDateTime::currentMSecsSinceEpoch();
+  const int fontSize   = 16;
+  const int penWidth   = 5;
+  const int progressCircleRadius = 4;
+  const int titleBorderWidth     = 1;
+  const int titleHeight = 30;
   const int textPadding = 10;
+
   // Invert the position for the calculation of the 'y' axis: newest at the top
   const int popupLevel = (_popupTray.size()-1) - listPos;
   const QRect popupRect(
-                          margin,
-                          margin + popupLevel * (margin+POPUP_HEIGHT),
-                          POPUP_WIDTH,
-                          POPUP_HEIGHT
-                       );
+        margin,
+        margin + popupLevel * (margin+POPUP_HEIGHT),
+        POPUP_WIDTH,
+        POPUP_HEIGHT
+      );
 
-  // Main color
+  ////////// FADE OUT Pop-up
+  // First section, normal alpha,
+  // After section, increase transparency
+  // lt = lifetime
+  // s  = section
+  //            |-0.2-| ---> section
+  // 0        lt*s   lt
+  // |---------||====||
+  //           0.0   1.0  --> percentageInSection --> fading out
+  const float section = 0.2; // (the last 1/5 of the lifetime)
+  const int timeConsumed = time - p.timeCreated;
+  const float lifeInSection = timeConsumed - (float)p.lifetime * (1-section);
+  float percentageInSection = lifeInSection / ((float)p.lifetime * section); // 0.0 to 1.0
+  if(percentageInSection > 1) percentageInSection = 1;
+  if(percentageInSection < 0) percentageInSection = 0;
+  const float alphaPercentage = 1-percentageInSection;
+  //////////
+
+  // MAIN COLOR AND TITLE TEXT
   QColor color;
-  switch(_popupTray.at(listPos).urgency) {
-    case LOG_INFO:    color = QCOLOR_CYAN; break;
-    case LOG_SUCCESS: color = QCOLOR_GREEN; break;
-    case LOG_ERROR:   color = QCOLOR_RED;  break;
+  QString title;
+  switch(p.urgency) {
+    case LOG_INFO:    color = QCOLOR_CYAN;  title="INFORMATION"; break;
+    case LOG_SUCCESS: color = QCOLOR_GREEN; title="SUCCESS";     break;
+    case LOG_ERROR:   color = QCOLOR_RED;   title="ERROR";       break;
 
     case LOG_TEXT:
-      logUser(LOG_ERROR_AND_EXIT, "", "An error happened. You shouldn't be able to print a popup with LOG_TEXT, as it's only designed to print it to the stdout");
     case LOG_ERROR_AND_EXIT:
-      logUser(LOG_ERROR_AND_EXIT, "", "An error happened. You shouldn't be able to print a popup if you're going to exit the application");
+      logUser(LOG_ERROR_AND_EXIT, "", "An error happened. You shouldn't print a popup with LOG_ERROR_AND_EXIT or LOG_TEXT");
       break;
   }
 
-  // Painter configurations
+  // PAINTER CONFIGURATIONS
   QFont font; font.setPixelSize(fontSize); screenPainter->setFont(font);
   color.setAlpha(255 * alphaPercentage);
   screenPainter->setPen(color);
   changePenWidth(screenPainter, penWidth);
 
+  // BACKGROUND
   QPainterPath background;
   background.addRoundedRect(popupRect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
-  // Contrast
+    // Contrast
   QColor contrast = QCOLOR_BLACK;
   contrast.setAlpha(175 * alphaPercentage); // Transparency
   screenPainter->fillPath(background, contrast);
-  // Highlight
+    // Highlight
   color.setAlpha(65 * alphaPercentage); // Transparency
   screenPainter->fillPath(background, color);
 
+  // MAIN TEXT AND BORDERS
   screenPainter->drawRoundedRect(popupRect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
-  screenPainter->drawText(popupRect.x()+textPadding,
-                          popupRect.y()+textPadding,
-                          popupRect.width()-2*textPadding,
-                          popupRect.height()-2*textPadding,
-                          Qt::AlignCenter | Qt::TextWordWrap,
-                          _popupTray.at(listPos).message);
+  screenPainter->drawText(
+        popupRect.x() + textPadding,
+        popupRect.y() + textPadding + titleHeight,
+        popupRect.width()  - 2*textPadding,
+        popupRect.height() - 2*textPadding - titleHeight,
+        Qt::AlignCenter | Qt::TextWordWrap,
+        p.message
+      );
+
+  // TITLE
+  const QPoint startDivider(
+        popupRect.x(),
+        popupRect.y() + titleHeight
+      );
+  const QPoint endDivider(
+        startDivider.x() + popupRect.width(),
+        startDivider.y()
+      );
+  const QPoint endDividerProgress(
+        startDivider.x() + popupRect.width() * (1 - (float)timeConsumed/(float)p.lifetime),
+        startDivider.y()
+      );
+    // Title text
+  screenPainter->drawText(
+        popupRect.x(),     popupRect.y(),
+        popupRect.width(), titleHeight,
+        Qt::AlignCenter | Qt::TextWordWrap,
+        title
+      );
+    // Progress line and circle
+  screenPainter->drawLine(startDivider, endDividerProgress);
+  screenPainter->setBrush(screenPainter->pen().color()); // Fill
+  screenPainter->drawEllipse(
+        endDividerProgress.x() - progressCircleRadius,
+        endDividerProgress.y() - progressCircleRadius,
+        2 * progressCircleRadius,
+        2 * progressCircleRadius
+      );
+  screenPainter->setBrush(QBrush()); // No fill
+    // Static divider Line
+  changePenWidth(screenPainter, titleBorderWidth);
+  screenPainter->drawLine(endDividerProgress, endDivider);
 }
 
 void ZoomWidget::drawPopupTray(QPainter *screenPainter)
@@ -1273,7 +1335,6 @@ void ZoomWidget::drawPopupTray(QPainter *screenPainter)
   if(_popupTray.size() == 0)
     return;
 
-  const qint64 time = QDateTime::currentMSecsSinceEpoch();
   const int margin  = 20;
 
   if(isCursorInsideHitBox(margin,
@@ -1287,23 +1348,8 @@ void ZoomWidget::drawPopupTray(QPainter *screenPainter)
   }
 
   for(int i=_popupTray.size()-1; i>=0; i--) {
-    Popup p = _popupTray.at(i);
 
-    // lt = lifetime
-    // 0     lt/2      lt
-    // |------||=======||
-    //        0.0      1.0  --> percentageInSecondHalf
-    const int timeConsumed = time-p.timeCreated;
-    const float lifeInSecondHalf = (timeConsumed - (float)p.lifetime/2.0);
-    const float percentageInSecondHalf = lifeInSecondHalf / ((float)p.lifetime/2.0); // 0.0 to 1.0
-
-    // First half, normal alpha,
-    // After second half, increase transparency
-    const float alphaPercentage = (timeConsumed <= p.lifetime/2)
-                                  ? 1.0
-                                  : 1-percentageInSecondHalf;
-
-    drawPopup(screenPainter, i, margin, alphaPercentage);
+    drawPopup(screenPainter, i, margin);
   }
 }
 
@@ -2905,7 +2951,7 @@ void ZoomWidget::logUser(Log_Urgency type, QString popupMsg, const char *fmt, ..
 
     case LOG_TEXT:
     case LOG_ERROR_AND_EXIT:
-      logUser(LOG_ERROR_AND_EXIT, "", "You shouldn't be here...");
+      logUser(LOG_ERROR_AND_EXIT, "", "An error happened. You shouldn't add a pop-up with LOG_ERROR_AND_EXIT or LOG_TEXT");
       break;
   }
 
