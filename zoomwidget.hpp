@@ -12,6 +12,8 @@
 #include <QFile>
 #include <QFont>
 #include <QDir>
+#include <QSize>
+#include <QPoint>
 #include <stdio.h>
 #include <stdarg.h>
 
