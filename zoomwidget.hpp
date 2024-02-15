@@ -309,6 +309,15 @@ struct Popup {
   Log_Urgency urgency;
 };
 
+struct PopupTray {
+  QList<Popup> popups;
+  int margin;
+  QPoint start;
+  float slideIn;  // a fraction (section) of the lifetime (from 0.0 to 1.0) for the effect
+  float slideOut; // a fraction (section) of the lifetime (from 0.0 to 1.0) for the effect
+  QTimer *updateTimer;
+};
+
 template<typename T>
 class Drawing {
   private:
@@ -452,8 +461,7 @@ class ZoomWidget : public QWidget
     /////////////////////////
 
     ToolBar _toolBar;
-    QList<Popup> _popupTray;
-    QTimer *_popupUpdateTimer;
+    PopupTray _popupTray;
 
     // Modes
     bool _exitConfirm;
@@ -499,8 +507,10 @@ class ZoomWidget : public QWidget
     ArrowHead getArrowHead(int x, int y, int width, int height);
     void drawTrimmed(QPainter *pixmapPainter);
     void drawPopupTray(QPainter *screenPainter);
-    void drawPopup(QPainter *screenPainter, const int listPos, const QPoint trayStart, const int margin, const float slideOutSection);
+    void drawPopup(QPainter *screenPainter, const int listPos);
 
+    void setPopupTrayPos();
+    QRect getPopupRect(const int listPos);
     void updateForPopups(); // Timer function
 
     void saveImage(QPixmap pixmap, bool toImage);

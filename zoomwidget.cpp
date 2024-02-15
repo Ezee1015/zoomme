@@ -67,11 +67,15 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _activePen.setColor(QCOLOR_RED);
   _activePen.setWidth(4);
 
-  _popupUpdateTimer = new QTimer(this);
-  connect( _popupUpdateTimer,
+  _popupTray.slideIn = 0.08;  // a 2/25 of the lifetime
+  _popupTray.slideOut = 0.08; // a 2/25 of the lifetime
+  _popupTray.margin = 20;
+  _popupTray.updateTimer = new QTimer(this);
+  connect( _popupTray.updateTimer,
            &QTimer::timeout,
            this,
            &ZoomWidget::updateForPopups );
+  setPopupTrayPos();
 
   _toolBar.show = false;
   loadButtons();
@@ -1212,9 +1216,22 @@ void ZoomWidget::drawToolBar(QPainter *screenPainter)
   }
 }
 
-void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const QPoint trayStart, const int margin, const float slideOutSection)
+QRect ZoomWidget::getPopupRect(const int listPos)
 {
-  const Popup p = _popupTray.at(listPos);
+  // Invert the position for the calculation of the 'y' axis: newest at the top
+  const int popupLevel = (_popupTray.popups.size()-1) - listPos;
+
+  return QRect(
+        _popupTray.start.x(),
+        _popupTray.start.y() + popupLevel * (_popupTray.margin+POPUP_HEIGHT),
+        POPUP_WIDTH,
+        POPUP_HEIGHT
+      );
+}
+
+void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
+{
+  const Popup p = _popupTray.popups.at(listPos);
   const qint64 time = QDateTime::currentMSecsSinceEpoch();
   const int timeConsumed = time - p.timeCreated;
   const int fontSize   = 16;
@@ -1225,22 +1242,13 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const QPo
   const int titleHeight = 30;
   const int textPadding = 10;
 
-  // Invert the position for the calculation of the 'y' axis: newest at the top
-  const int popupLevel = (_popupTray.size()-1) - listPos;
-
-  QRect popupRect(
-        trayStart.x(),
-        trayStart.y() + popupLevel * (margin+POPUP_HEIGHT),
-        POPUP_WIDTH,
-        POPUP_HEIGHT
-      );
-
+  QRect popupRect = getPopupRect(listPos);
   // SLIDE OUT
   // 0                lifetime
   // |==|----------|==|
   // |e | visible  | e| (e --> effect)
-  const float effectDuration = (float)p.lifetime * slideOutSection;
-  const float endVisible = (float)p.lifetime * (1-slideOutSection);
+  const float effectDuration = (float)p.lifetime * _popupTray.slideOut;
+  const float endVisible = (float)p.lifetime * (1-_popupTray.slideOut);
   if(timeConsumed >= endVisible) {
     const float lifeInLastSection = timeConsumed - endVisible;
     const float percentageInLastSection = lifeInLastSection / effectDuration; // 0.0 to 1.0
@@ -1249,8 +1257,8 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const QPo
     popupRect.setWidth(popupRect.width() - slideOut);
   }
   // FADE OUT
-  // const float lifeInLastSection = timeConsumed - (float)p.lifetime * (1-slideOutSection);
-  // float percentageInLastSection = lifeInLastSection / ((float)p.lifetime * slideOutSection); // 0.0 to 1.0
+  // const float lifeInLastSection = timeConsumed - (float)p.lifetime * (1-_popupTray.slideOut);
+  // float percentageInLastSection = lifeInLastSection / ((float)p.lifetime * _popupTray.slideOut); // 0.0 to 1.0
   // if(percentageInLastSection > 1) percentageInLastSection = 1;
   // if(percentageInLastSection < 0) percentageInLastSection = 0;
   // const float alphaPercentage = 1-percentageInLastSection;
@@ -1333,32 +1341,16 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const QPo
   screenPainter->drawLine(endDividerProgress, endDivider);
 }
 
-void ZoomWidget::drawPopupTray(QPainter *screenPainter)
+void ZoomWidget::setPopupTrayPos()
 {
-  if(_screenOpts == SCREENOPTS_HIDE_ALL || _screenOpts == SCREENOPTS_HIDE_FLOATING)
-    return;
-
-  if(_popupTray.size() == 0)
-    return;
-
-  const int popupMargin  = 20;
   const qint64 time = QDateTime::currentMSecsSinceEpoch();
-  const float slideInSection = 0.08; // (the first 2/25 of the lifetime)
-  const float slideOutSection = 0.08; // (the last 2/25 of the lifetime)
-
-  QRect popupTray(
-        popupMargin,
-        popupMargin,
-        POPUP_WIDTH,
-        (POPUP_HEIGHT + popupMargin) * _popupTray.size() - popupMargin // Take out the bottom margin of the last pop-up
-      );
 
   // SLIDE IN
   int slideInTray = 0;
-  for(int i=0; i<_popupTray.size(); i++) {
-    Popup p = _popupTray.at(i);
+  for(int i=0; i<_popupTray.popups.size(); i++) {
+    Popup p = _popupTray.popups.at(i);
     const int timeConsumed = time - p.timeCreated;
-    const float effectDuration = (float)p.lifetime * slideInSection;
+    const float effectDuration = (float)p.lifetime * _popupTray.slideIn;
 
     // 0                lifetime
     // |==|----------|==|
@@ -1366,25 +1358,44 @@ void ZoomWidget::drawPopupTray(QPainter *screenPainter)
     const float startVisible = effectDuration; // The visible starts when the effect finishes
     if(timeConsumed <= startVisible) {
       const float percentageInFirstSection = timeConsumed / effectDuration; // 0.0 to 1.0
-      const int slideIn = (popupTray.y() + POPUP_HEIGHT) * (1-percentageInFirstSection);
+      const int slideIn = (POPUP_HEIGHT + _popupTray.margin) * (1-percentageInFirstSection);
       slideInTray += slideIn;
     }
   }
-  popupTray.setY(popupTray.y() - slideInTray);
+
+  _popupTray.start = QPoint(
+        _popupTray.margin,
+        _popupTray.margin - slideInTray
+      );
+}
+
+void ZoomWidget::drawPopupTray(QPainter *screenPainter)
+{
+  if(_screenOpts == SCREENOPTS_HIDE_ALL || _screenOpts == SCREENOPTS_HIDE_FLOATING)
+    return;
+
+  if(_popupTray.popups.size() == 0)
+    return;
+
+  setPopupTrayPos();
+  const QSize traySize(
+        POPUP_WIDTH,
+        (POPUP_HEIGHT + _popupTray.margin) * _popupTray.popups.size() - _popupTray.margin // Take out the bottom margin of the last pop-up
+      );
 
   if(isCursorInsideHitBox(
-        popupTray.x() - popupMargin,
-        popupTray.y() - popupMargin,
-        popupTray.width() + 2*popupMargin,
-        popupTray.height() + 2*popupMargin,
+        _popupTray.start.x() - _popupTray.margin,
+        _popupTray.start.y() - _popupTray.margin,
+        traySize.width() + 2*_popupTray.margin,
+        traySize.height() + 2*_popupTray.margin,
         GET_CURSOR_POS(),
         true)
     ) {
     return;
   }
 
-  for(int i=_popupTray.size()-1; i>=0; i--)
-    drawPopup(screenPainter, i, popupTray.topLeft(), popupMargin, slideOutSection);
+  for(int i=_popupTray.popups.size()-1; i>=0; i--)
+    drawPopup(screenPainter, i);
 }
 
 void ZoomWidget::drawStatus(QPainter *screenPainter)
@@ -2992,25 +3003,25 @@ void ZoomWidget::logUser(Log_Urgency type, QString popupMsg, const char *fmt, ..
   }
 
   const qint64 time = QDateTime::currentMSecsSinceEpoch();
-  _popupTray.append(Popup{ time, lifetime, popupMsg, type });
-  if(!_popupUpdateTimer->isActive())
-    _popupUpdateTimer->start(POPUP_UPDATE_MSEC);
+  _popupTray.popups.append(Popup{ time, lifetime, popupMsg, type });
+  if(!_popupTray.updateTimer->isActive())
+    _popupTray.updateTimer->start(POPUP_UPDATE_MSEC);
   update();
 }
 
 void ZoomWidget::updateForPopups()
 {
-  if(_popupTray.size() == 0)
-    _popupUpdateTimer->stop();
+  if(_popupTray.popups.size() == 0)
+    _popupTray.updateTimer->stop();
 
   const qint64 time = QDateTime::currentMSecsSinceEpoch();
 
   // Remove old pop-ups
-  for(int i=_popupTray.size()-1; i>=0; i--) {
-    Popup p = _popupTray.at(i);
+  for(int i=_popupTray.popups.size()-1; i>=0; i--) {
+    Popup p = _popupTray.popups.at(i);
 
     if((time-p.timeCreated) >= p.lifetime)
-      _popupTray.removeAt(i);
+      _popupTray.popups.removeAt(i);
   }
 
   update();
