@@ -1212,7 +1212,7 @@ void ZoomWidget::drawToolBar(QPainter *screenPainter)
   }
 }
 
-void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const int margin)
+void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const QPoint trayStart, const int margin, const float slideSection)
 {
   const Popup p = _popupTray.at(listPos);
   const qint64 time = QDateTime::currentMSecsSinceEpoch();
@@ -1228,26 +1228,17 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const int
   const int popupLevel = (_popupTray.size()-1) - listPos;
 
   QRect popupRect(
-        margin,
-        margin + popupLevel * (margin+POPUP_HEIGHT),
+        trayStart.x(),
+        trayStart.y() + popupLevel * (margin+POPUP_HEIGHT),
         POPUP_WIDTH,
         POPUP_HEIGHT
       );
 
-  const float slideSection = 0.08; // (the first/last 2/25 of the lifetime)
-  const float effectDuration = (float)p.lifetime * slideSection;
-  // SLIDE IN
+  // SLIDE OUT
   // 0                lifetime
   // |==|----------|==|
   // |e | visible  | e| (e --> effect)
-  const float startVisible = effectDuration; // The visible starts when the effect finishes
-  if(timeConsumed <= startVisible) {
-    const float percentageInFirstSection = timeConsumed / effectDuration; // 0.0 to 1.0
-    const int slideIn = (popupRect.x() + popupRect.width()) * (1-percentageInFirstSection);
-    popupRect.setX(popupRect.x() - slideIn);
-    popupRect.setWidth(popupRect.width() - slideIn);
-  }
-  // SLIDE OUT
+  const float effectDuration = (float)p.lifetime * slideSection;
   const float endVisible = (float)p.lifetime * (1-slideSection);
   if(timeConsumed >= endVisible) {
     const float lifeInLastSection = timeConsumed - endVisible;
@@ -1350,22 +1341,50 @@ void ZoomWidget::drawPopupTray(QPainter *screenPainter)
   if(_popupTray.size() == 0)
     return;
 
-  const int margin  = 20;
+  const int popupMargin  = 20;
+  const qint64 time = QDateTime::currentMSecsSinceEpoch();
+  const float slideInSection = 0.08; // (the first 2/25 of the lifetime)
+  const float slideOutSection = 0.08; // (the last 2/25 of the lifetime)
 
-  if(isCursorInsideHitBox(margin,
-                          margin,
-                          POPUP_WIDTH,
-                          POPUP_HEIGHT * _popupTray.size(),
-                          GET_CURSOR_POS(),
-                          true)
+  QRect popupTray(
+        popupMargin,
+        popupMargin,
+        POPUP_WIDTH,
+        (POPUP_HEIGHT + popupMargin) * _popupTray.size() - popupMargin // Take out the bottom margin of the last pop-up
+      );
+
+  // SLIDE IN
+  int slideInTray = 0;
+  for(int i=0; i<_popupTray.size(); i++) {
+    Popup p = _popupTray.at(i);
+    const int timeConsumed = time - p.timeCreated;
+    const float effectDuration = (float)p.lifetime * slideInSection;
+
+    // 0                lifetime
+    // |==|----------|==|
+    // |e | visible  | e| (e --> effect)
+    const float startVisible = effectDuration; // The visible starts when the effect finishes
+    if(timeConsumed <= startVisible) {
+      const float percentageInFirstSection = timeConsumed / effectDuration; // 0.0 to 1.0
+      const int slideIn = (popupTray.y() + POPUP_HEIGHT) * (1-percentageInFirstSection);
+      slideInTray += slideIn;
+    }
+  }
+  popupTray.setY(popupTray.y() - slideInTray);
+
+  if(isCursorInsideHitBox(
+        popupTray.x() - popupMargin,
+        popupTray.y() - popupMargin,
+        popupTray.width() + 2*popupMargin,
+        popupTray.height() + 2*popupMargin,
+        GET_CURSOR_POS(),
+        true)
     ) {
     return;
   }
 
-  for(int i=_popupTray.size()-1; i>=0; i--) {
-
-    drawPopup(screenPainter, i, margin);
-  }
+  for(int i=_popupTray.size()-1; i>=0; i--)
+    drawPopup(screenPainter, i, popupTray.topLeft(), popupMargin, slideOutSection);
 }
 
 void ZoomWidget::drawStatus(QPainter *screenPainter)

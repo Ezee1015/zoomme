@@ -496,7 +496,7 @@ class ZoomWidget : public QWidget
     ArrowHead getArrowHead(int x, int y, int width, int height);
     void drawTrimmed(QPainter *pixmapPainter);
     void drawPopupTray(QPainter *screenPainter);
-    void drawPopup(QPainter *screenPainter, const int listPos, const int margin);
+    void drawPopup(QPainter *screenPainter, const int listPos, const QPoint trayStart, const int margin, const float slideSection);
 
     void updateForPopups(); // Timer function
 
