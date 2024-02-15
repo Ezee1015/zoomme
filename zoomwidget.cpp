@@ -67,8 +67,6 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _activePen.setColor(QCOLOR_RED);
   _activePen.setWidth(4);
 
-  _popupTray.slideIn = 0.08;  // a 2/25 of the lifetime
-  _popupTray.slideOut = 0.08; // a 2/25 of the lifetime
   _popupTray.margin = 20;
   _popupTray.updateTimer = new QTimer(this);
   connect( _popupTray.updateTimer,
@@ -1237,7 +1235,7 @@ void ZoomWidget::closePopupUnderCursor(const QPoint cursorPos)
   Popup edit = _popupTray.popups.takeAt(popupPos);
 
   const int timeConsumed = time - edit.timeCreated;
-  const int visibleEnd = edit.lifetime * (1-_popupTray.slideOut);
+  const int visibleEnd = edit.lifetime  - POPUP_SLIDE_OUT_MSEC;
   // Don't change the time if it's already sliding out
   if(timeConsumed < visibleEnd)
     edit.timeCreated = time - visibleEnd;
@@ -1293,18 +1291,17 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
   // 0                lifetime
   // |==|----------|==|
   // |e | visible  | e| (e --> effect)
-  const float effectDuration = (float)p.lifetime * _popupTray.slideOut;
-  const float endVisible = (float)p.lifetime * (1-_popupTray.slideOut);
+  const float endVisible = (float)p.lifetime - POPUP_SLIDE_OUT_MSEC;
   if(timeConsumed >= endVisible) {
     const float lifeInLastSection = timeConsumed - endVisible;
-    const float percentageInLastSection = lifeInLastSection / effectDuration; // 0.0 to 1.0
+    const float percentageInLastSection = lifeInLastSection / (float)POPUP_SLIDE_OUT_MSEC; // 0.0 to 1.0
     const int slideOut = (popupRect.x() + popupRect.width()) * percentageInLastSection;
     popupRect.setX(popupRect.x() - slideOut);
     popupRect.setWidth(popupRect.width() - slideOut);
   }
   // FADE OUT
-  // const float lifeInLastSection = timeConsumed - (float)p.lifetime * (1-_popupTray.slideOut);
-  // float percentageInLastSection = lifeInLastSection / ((float)p.lifetime * _popupTray.slideOut); // 0.0 to 1.0
+  // const float lifeInLastSection = timeConsumed - endVisible;
+  // float percentageInLastSection = lifeInLastSection / POPUP_SLIDE_MSEC; // 0.0 to 1.0
   // if(percentageInLastSection > 1) percentageInLastSection = 1;
   // if(percentageInLastSection < 0) percentageInLastSection = 0;
   // const float alphaPercentage = 1-percentageInLastSection;
@@ -1396,14 +1393,12 @@ void ZoomWidget::setPopupTrayPos()
   for(int i=0; i<_popupTray.popups.size(); i++) {
     Popup p = _popupTray.popups.at(i);
     const int timeConsumed = time - p.timeCreated;
-    const float effectDuration = (float)p.lifetime * _popupTray.slideIn;
 
     // 0                lifetime
     // |==|----------|==|
     // |e | visible  | e| (e --> effect)
-    const float startVisible = effectDuration; // The visible starts when the effect finishes
-    if(timeConsumed <= startVisible) {
-      const float percentageInFirstSection = timeConsumed / effectDuration; // 0.0 to 1.0
+    if(timeConsumed <= POPUP_SLIDE_IN_MSEC) {
+      const float percentageInFirstSection = (float)timeConsumed / (float)POPUP_SLIDE_IN_MSEC; // 0.0 to 1.0
       const int slideIn = (POPUP_HEIGHT + _popupTray.margin) * (1-percentageInFirstSection);
       slideInTray += slideIn;
     }

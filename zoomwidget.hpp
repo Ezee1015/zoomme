@@ -69,6 +69,8 @@
 #define POPUP_ERROR_MSEC 4000
 #define POPUP_INFO_MSEC 3000
 #define POPUP_SUCCESS_MSEC 3000
+#define POPUP_SLIDE_IN_MSEC 350
+#define POPUP_SLIDE_OUT_MSEC 350
 #define POPUP_UPDATE_MSEC 20
 #define POPUP_WIDTH 300
 #define POPUP_HEIGHT 120
@@ -313,8 +315,6 @@ struct PopupTray {
   QList<Popup> popups;
   int margin;
   QPoint start;
-  float slideIn;  // a fraction (section) of the lifetime (from 0.0 to 1.0) for the effect
-  float slideOut; // a fraction (section) of the lifetime (from 0.0 to 1.0) for the effect
   QTimer *updateTimer;
 };
 
