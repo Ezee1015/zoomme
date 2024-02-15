@@ -72,6 +72,9 @@
 #define POPUP_UPDATE_MSEC 20
 #define POPUP_WIDTH 300
 #define POPUP_HEIGHT 120
+// The intensity of the flashing circle in the progress bar. The bigger the
+// number, the less intense it is
+#define POPUP_CIRCLE_INTENSITY 140
 // END OF CUSTOMIZATION
 
 // CODE

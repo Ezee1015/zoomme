@@ -1219,7 +1219,8 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const QPo
   const int timeConsumed = time - p.timeCreated;
   const int fontSize   = 16;
   const int penWidth   = 5;
-  const int progressCircleRadius = 4;
+  const int progressCircleRadius = 4 + 2 * sin((float)timeConsumed/POPUP_CIRCLE_INTENSITY); // the sin of time/intensity
+  // const int progressCircleRadius = 4;
   const int titleBorderWidth     = 1;
   const int titleHeight = 30;
   const int textPadding = 10;
