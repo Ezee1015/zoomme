@@ -509,8 +509,11 @@ class ZoomWidget : public QWidget
     void drawPopupTray(QPainter *screenPainter);
     void drawPopup(QPainter *screenPainter, const int listPos);
 
+    // Pop-up
     void setPopupTrayPos();
     QRect getPopupRect(const int listPos);
+    bool isPressingPopup(const QPoint cursorPos);
+    void closePopupUnderCursor(const QPoint cursorPos);
     void updateForPopups(); // Timer function
 
     void saveImage(QPixmap pixmap, bool toImage);

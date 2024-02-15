@@ -1216,6 +1216,52 @@ void ZoomWidget::drawToolBar(QPainter *screenPainter)
   }
 }
 
+void ZoomWidget::closePopupUnderCursor(const QPoint cursorPos)
+{
+  const qint64 time = QDateTime::currentMSecsSinceEpoch();
+
+  int popupPos = -1;
+  for(int i=0; i<_popupTray.popups.size(); i++) {
+    const QRect p = getPopupRect(i);
+    if( isCursorInsideHitBox(p.x(), p.y(), p.width(), p.height(), cursorPos, true) ) {
+      popupPos = i;
+      break;
+    }
+  }
+
+  if(popupPos == -1) {
+    logUser(LOG_ERROR, "", "Couldn't find the pop-up under the cursor");
+    return;
+  }
+
+  Popup edit = _popupTray.popups.takeAt(popupPos);
+
+  const int timeConsumed = time - edit.timeCreated;
+  const int visibleEnd = edit.lifetime * (1-_popupTray.slideOut);
+  // Don't change the time if it's already sliding out
+  if(timeConsumed < visibleEnd)
+    edit.timeCreated = time - visibleEnd;
+
+  _popupTray.popups.insert(popupPos, edit);
+}
+
+bool ZoomWidget::isPressingPopup(const QPoint cursorPos)
+{
+  if(_state != STATE_MOVING)
+    return false;
+
+  if(_screenOpts == SCREENOPTS_HIDE_ALL || _screenOpts == SCREENOPTS_HIDE_FLOATING)
+    return false;
+
+  for(int i=0; i<_popupTray.popups.size(); i++) {
+    const QRect p = getPopupRect(i);
+    if( isCursorInsideHitBox(p.x(), p.y(), p.width(), p.height(), cursorPos, true) )
+      return true;
+  }
+
+  return false;
+}
+
 QRect ZoomWidget::getPopupRect(const int listPos)
 {
   // Invert the position for the calculation of the 'y' axis: newest at the top
@@ -1378,21 +1424,6 @@ void ZoomWidget::drawPopupTray(QPainter *screenPainter)
     return;
 
   setPopupTrayPos();
-  const QSize traySize(
-        POPUP_WIDTH,
-        (POPUP_HEIGHT + _popupTray.margin) * _popupTray.popups.size() - _popupTray.margin // Take out the bottom margin of the last pop-up
-      );
-
-  if(isCursorInsideHitBox(
-        _popupTray.start.x() - _popupTray.margin,
-        _popupTray.start.y() - _popupTray.margin,
-        traySize.width() + 2*_popupTray.margin,
-        traySize.height() + 2*_popupTray.margin,
-        GET_CURSOR_POS(),
-        true)
-    ) {
-    return;
-  }
 
   for(int i=_popupTray.popups.size()-1; i>=0; i--)
     drawPopup(screenPainter, i);
@@ -2002,6 +2033,12 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
     toggleAction(_toolBar.buttons.at(buttonPos).action);
     update();
     updateCursorShape();
+    return;
+  }
+
+  if(isPressingPopup(cursorPos)) {
+    closePopupUnderCursor(cursorPos);
+    update();
     return;
   }
 
