@@ -1287,7 +1287,8 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
   const int textPadding = 10;
 
   QRect popupRect = getPopupRect(listPos);
-  // SLIDE OUT
+  float alphaPercentage = 1;
+
   // 0                lifetime
   // |==|----------|==|
   // |e | visible  | e| (e --> effect)
@@ -1295,16 +1296,13 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
   if(timeConsumed >= endVisible) {
     const float lifeInLastSection = timeConsumed - endVisible;
     const float percentageInLastSection = lifeInLastSection / (float)POPUP_SLIDE_OUT_MSEC; // 0.0 to 1.0
+    // SLIDE OUT
     const int slideOut = (popupRect.x() + popupRect.width()) * percentageInLastSection;
     popupRect.setX(popupRect.x() - slideOut);
     popupRect.setWidth(popupRect.width() - slideOut);
+    // FADE OUT
+    alphaPercentage = 1-percentageInLastSection;
   }
-  // FADE OUT
-  // const float lifeInLastSection = timeConsumed - endVisible;
-  // float percentageInLastSection = lifeInLastSection / POPUP_SLIDE_MSEC; // 0.0 to 1.0
-  // if(percentageInLastSection > 1) percentageInLastSection = 1;
-  // if(percentageInLastSection < 0) percentageInLastSection = 0;
-  // const float alphaPercentage = 1-percentageInLastSection;
 
   // MAIN COLOR AND TITLE TEXT
   QColor color;
@@ -1322,7 +1320,7 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
 
   // PAINTER CONFIGURATIONS
   QFont font; font.setPixelSize(fontSize); screenPainter->setFont(font);
-  color.setAlpha(255 /* * alphaPercentage */);
+  color.setAlpha(255 * alphaPercentage);
   screenPainter->setPen(color);
   changePenWidth(screenPainter, penWidth);
 
@@ -1331,10 +1329,10 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
   background.addRoundedRect(popupRect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
     // Contrast
   QColor contrast = QCOLOR_BLACK;
-  contrast.setAlpha(175 /* * alphaPercentage */); // Transparency
+  contrast.setAlpha(175 * alphaPercentage); // Transparency
   screenPainter->fillPath(background, contrast);
     // Highlight
-  color.setAlpha(65 /* * alphaPercentage */); // Transparency
+  color.setAlpha(65 * alphaPercentage); // Transparency
   screenPainter->fillPath(background, color);
 
   // MAIN TEXT AND BORDERS
