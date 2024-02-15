@@ -1234,22 +1234,35 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const int
         POPUP_HEIGHT
       );
 
-  // FADE OUT Pop-up
-  const float lastSection = 0.2; // (the last 1/5 of the lifetime)
-  const float lifeInLastSection = timeConsumed - (float)p.lifetime * (1-lastSection);
-  float percentageInLastSection = lifeInLastSection / ((float)p.lifetime * lastSection); // 0.0 to 1.0
-  if(percentageInLastSection > 1) percentageInLastSection = 1;
-  if(percentageInLastSection < 0) percentageInLastSection = 0;
-  const float alphaPercentage = 1-percentageInLastSection;
-
-  // FADE IN Pop-up
-  const float firstSection = 0.08; // (the first 2/25 of the lifetime)
-  float percentageInFirstSection = timeConsumed / ((float)p.lifetime * firstSection); // 0.0 to 1.0
-  if(percentageInFirstSection > 0 && percentageInFirstSection < 1) {
-    const int fadeIn = (popupRect.x() + popupRect.width()) * (1-percentageInFirstSection);
-    popupRect.setX(popupRect.x() - fadeIn);
-    popupRect.setWidth(popupRect.width() - fadeIn);
+  const float slideSection = 0.08; // (the first/last 2/25 of the lifetime)
+  const float effectDuration = (float)p.lifetime * slideSection;
+  // SLIDE IN
+  // 0                lifetime
+  // |==|----------|==|
+  // |e | visible  | e| (e --> effect)
+  const float startVisible = effectDuration; // The visible starts when the effect finishes
+  if(timeConsumed <= startVisible) {
+    const float percentageInFirstSection = timeConsumed / effectDuration; // 0.0 to 1.0
+    const int slideIn = (popupRect.x() + popupRect.width()) * (1-percentageInFirstSection);
+    popupRect.setX(popupRect.x() - slideIn);
+    popupRect.setWidth(popupRect.width() - slideIn);
   }
+  // SLIDE OUT
+  const float endVisible = (float)p.lifetime * (1-slideSection);
+  if(timeConsumed >= endVisible) {
+    const float lifeInLastSection = timeConsumed - endVisible;
+    const float percentageInLastSection = lifeInLastSection / effectDuration; // 0.0 to 1.0
+    const int slideOut = (popupRect.x() + popupRect.width()) * percentageInLastSection;
+    popupRect.setX(popupRect.x() - slideOut);
+    popupRect.setWidth(popupRect.width() - slideOut);
+  }
+  // FADE OUT
+  // const float lastSection = 0.2; // (the last 1/5 of the lifetime)
+  // const float lifeInLastSection = timeConsumed - (float)p.lifetime * (1-lastSection);
+  // float percentageInLastSection = lifeInLastSection / ((float)p.lifetime * lastSection); // 0.0 to 1.0
+  // if(percentageInLastSection > 1) percentageInLastSection = 1;
+  // if(percentageInLastSection < 0) percentageInLastSection = 0;
+  // const float alphaPercentage = 1-percentageInLastSection;
 
   // MAIN COLOR AND TITLE TEXT
   QColor color;
@@ -1267,7 +1280,7 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const int
 
   // PAINTER CONFIGURATIONS
   QFont font; font.setPixelSize(fontSize); screenPainter->setFont(font);
-  color.setAlpha(255 * alphaPercentage);
+  color.setAlpha(255 /* * alphaPercentage */);
   screenPainter->setPen(color);
   changePenWidth(screenPainter, penWidth);
 
@@ -1276,10 +1289,10 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const int
   background.addRoundedRect(popupRect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
     // Contrast
   QColor contrast = QCOLOR_BLACK;
-  contrast.setAlpha(175 * alphaPercentage); // Transparency
+  contrast.setAlpha(175 /* * alphaPercentage */); // Transparency
   screenPainter->fillPath(background, contrast);
     // Highlight
-  color.setAlpha(65 * alphaPercentage); // Transparency
+  color.setAlpha(65 /* * alphaPercentage */); // Transparency
   screenPainter->fillPath(background, color);
 
   // MAIN TEXT AND BORDERS
