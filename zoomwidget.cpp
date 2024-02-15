@@ -1212,7 +1212,7 @@ void ZoomWidget::drawToolBar(QPainter *screenPainter)
   }
 }
 
-void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const QPoint trayStart, const int margin, const float slideSection)
+void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const QPoint trayStart, const int margin, const float slideOutSection)
 {
   const Popup p = _popupTray.at(listPos);
   const qint64 time = QDateTime::currentMSecsSinceEpoch();
@@ -1238,8 +1238,8 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const QPo
   // 0                lifetime
   // |==|----------|==|
   // |e | visible  | e| (e --> effect)
-  const float effectDuration = (float)p.lifetime * slideSection;
-  const float endVisible = (float)p.lifetime * (1-slideSection);
+  const float effectDuration = (float)p.lifetime * slideOutSection;
+  const float endVisible = (float)p.lifetime * (1-slideOutSection);
   if(timeConsumed >= endVisible) {
     const float lifeInLastSection = timeConsumed - endVisible;
     const float percentageInLastSection = lifeInLastSection / effectDuration; // 0.0 to 1.0
@@ -1248,9 +1248,8 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos, const QPo
     popupRect.setWidth(popupRect.width() - slideOut);
   }
   // FADE OUT
-  // const float lastSection = 0.2; // (the last 1/5 of the lifetime)
-  // const float lifeInLastSection = timeConsumed - (float)p.lifetime * (1-lastSection);
-  // float percentageInLastSection = lifeInLastSection / ((float)p.lifetime * lastSection); // 0.0 to 1.0
+  // const float lifeInLastSection = timeConsumed - (float)p.lifetime * (1-slideOutSection);
+  // float percentageInLastSection = lifeInLastSection / ((float)p.lifetime * slideOutSection); // 0.0 to 1.0
   // if(percentageInLastSection > 1) percentageInLastSection = 1;
   // if(percentageInLastSection < 0) percentageInLastSection = 0;
   // const float alphaPercentage = 1-percentageInLastSection;
