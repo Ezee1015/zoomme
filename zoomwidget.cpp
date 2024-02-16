@@ -1295,7 +1295,9 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
   const float endVisible = (float)p.lifetime - POPUP_SLIDE_OUT_MSEC;
   if(timeConsumed >= endVisible) {
     const float lifeInLastSection = timeConsumed - endVisible;
-    const float percentageInLastSection = lifeInLastSection / (float)POPUP_SLIDE_OUT_MSEC; // 0.0 to 1.0
+    float percentageInLastSection = lifeInLastSection / (float)POPUP_SLIDE_OUT_MSEC; // 0.0 to 1.0
+    if(percentageInLastSection > 1) percentageInLastSection = 1; // Sometimes it overflows to 1.0XXXX
+
     // SLIDE OUT
     const int slideOut = (popupRect.x() + popupRect.width()) * percentageInLastSection;
     popupRect.setX(popupRect.x() - slideOut);
