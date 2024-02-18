@@ -42,6 +42,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _exitConfirm = false;
   _boardMode = false;
   _highlight = false;
+  _liveMode = false;
   _flashlightMode = false;
   _flashlightRadius = 80;
   _screenOpts = SCREENOPTS_SHOW_ALL;

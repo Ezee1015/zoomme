@@ -258,7 +258,6 @@ int main(int argc, char *argv[])
     w.restoreStateFromFile(backupFile, fitOption);
 
   } else if(isDefined(img)) {
-    w.setLiveMode(false);
     w.grabImage(QPixmap(img), fitOption);
 
   } else if(isDefined(emptyPixmap)) {
