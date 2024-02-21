@@ -18,6 +18,9 @@ You can...
 
 Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https://github.com/Ezee1015/zoomme/tree/Qt5)) and OpenGL.
 
+### Tool bar (available tools)
+![Demonstration of the tool bar](./resources/toolbar.png)
+
 ### Demonstration
 ![Demonstration of the functionality](resources/demonstration.gif)
 
