@@ -19,7 +19,7 @@ You can...
 Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https://github.com/Ezee1015/zoomme/tree/Qt5)) and OpenGL.
 
 ### Demonstration
-![Demonstration of the functionality](resources/demonstration.gif)
+![Demonstration of the functionality](resources/demonstration.mp4)
 
 > *The idea of the Flashlight effect was taken from [tsoding/boomer](https://github.com/tsoding/boomer)*
 
