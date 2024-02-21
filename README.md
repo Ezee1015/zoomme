@@ -62,8 +62,9 @@ The Escape key performs the following actions in a sequential order. If one cond
 
 ---
 
+### Non-essential
 
-### Export
+#### Export
 
 |    Key/Event    | Function                                                                                                                                                                                                                                                                                                                                                                                                          |
 |:---------------:|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -72,7 +73,7 @@ The Escape key performs the following actions in a sequential order. If one cond
 | **`Shift + E`** | Save the current work inside a '.zoomme' file, so you can [later restore the state of the program](#restore-from-file) from it. It is going to be save in the same path and with the same name that the image of the screenshot. The computer will *beep* if the file was correctly saved                                                                                                                         |
 |  **`-`** (dash) | Start/stop recording. After stopping, a video will be produced, but it may take some time for rendering (You'll know when it finished rendering when the recording indicator of the status bar goes away and you listen a *beep*). The video is going to be save in the same path and with the same name that the image of the screenshot. **Requirements**: have `ffmpeg` installed, and use a Unix based system |
 
-### General functions
+#### General
 |     Key/Event    | Function                                                                                                      |
 |:----------------:|---------------------------------------------------------------------------------------------------------------|
 | **`.`** (period) | To toggle the "Flashlight effect" on the cursor.                                                              |
@@ -80,7 +81,7 @@ The Escape key performs the following actions in a sequential order. If one cond
 |    **`Space`**   | To toggle the visibility of the elements of the screen: hide the status bar, hide all or show all             |
 
 
-### Available Drawing Modes
+#### Available Drawing Modes
 
 |   Key   | Function                                              |
 |:-------:|-------------------------------------------------------|
@@ -92,7 +93,7 @@ The Escape key performs the following actions in a sequential order. If one cond
 | **`T`** | To change the mode to insert Text                     |
 | **`H`** | To highlight the background of the forms/drawings     |
 
-### Available Actions for the drawing modes
+#### Available Actions for the drawing modes
 
 |       Key       | Function                                                                                                                               |
 |:---------------:|----------------------------------------------------------------------------------------------------------------------------------------|
@@ -101,8 +102,7 @@ The Escape key performs the following actions in a sequential order. If one cond
 |     **`,`**     | To delete a drawing (from the current mode) with the mouse. You can exit by deleting a form, with the Escape key or pressing `,` again |
 |     **`Q`**     | To clear all the drawings                                                                                                              |
 
-
-### Change the color of the lines
+#### Change the color of the lines
 
 |   Key   | Function                        |
 |:-------:|---------------------------------|
@@ -117,7 +117,7 @@ The Escape key performs the following actions in a sequential order. If one cond
 | **`D`** | To change color to Black        |
 | **`P`** | To pick a color from the screen |
 
-### Change the size of the lines
+#### Change the size of the lines
 |   Key   | Function                        |
 |:-------:|---------------------------------|
 | **`1`** | To change the width to 1 pixel  |
