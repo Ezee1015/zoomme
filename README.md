@@ -322,6 +322,7 @@ This will override the [file name, video extension and image extension configura
 > - Icons in the status bar
 > - FPS and quality of the recording
 > - Default folder for exporting files
+> - And more!
 
 
 ## Credit
