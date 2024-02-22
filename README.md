@@ -3,7 +3,7 @@
   <h1>ZoomMe</h1>
 </div>
 
-Application for zooming/magnifying and annotating the desktop (like ZoomIt under windows).
+Application for zooming/**magnifying** and **annotating** the desktop (like ZoomIt under windows).
 
 You can...
 - Draw lines, rectangles, arrows, ellipses and hand draws (free forms)!
