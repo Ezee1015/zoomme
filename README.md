@@ -28,7 +28,7 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 
 ## Index
 
-* [Functions & Mappings](#functions-%26-mappings)
+* [Functions & Mappings](#functions--mappings)
     * [Essential](#essential)
     * [Non-essential](#non-essential)
 * [Dependencies](#dependencies)
