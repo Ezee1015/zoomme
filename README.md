@@ -26,6 +26,22 @@ Made with Qt6 (it works with Qt5 too. There's an [older branch for that](https:/
 
 > *The idea of the Flashlight effect was taken from [tsoding/boomer](https://github.com/tsoding/boomer)*
 
+## Index
+
+* [Functions & Mappings](#functions-%26-mappings)
+    * [Essential](#essential)
+    * [Non-essential](#non-essential)
+* [Dependencies](#dependencies)
+* [Instalation (Compilation)](#instalation-(compilation))
+    * [Compile with cmake (recommended)](#compile-with-cmake-(recommended))
+    * [Compile with qmake](#compile-with-qmake)
+* [Running (flags)](#running-(flags))
+    * [Synopsis](#synopsis)
+        * [Configuration](#configuration)
+        * [Modes](#modes)
+* [:suspect: Secret :suspect:](#suspect-secret-suspect)
+* [Credit](#credit)
+
 ## Functions & Mappings
 
 ### Essential
