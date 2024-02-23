@@ -2021,14 +2021,11 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
   const QPoint cursorPos = event->pos();
 
   // Pre mouse processing
-  if(isToolBarVisible()) {
-    int buttonPos = buttonBehindCursor(cursorPos);
-    if(buttonPos==-1)
-      return;
-
+  if(isCursorOverButton(cursorPos)) {
+    const int buttonPos = buttonBehindCursor(cursorPos);
     toggleAction(_toolBar.buttons.at(buttonPos).action);
-    update();
     updateCursorShape();
+    update();
     return;
   }
 
