@@ -683,7 +683,7 @@ bool ZoomWidget::isCursorOverToolBar(QPoint cursorPos)
       _toolBar.rect.width()  + _toolBar.margin ,
       _toolBar.rect.height() + _toolBar.margin ,
       cursorPos,
-      false);
+      true);
 }
 
 // It doesn't make any distinction between disabled and not disabled buttons
