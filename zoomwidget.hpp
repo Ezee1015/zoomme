@@ -14,8 +14,6 @@
 #include <QDir>
 #include <QSize>
 #include <QPoint>
-#include <stdio.h>
-#include <stdarg.h>
 
 // CUSTOMIZATION
 #define QCOLOR_RED       QColor(224,  49,  49)
