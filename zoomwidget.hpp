@@ -524,6 +524,7 @@ class ZoomWidget : public QWidget
     void toggleAction(ZoomWidgetAction action);
     bool isToolBarVisible();
     bool isCursorOverButton(QPoint cursorPos);
+    bool isCursorOverToolBar(QPoint cursorPos);
     // Returns the position in the vector of the buttons (_toolBar) that is behind
     // the cursor position. Returns -1 if there's no button under the cursor
     int buttonBehindCursor(QPoint cursor);

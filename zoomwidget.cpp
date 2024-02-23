@@ -88,10 +88,16 @@ ZoomWidget::~ZoomWidget()
 
 bool ZoomWidget::isToolBarVisible()
 {
-  return _toolBar.show                 &&
-         _state != STATE_COLOR_PICKER  &&
-         _state != STATE_TYPING        &&
-         _state != STATE_DRAWING;
+  return _toolBar.show     &&
+         !_canvas.dragging &&
+                              (
+                               // Show tool bar to escape from the mode
+                               _state == STATE_TO_TRIM      ||
+                               _state == STATE_DELETING     ||
+                               _state == STATE_COLOR_PICKER ||
+                               // Normal state
+                               _state == STATE_MOVING
+                              );
 }
 
 void ZoomWidget::toggleAction(ZoomWidgetAction action)
@@ -666,6 +672,20 @@ int ZoomWidget::buttonBehindCursor(QPoint cursor)
   return -1;
 }
 
+bool ZoomWidget::isCursorOverToolBar(QPoint cursorPos)
+{
+  if(!isToolBarVisible())
+    return false;
+
+  return isCursorInsideHitBox(
+      _toolBar.rect.x()      - _toolBar.margin/2,
+      _toolBar.rect.y()      - _toolBar.margin/2 ,
+      _toolBar.rect.width()  + _toolBar.margin ,
+      _toolBar.rect.height() + _toolBar.margin ,
+      cursorPos,
+      false);
+}
+
 // It doesn't make any distinction between disabled and not disabled buttons
 bool ZoomWidget::isCursorOverButton(QPoint cursorPos)
 {
@@ -1125,14 +1145,15 @@ ArrowHead ZoomWidget::getArrowHead(int x, int y, int width, int height)
 
 bool ZoomWidget::isDrawingHovered(ZoomWidgetDrawMode drawType, int vectorPos)
 {
+  const QPoint cursorPos = GET_CURSOR_POS();
   // Only if it's deleting or if it's trying to modify a text
-  bool isDeleting = (_state == STATE_DELETING);
-  if(!isDeleting && !isTextEditable(GET_CURSOR_POS()))
+  bool hoverMode = (_state == STATE_DELETING) || (isTextEditable(cursorPos));
+  if(!hoverMode || isCursorOverToolBar(cursorPos))
     return false;
 
   // This is the position of the form (in the current draw mode) in the vector,
   // that is behind the cursor.
-  int posFormBehindCursor = cursorOverForm(GET_CURSOR_POS());
+  int posFormBehindCursor = cursorOverForm(cursorPos);
 
   return (_drawMode == drawType) && (posFormBehindCursor==vectorPos);
 }
@@ -2021,9 +2042,10 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
   const QPoint cursorPos = event->pos();
 
   // Pre mouse processing
-  if(isCursorOverButton(cursorPos)) {
-    const int buttonPos = buttonBehindCursor(cursorPos);
-    toggleAction(_toolBar.buttons.at(buttonPos).action);
+  if(isCursorOverToolBar(cursorPos)) {
+    if(isCursorOverButton(cursorPos))
+      toggleAction(_toolBar.buttons.at(buttonBehindCursor(cursorPos)).action);
+
     updateCursorShape();
     update();
     return;
@@ -2340,12 +2362,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 
   updateAtMousePos(cursorPos);
 
-  if(_canvas.dragging) {
-    update();
-    return;
-  }
-
-  if(_screenOpts == SCREENOPTS_HIDE_ALL){
+  if(_canvas.dragging || _screenOpts == SCREENOPTS_HIDE_ALL || isCursorOverToolBar(cursorPos)){
     update();
     return;
   }
@@ -2966,7 +2983,7 @@ bool ZoomWidget::isDisabledMouseTracking()
 
   return (_canvas.freezePos == FREEZE_BY_TEXT)  ||
          (_canvas.freezePos == FREEZE_BY_SHIFT) ||
-         (isToolBarVisible())                   ||
+         (_toolBar.show)                        ||
          (_canvas.dragging);
 }
 
