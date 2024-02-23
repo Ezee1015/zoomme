@@ -2544,6 +2544,34 @@ bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorP
   return hitBox.contains(cursorPos);
 }
 
+bool ZoomWidget::isCursorOverLine(int x, int y, int w, int h, QPoint cursorPos)
+{
+  const int segmentSize = 25; // Segment size for the hypotenuse
+
+  // Divide the line in chunks (depending of the line size)
+  int chunkCount = std::hypot(w / _canvas.scale, h / _canvas.scale) / segmentSize;
+  if(chunkCount == 0) chunkCount = 1;
+
+  const QSizeF chunkSize(
+        (float)w /(float)chunkCount,
+        (float)h /(float)chunkCount
+      );
+
+  for(int i=0; i<chunkCount; i++) {
+    if(isCursorInsideHitBox(
+        x + chunkSize.width() * i,
+        y + chunkSize.height() * i,
+        chunkSize.width(),
+        chunkSize.height(),
+        cursorPos,
+        false)
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // The cursor pos shouln't be fixed to hdpi scaling, because in
 // getRealUserObjectPos() they are scaled to the screen 'scaled' (no hdpi)
 // resolution (and the cursor has to be relative to the same resolution that the
@@ -2558,7 +2586,7 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos)
     case DRAWMODE_LINE:
       for (int i = 0; i < _lines.size(); ++i) {
         getRealUserObjectPos(_lines.at(i), &x, &y, &w, &h, true);
-        if(isCursorInsideHitBox(x, y, w, h, cursorPos, false))
+        if(isCursorOverLine(x, y, w, h, cursorPos))
           return i;
       }
       break;
@@ -2572,8 +2600,39 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos)
     case DRAWMODE_ARROW:
       for (int i = 0; i < _arrows.size(); ++i) {
         getRealUserObjectPos(_arrows.at(i), &x, &y, &w, &h, true);
-        if(isCursorInsideHitBox(x, y, w, h, cursorPos, false))
+        if(isCursorOverLine(x, y, w, h, cursorPos))
           return i;
+
+        // Get the arrow's coordinates relative to the pixmap to calculate the
+        // arrow head properly
+        getRealUserObjectPos(_arrows.at(i), &x, &y, &w, &h, false);
+
+        // Arrow head
+        ArrowHead head = getArrowHead(x, y, w, h);
+        // Convert the pixmap points of the arrow to screen points
+        head.startPoint = pixmapPointToScreenPos(head.startPoint);
+        head.leftLineEnd = pixmapPointToScreenPos(head.leftLineEnd);
+        head.rightLineEnd = pixmapPointToScreenPos(head.rightLineEnd);
+          // Left Line check
+        if(isCursorOverLine(
+              head.startPoint.x(),
+              head.startPoint.y(),
+              head.leftLineEnd.x() - head.startPoint.x(),
+              head.leftLineEnd.y() - head.startPoint.y(),
+              cursorPos)
+          ) {
+            return i;
+        }
+          // Right Line check
+        if(isCursorOverLine(
+              head.startPoint.x(),
+              head.startPoint.y(),
+              head.rightLineEnd.x() - head.startPoint.x(),
+              head.rightLineEnd.y() - head.startPoint.y(),
+              cursorPos)
+          ) {
+            return i;
+        }
       }
       break;
     case DRAWMODE_ELLIPSE:

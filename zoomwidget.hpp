@@ -575,6 +575,7 @@ class ZoomWidget : public QWidget
     // The X, Y, W and H arguments must be a point in the SCREEN, not in the pixmap
     // If floating is enabled, the form (the width and height) is not affected by zoom/scaling
     bool isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos, bool isFloating);
+    bool isCursorOverLine(int x, int y, int w, int h, QPoint cursorPos);
 
     // Recording
     void saveFrameToFile(); // Timer function
