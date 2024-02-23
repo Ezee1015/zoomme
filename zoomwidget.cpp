@@ -2999,8 +2999,8 @@ void ZoomWidget::checkPixmapPos()
   }
 }
 
-// TODO FORMAT CURLY BRACKET
-QPoint ZoomWidget::screenPointToPixmapPos(QPoint qpoint) {
+QPoint ZoomWidget::screenPointToPixmapPos(QPoint qpoint)
+{
   QPoint returnPoint = (qpoint - _canvas.pos)/_canvas.scale;
 
   returnPoint.setX( FIX_X_FOR_HDPI_SCALING(returnPoint.x()) );
@@ -3009,7 +3009,8 @@ QPoint ZoomWidget::screenPointToPixmapPos(QPoint qpoint) {
   return returnPoint;
 }
 
-QPoint ZoomWidget::pixmapPointToScreenPos(QPoint qpoint) {
+QPoint ZoomWidget::pixmapPointToScreenPos(QPoint qpoint)
+{
   qpoint.setX( GET_X_FROM_HDPI_SCALING(qpoint.x()) );
   qpoint.setY( GET_Y_FROM_HDPI_SCALING(qpoint.y()) );
 
@@ -3018,7 +3019,8 @@ QPoint ZoomWidget::pixmapPointToScreenPos(QPoint qpoint) {
   return point;
 }
 
-QSize ZoomWidget::pixmapSizeToScreenSize(QSize qsize){
+QSize ZoomWidget::pixmapSizeToScreenSize(QSize qsize)
+{
   qsize.setWidth(  GET_X_FROM_HDPI_SCALING(qsize.width() ) );
   qsize.setHeight( GET_Y_FROM_HDPI_SCALING(qsize.height()) );
 
