@@ -455,7 +455,7 @@ class ZoomWidget : public QWidget
     Drawing<UserFreeFormData>  _freeForms;
 
     // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
-    // QList<UserObjectData>    _userTests;
+    // QList<UserObjectData>    _tests;
     /////////////////////////
 
     ToolBar _toolBar;
