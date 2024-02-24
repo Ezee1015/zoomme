@@ -481,15 +481,15 @@ class ZoomWidget : public QWidget
     QTimer *recordTimer;
     QFile *recordTempFile;
 
-    ZoomWidgetState	_state;
+    ZoomWidgetState _state;
     QPoint _lastMousePos;
 
     // Drawing properties.
-    ZoomWidgetDrawMode	_drawMode;
-    QPen	_activePen;
+    ZoomWidgetDrawMode _drawMode;
+    QPen _activePen;
     // These two points should be fixed to hdpi scaling
-    QPoint	_startDrawPoint;
-    QPoint	_endDrawPoint;
+    QPoint _startDrawPoint;
+    QPoint _endDrawPoint;
 
     void drawDrawnPixmap(QPainter *painter);
     void drawSavedForms(QPainter *pixmapPainter);
