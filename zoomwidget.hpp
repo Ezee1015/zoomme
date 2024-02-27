@@ -102,8 +102,8 @@
 #define GET_X_FROM_HDPI_SCALING(point) (point * (_canvas.originalSize.width())  / _sourcePixmap.width() )
 #define GET_Y_FROM_HDPI_SCALING(point) (point * (_canvas.originalSize.height()) / _sourcePixmap.height())
 
-#define IS_RECORDING (recordTimer->isActive())
-#define IS_FFMPEG_RUNNING (ffmpeg.state() != QProcess::NotRunning)
+#define IS_RECORDING (_recordTimer->isActive())
+#define IS_FFMPEG_RUNNING (_ffmpeg.state() != QProcess::NotRunning)
 
 namespace Ui {
   class zoomwidget;
@@ -419,7 +419,7 @@ class ZoomWidget : public QWidget
   private:
     Ui::zoomwidget *ui;
 
-    QClipboard *clipboard;
+    QClipboard *_clipboard;
 
     // Note: When scaling is enabled (such as HiDPI with Graphic Server scaling
     // in X11 or Wayland), if you grab the desktop, _sourcePixmap works with the
@@ -477,9 +477,9 @@ class ZoomWidget : public QWidget
     QColor _colorBeforePickColorMode;
 
     // Recording
-    QProcess ffmpeg;
-    QTimer *recordTimer;
-    QFile *recordTempFile;
+    QProcess _ffmpeg;
+    QTimer *_recordTimer;
+    QFile *_recordTempFile;
 
     ZoomWidgetState _state;
     QPoint _lastMousePos;

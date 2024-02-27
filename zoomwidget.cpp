@@ -47,23 +47,23 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _flashlightRadius = 80;
   _screenOpts = SCREENOPTS_SHOW_ALL;
 
-  clipboard = QApplication::clipboard();
-  if(!clipboard)
+  _clipboard = QApplication::clipboard();
+  if(!_clipboard)
     logUser(LOG_ERROR, "", "Couldn't grab the clipboard");
 
-  recordTimer = new QTimer(this);
-  connect( recordTimer,
+  _recordTimer = new QTimer(this);
+  connect( _recordTimer,
            &QTimer::timeout,
            this,
            &ZoomWidget::saveFrameToFile );
   // Show the ffmpeg output on the screen
-  ffmpeg.setProcessChannelMode(ffmpeg.ForwardedChannels);
+  _ffmpeg.setProcessChannelMode(_ffmpeg.ForwardedChannels);
   // Don't create a file if the setProcessChannelMode is set, because it's an
   // inconsistency
   // ffmpeg.setStandardErrorFile("ffmpeg_log.txt");
   // ffmpeg.setStandardOutputFile("ffmpeg_output.txt");
   QDir tempFile(QStandardPaths::writableLocation(QStandardPaths::TempLocation));
-  recordTempFile = new QFile(tempFile.absoluteFilePath(RECORD_TEMP_FILENAME));
+  _recordTempFile = new QFile(tempFile.absoluteFilePath(RECORD_TEMP_FILENAME));
 
   _activePen.setColor(QCOLOR_RED);
   _activePen.setWidth(4);
@@ -159,25 +159,25 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
 
     case ACTION_RECORDING: {
        if(IS_RECORDING){
-         recordTimer->stop();
+         _recordTimer->stop();
          createVideoFFmpeg();
-         recordTempFile->remove();
+         _recordTempFile->remove();
          break;
        }
 
        // Start recording
-       logUser(LOG_TEXT, "", "Temporary record file path: %s", QSTRING_TO_STRING(recordTempFile->fileName()));
+       logUser(LOG_TEXT, "", "Temporary record file path: %s", QSTRING_TO_STRING(_recordTempFile->fileName()));
 
-       recordTempFile->remove(); // Just in case for if it already exists
+       _recordTempFile->remove(); // Just in case for if it already exists
 
-       bool openTempFile = recordTempFile->open(QIODevice::ReadWrite);
+       bool openTempFile = _recordTempFile->open(QIODevice::ReadWrite);
        if (!openTempFile) {
          logUser(LOG_ERROR, "", "Couldn't open the temp file for the bytes output");
-         recordTempFile->close();
+         _recordTempFile->close();
          break;
        }
 
-       recordTimer->start(1000/RECORD_FPS);
+       _recordTimer->start(1000/RECORD_FPS);
        QApplication::beep();
        break;
     }
@@ -993,7 +993,7 @@ void ZoomWidget::createVideoFFmpeg()
             << "-pix_fmt"   << "yuv420p" // Indicates that the file contains JPEG images
             << "-s"         << resolution
             << "-r"         << QString::number(RECORD_FPS)
-            << "-i"         << recordTempFile->fileName()
+            << "-i"         << _recordTempFile->fileName()
   // OUTPUT ARGS
             // Commented to add support to GIF, for example
             // << "-c:v"       << "libx264"
@@ -1007,32 +1007,32 @@ void ZoomWidget::createVideoFFmpeg()
             << getFilePath(FILE_VIDEO);
 
   // Start process
-  ffmpeg.start("ffmpeg", arguments);
+  _ffmpeg.start("ffmpeg", arguments);
 
   updateCursorShape();
 
   const int timeout = 10000;
-  if (!ffmpeg.waitForStarted(timeout)){
+  if (!_ffmpeg.waitForStarted(timeout)){
     logUser(LOG_ERROR, "Couldn't start FFmpeg. Maybe it is not installed...",
                        "Couldn't start ffmpeg or timeout occurred (%.1f sec.). Maybe FFmpeg is not installed. Killing the ffmpeg process...", ((float)timeout/1000.0));
-    logUser(LOG_TEXT, "", "  - Error: %s", QSTRING_TO_STRING(ffmpeg.errorString()));
+    logUser(LOG_TEXT, "", "  - Error: %s", QSTRING_TO_STRING(_ffmpeg.errorString()));
     logUser(LOG_TEXT, "", "  - Executed command: ffmpeg %s", QSTRING_TO_STRING(arguments.join(" ")));
-    ffmpeg.kill();
+    _ffmpeg.kill();
     return;
   }
 
-  if(!ffmpeg.waitForFinished(-1)){
-    logUser(LOG_ERROR, "", "An error occurred with FFmpeg: %s", QSTRING_TO_STRING(ffmpeg.errorString()));
+  if(!_ffmpeg.waitForFinished(-1)){
+    logUser(LOG_ERROR, "", "An error occurred with FFmpeg: %s", QSTRING_TO_STRING(_ffmpeg.errorString()));
     return;
   }
 
-  if(ffmpeg.exitStatus() == QProcess::CrashExit) {
+  if(_ffmpeg.exitStatus() == QProcess::CrashExit) {
     logUser(LOG_ERROR, "","FFmpeg crashed");
     return;
   }
 
-  if(ffmpeg.exitCode() != 0) {
-    logUser(LOG_ERROR, "", "FFmpeg failed. Exit code: %d", ffmpeg.exitCode());
+  if(_ffmpeg.exitCode() != 0) {
+    logUser(LOG_ERROR, "", "FFmpeg failed. Exit code: %d", _ffmpeg.exitCode());
     return;
   }
 
@@ -1050,7 +1050,7 @@ void ZoomWidget::saveFrameToFile()
   QBuffer buffer(&imageBytes); buffer.open(QIODevice::WriteOnly);
   image.save(&buffer, "JPEG", RECORD_QUALITY);
 
-  recordTempFile->write(imageBytes);
+  _recordTempFile->write(imageBytes);
 }
 
 QRect fixQRect(int x, int y, int width, int height)
@@ -2190,7 +2190,7 @@ void ZoomWidget::saveImage(QPixmap pixmap, bool toImage)
   // there's not a standard way to save a path in linux afaik (in example,
   // Dolphin will copy the image, but Thunar and GIMP will not recognize
   // it).
-  if(!clipboard) {
+  if(!_clipboard) {
    logUser(LOG_ERROR, "", "There's no clipboard to save the image into");
    return;
   }
@@ -2199,20 +2199,20 @@ void ZoomWidget::saveImage(QPixmap pixmap, bool toImage)
   QMimeData *mimeData = new QMimeData();
   QList<QUrl> urlList; urlList.append(QUrl::fromLocalFile(path));
   mimeData->setUrls(urlList);
-  clipboard->setMimeData(mimeData);
+  _clipboard->setMimeData(mimeData);
   logUser(LOG_SUCCESS, "", "Image path saved to clipboard successfully!");
   QApplication::beep();
 #else
   // Copy the image into clipboard (this causes some problems with the
   // clipboard manager in Linux, because when the app exits, the image gets
   // deleted with it. The clipboard only save a pointer to that image)
-  if(!clipboard) {
+  if(!_clipboard) {
    logUser(LOG_ERROR, "", "There's no clipboard to save the image into");
    return;
   }
 
   logUser(LOG_TEXT, "", "Saving the image to the clipboard with Qt");
-  clipboard->setImage(pixmap.toImage());
+  _clipboard->setImage(pixmap.toImage());
   logUser(LOG_SUCCESS, "", "Image saved to clipboard successfully!");
   QApplication::beep();
 #endif
@@ -2837,10 +2837,10 @@ void ZoomWidget::grabFromClipboard(FitImage config)
 {
   QImage image;
 
-  if(!clipboard)
+  if(!_clipboard)
     logUser(LOG_ERROR_AND_EXIT, "", "The clipboard is uninitialized");
 
-  image = clipboard->image();
+  image = _clipboard->image();
   if(image.isNull())
     logUser(LOG_ERROR_AND_EXIT, "", "The clipboard doesn't contain an image or its format is not supported");
 
