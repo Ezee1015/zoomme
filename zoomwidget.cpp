@@ -611,36 +611,31 @@ void ZoomWidget::generateToolBar()
     buttonsPerLine[ _toolBar.buttons.at(i).row ]++;
   }
 
-  // Clear the tool list
-  QList<Button> buttons;
-  buttons.append(_toolBar.buttons);
-  _toolBar.buttons.clear();
-
-  // Size the buttons
+  // Size and position the buttons
   float buttonCount[rows];
   for (int i=0; i<rows; i++) buttonCount[i]=0;
 
-  for (int i=0; i<buttons.size(); i++) {
-    const int row = buttons.at(i).row;
+  for (int i=0; i<_toolBar.buttons.size(); i++) {
+    const Button btn = _toolBar.buttons.at(i);
 
-    float width = (float)background.width() / (float)buttonsPerLine[row];
+    float width = (float)background.width() / (float)buttonsPerLine[btn.row];
     int height  = rowHeight - (float)margin / (float)rows;
-    int x       = background.x() + buttonCount[row] * width;
-    int y       = background.y() + row * height;
+    int x       = background.x() + buttonCount[btn.row] * width;
+    int y       = background.y() + btn.row * height;
 
     // Padding
-    x+=buttonPadding;
-    y+=buttonPadding;
-    width-=buttonPadding*2;
-    height-=buttonPadding*2;
+    x += buttonPadding;
+    y += buttonPadding;
+    width  -= buttonPadding*2;
+    height -= buttonPadding*2;
 
     // Add the button to the count
-    buttonCount[row]++;
+    buttonCount[btn.row]++;
 
-    _toolBar.buttons.append(Button{
-        buttons.at(i).action,
-        buttons.at(i).name,
-        row,
+    _toolBar.buttons.replace(i, Button{
+        btn.action,
+        btn.name,
+        btn.row,
         QRect(x, y, width, height)
     });
   }
