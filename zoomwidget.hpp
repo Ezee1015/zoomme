@@ -351,31 +351,31 @@ class Drawing {
     }
 
     void remove(const int itemPos) {
-      if(itemPos >= forms.size()) return;
+      if (itemPos >= forms.size()) return;
       deleted.append(forms.takeAt(itemPos));
     }
 
     // Removes the form. It DOESN'T put it in the deleted list.
     // Useful for editing the last form
     void destroyLast() {
-      if(forms.size() == 0) return;
+      if (forms.isEmpty()) return;
       forms.removeLast();
     }
 
     // Move the form to the top of the list (e.g., for editing texts you edit
     // the last created -top of the list- text)
     void moveToTop(const int itemPos) {
-      if(itemPos >= forms.size()) return;
+      if (itemPos >= forms.size()) return;
       forms.append(forms.takeAt(itemPos));
     }
 
     void undo() {
-      if(forms.isEmpty()) return;
+      if (forms.isEmpty()) return;
       deleted.append(forms.takeLast());
     }
 
     void redo() {
-      if(deleted.isEmpty()) return;
+      if (deleted.isEmpty()) return;
       forms.append(deleted.takeLast());
     }
 

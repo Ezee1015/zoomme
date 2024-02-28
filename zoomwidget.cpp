@@ -25,58 +25,52 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   ui->setupUi(this);
   setMouseTracking(true);
 
-  _state = STATE_MOVING;
-  _drawMode  = DRAWMODE_LINE;
+  _activePen.setColor(QCOLOR_RED);
+  _activePen.setWidth(4);
 
-  _desktopScreen = QGuiApplication::screenAt(QCursor::pos());
-  _screenSize = _desktopScreen->geometry().size();
-  _canvas.pos = QPoint(0, 0);
-  _canvas.size = QApplication::screenAt(QCursor::pos())->geometry().size();
-  _canvas.originalSize = _canvas.size;
-  _canvas.scale = 1.0f;
-  _canvas.freezePos = FREEZE_FALSE;
-  _canvas.dragging = false;
+  _desktopScreen         = QGuiApplication::screenAt(QCursor::pos());
+  _screenSize            = _desktopScreen->geometry().size();
+  _canvas.pos            = QPoint(0, 0);
+  _canvas.size           = QApplication::screenAt(QCursor::pos())->geometry().size();
+  _canvas.originalSize   = _canvas.size;
+  _canvas.scale          = 1.0f;
+  _canvas.freezePos      = FREEZE_FALSE;
+  _canvas.dragging       = false;
 
-  _lastMousePos = GET_CURSOR_POS();
+  _state                 = STATE_MOVING;
+  _drawMode              = DRAWMODE_LINE;
+  _screenOpts            = SCREENOPTS_SHOW_ALL;
+  _exitConfirm           = false;
+  _boardMode             = false;
+  _highlight             = false;
+  _liveMode              = false;
+  _flashlightMode        = false;
+  _flashlightRadius      = 80;
+  _popupTray.margin      = 20;
+  _toolBar.show          = false;
 
-  _exitConfirm = false;
-  _boardMode = false;
-  _highlight = false;
-  _liveMode = false;
-  _flashlightMode = false;
-  _flashlightRadius = 80;
-  _screenOpts = SCREENOPTS_SHOW_ALL;
+  _lastMousePos          = GET_CURSOR_POS();
+  _clipboard             = QApplication::clipboard();
+  _recordTimer           = new QTimer(this);
+  _popupTray.updateTimer = new QTimer(this);
 
-  _clipboard = QApplication::clipboard();
-  if(!_clipboard)
-    logUser(LOG_ERROR, "", "Couldn't grab the clipboard");
+  connect(_popupTray.updateTimer, &QTimer::timeout, this, &ZoomWidget::updateForPopups);
 
-  _recordTimer = new QTimer(this);
-  connect( _recordTimer,
-           &QTimer::timeout,
-           this,
-           &ZoomWidget::saveFrameToFile );
-  // Show the ffmpeg output on the screen
-  _ffmpeg.setProcessChannelMode(_ffmpeg.ForwardedChannels);
+  QDir tempFolder(QStandardPaths::writableLocation(QStandardPaths::TempLocation));
+  _recordTempFile = new QFile(tempFolder.absoluteFilePath(RECORD_TEMP_FILENAME));
+
+  connect(_recordTimer, &QTimer::timeout, this, &ZoomWidget::saveFrameToFile);
+  _ffmpeg.setProcessChannelMode(_ffmpeg.ForwardedChannels); // Show the ffmpeg output on the screen
   // Don't create a file if the setProcessChannelMode is set, because it's an
   // inconsistency
   // ffmpeg.setStandardErrorFile("ffmpeg_log.txt");
   // ffmpeg.setStandardOutputFile("ffmpeg_output.txt");
-  QDir tempFile(QStandardPaths::writableLocation(QStandardPaths::TempLocation));
-  _recordTempFile = new QFile(tempFile.absoluteFilePath(RECORD_TEMP_FILENAME));
 
-  _activePen.setColor(QCOLOR_RED);
-  _activePen.setWidth(4);
+  if (!_clipboard) {
+    logUser(LOG_ERROR, "", "Couldn't grab the clipboard");
+  }
 
-  _popupTray.margin = 20;
-  _popupTray.updateTimer = new QTimer(this);
-  connect( _popupTray.updateTimer,
-           &QTimer::timeout,
-           this,
-           &ZoomWidget::updateForPopups );
   setPopupTrayPos();
-
-  _toolBar.show = false;
   loadButtons();
   generateToolBar();
 }
@@ -88,25 +82,24 @@ ZoomWidget::~ZoomWidget()
 
 bool ZoomWidget::isToolBarVisible()
 {
-  return _toolBar.show     &&
-         !_canvas.dragging &&
-                              (
-                               // Show tool bar to escape from the mode
-                               _state == STATE_TO_TRIM      ||
-                               _state == STATE_DELETING     ||
-                               _state == STATE_COLOR_PICKER ||
-                               // Normal state
-                               _state == STATE_MOVING
-                              );
+  bool visibleStates = (
+        // Show tool bar to escape from the mode
+        _state == STATE_TO_TRIM      ||
+        _state == STATE_DELETING     ||
+        _state == STATE_COLOR_PICKER ||
+        // Normal state
+        _state == STATE_MOVING
+      );
+
+  return (_toolBar.show) && (!_canvas.dragging) && (visibleStates);
 }
 
 void ZoomWidget::toggleAction(ZoomWidgetAction action)
 {
-  if(isActionDisabled(action))
-    return;
+  if (isActionDisabled(action)) return;
 
   // The guardian clauses for each action should be in isActionDisabled()
-  switch(action) {
+  switch (action) {
     case ACTION_LINE:          _drawMode = DRAWMODE_LINE;          break;
     case ACTION_RECTANGLE:     _drawMode = DRAWMODE_RECT;          break;
     case ACTION_ELLIPSE:       _drawMode = DRAWMODE_ELLIPSE;       break;
@@ -119,10 +112,11 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
     case ACTION_BLACKBOARD:    _boardMode = !_boardMode;           break;
 
     case ACTION_DELETE:
-       if(_state == STATE_MOVING)
+       if (_state == STATE_MOVING) {
          _state = STATE_DELETING;
-       else if(_state == STATE_DELETING)
+       } else if (_state == STATE_DELETING) {
          _state = STATE_MOVING;
+       }
        break;
 
     case ACTION_CLEAR:
@@ -136,7 +130,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        break;
 
     case ACTION_UNDO:
-       switch(_drawMode) {
+       switch (_drawMode) {
          case DRAWMODE_LINE:     _lines.undo();     break;
          case DRAWMODE_RECT:     _rects.undo();     break;
          case DRAWMODE_ARROW:    _arrows.undo();    break;
@@ -147,7 +141,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        break;
 
     case ACTION_REDO:
-       switch(_drawMode) {
+       switch (_drawMode) {
          case DRAWMODE_LINE:     _lines.redo();     break;
          case DRAWMODE_RECT:     _rects.redo();     break;
          case DRAWMODE_ARROW:    _arrows.redo();    break;
@@ -158,7 +152,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        break;
 
     case ACTION_RECORDING: {
-       if(IS_RECORDING){
+       if (IS_RECORDING) {
          _recordTimer->stop();
          createVideoFFmpeg();
          _recordTempFile->remove();
@@ -183,7 +177,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
     }
 
     case ACTION_PICK_COLOR:
-       if(_state == STATE_COLOR_PICKER) {
+       if (_state == STATE_COLOR_PICKER) {
          _state = STATE_MOVING;
          _activePen.setColor(_colorBeforePickColorMode);
          break;
@@ -204,36 +198,28 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
 
     case ACTION_SAVE_TRIMMED_TO_IMAGE:
       // If the mode is active, disable it
-      if(_state == STATE_TO_TRIM) {
-        if(_trimDestination == TRIM_SAVE_TO_IMAGE) {
-          _state = STATE_MOVING;
-          break;
-        }
-
-        _trimDestination = TRIM_SAVE_TO_IMAGE;
+      if (_state == STATE_TO_TRIM && _trimDestination == TRIM_SAVE_TO_IMAGE) {
+        _state = STATE_MOVING;
+        break;
       }
 
-      _state = STATE_TO_TRIM;
+      _state           = STATE_TO_TRIM;
       _trimDestination = TRIM_SAVE_TO_IMAGE;
-      _startDrawPoint = QPoint(0,0);
-      _endDrawPoint = QPoint(0,0);
+      _startDrawPoint  = QPoint(0,0);
+      _endDrawPoint    = QPoint(0,0);
       break;
 
     case ACTION_SAVE_TRIMMED_TO_CLIPBOARD:
       // If the mode is active, disable it
-      if(_state == STATE_TO_TRIM) {
-        if(_trimDestination == TRIM_SAVE_TO_CLIPBOARD) {
-          _state = STATE_MOVING;
-          break;
-        }
-
-        _trimDestination = TRIM_SAVE_TO_CLIPBOARD;
+      if (_state == STATE_TO_TRIM && _trimDestination == TRIM_SAVE_TO_CLIPBOARD) {
+        _state = STATE_MOVING;
+        break;
       }
 
-      _state = STATE_TO_TRIM;
+      _state           = STATE_TO_TRIM;
       _trimDestination = TRIM_SAVE_TO_CLIPBOARD;
-      _startDrawPoint = QPoint(0,0);
-      _endDrawPoint = QPoint(0,0);
+      _startDrawPoint  = QPoint(0,0);
+      _endDrawPoint    = QPoint(0,0);
       break;
 
     case ACTION_SAVE_PROJECT:
@@ -241,9 +227,9 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        break;
 
     case ACTION_SCREEN_OPTS:
-       switch(_screenOpts) {
-         case SCREENOPTS_HIDE_ALL:      _screenOpts = SCREENOPTS_SHOW_ALL;    break;
-         case SCREENOPTS_HIDE_FLOATING: _screenOpts = SCREENOPTS_HIDE_ALL;    break;
+       switch (_screenOpts) {
+         case SCREENOPTS_HIDE_ALL:      _screenOpts = SCREENOPTS_SHOW_ALL;      break;
+         case SCREENOPTS_HIDE_FLOATING: _screenOpts = SCREENOPTS_HIDE_ALL;      break;
          case SCREENOPTS_SHOW_ALL:      _screenOpts = SCREENOPTS_HIDE_FLOATING; break;
        }
        break;
@@ -270,7 +256,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
     case ACTION_WIDTH_9:       _activePen.setWidth(9);              break;
 
     case ACTION_ESCAPE:
-      if(_exitConfirm) {
+      if (_exitConfirm) {
         QApplication::beep();
         QApplication::quit();
         break;
@@ -291,12 +277,12 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
       } else if (_screenOpts == SCREENOPTS_HIDE_ALL) {
         toggleAction(ACTION_SCREEN_OPTS);
 
-      } else if(_canvas.size != _canvas.originalSize) {
+      } else if (_canvas.size != _canvas.originalSize) {
         _canvas.scale = 1.0f;
         scalePixmapAt(QPoint(0,0));
         checkPixmapPos();
 
-      } else if(IS_RECORDING) {
+      } else if (IS_RECORDING) {
         toggleAction(ACTION_RECORDING);
 
       } else {
@@ -371,23 +357,24 @@ void ZoomWidget::loadButtons()
 
   _toolBar.buttons.append(Button{ACTION_SPACER,            "",                    2, nullRect});
 
-  if(_exitConfirm) {
-    _toolBar.buttons.append(Button{ACTION_ESCAPE        ,    "Confirm Exit",        2, nullRect});
+  if (_exitConfirm) {
+    _toolBar.buttons.append(Button{ACTION_ESCAPE,            "Confirm Exit",        2, nullRect});
     _toolBar.buttons.append(Button{ACTION_ESCAPE_CANCEL,     "Cancel Exit",         2, nullRect});
-  } else
+  } else {
     _toolBar.buttons.append(Button{ACTION_ESCAPE,            "Escape",              2, nullRect});
+  }
 
-  _toolBar.buttons.append(Button{ACTION_SAVE_TO_FILE,      "Export image",        3, nullRect});
-  _toolBar.buttons.append(Button{ACTION_SAVE_TO_CLIPBOARD, "Export to clipboard", 3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SAVE_TO_FILE,              "Export image",                3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SAVE_TO_CLIPBOARD,         "Export to clipboard",         3, nullRect});
   _toolBar.buttons.append(Button{ACTION_SAVE_TRIMMED_TO_IMAGE,     "Export trimmed image",        3, nullRect});
   _toolBar.buttons.append(Button{ACTION_SAVE_TRIMMED_TO_CLIPBOARD, "Export trimmed to clipboard", 3, nullRect});
-  _toolBar.buttons.append(Button{ACTION_SAVE_PROJECT,      "Save project",        3, nullRect});
-  _toolBar.buttons.append(Button{ACTION_RECORDING,         "Record",              3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SAVE_PROJECT,              "Save project",                3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_RECORDING,                 "Record",                      3, nullRect});
 }
 
 bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
 {
-  switch(action) {
+  switch (action) {
     case ACTION_WIDTH_1:
     case ACTION_WIDTH_2:
     case ACTION_WIDTH_3:
@@ -415,29 +402,36 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
     case ACTION_FREEFORM:
     case ACTION_TEXT:
     case ACTION_HIGHLIGHT:
-      return false;
 
     case ACTION_FLASHLIGHT:
     case ACTION_BLACKBOARD:
+
+    case ACTION_SAVE_TO_FILE:
+    case ACTION_SAVE_TO_CLIPBOARD:
+    case ACTION_SAVE_PROJECT:
+
+    case ACTION_ESCAPE:
+    case ACTION_ESCAPE_CANCEL:
       return false;
 
-
     case ACTION_SCREEN_OPTS:
-       if(_state != STATE_MOVING)
-         return true;
+       if (_state != STATE_MOVING) return true;
        return false;
 
     case ACTION_PICK_COLOR:
-       if( _state != STATE_MOVING && _state != STATE_COLOR_PICKER)
+       if (_state != STATE_MOVING && _state != STATE_COLOR_PICKER) {
          return true;
-       if(_screenOpts == SCREENOPTS_HIDE_ALL)
+       }
+       if (_screenOpts == SCREENOPTS_HIDE_ALL) {
          return true;
+       }
        return false;
 
     case ACTION_REDO:
-       if(_screenOpts == SCREENOPTS_HIDE_ALL)
+       if (_screenOpts == SCREENOPTS_HIDE_ALL) {
          return true;
-       switch(_drawMode) {
+       }
+       switch (_drawMode) {
          case DRAWMODE_LINE:      return _lines.isDeletedEmpty();
          case DRAWMODE_RECT:      return _rects.isDeletedEmpty();
          case DRAWMODE_ARROW:     return _arrows.isDeletedEmpty();
@@ -448,9 +442,10 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
        return false;
 
     case ACTION_UNDO:
-       if(_screenOpts == SCREENOPTS_HIDE_ALL)
+       if (_screenOpts == SCREENOPTS_HIDE_ALL) {
          return true;
-       switch(_drawMode) {
+       }
+       switch (_drawMode) {
          case DRAWMODE_LINE:     return _lines.isEmpty();
          case DRAWMODE_RECT:     return _rects.isEmpty();
          case DRAWMODE_ARROW:    return _arrows.isEmpty();
@@ -461,23 +456,25 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
        return false;
 
     case ACTION_CLEAR:
-       if(_screenOpts == SCREENOPTS_HIDE_ALL)
+       if (_screenOpts == SCREENOPTS_HIDE_ALL) {
          return true;
-       if( _lines.isEmpty()     &&
-           _rects.isEmpty()     &&
-           _arrows.isEmpty()    &&
-           _ellipses.isEmpty()  &&
-           _texts.isEmpty()     &&
-           _freeForms.isEmpty()
-         ) {
+       }
+       if (  _lines.isEmpty()     &&
+             _rects.isEmpty()     &&
+             _arrows.isEmpty()    &&
+             _ellipses.isEmpty()  &&
+             _texts.isEmpty()     &&
+             _freeForms.isEmpty()
+          ) {
          return true;
        }
        return false;
 
     case ACTION_DELETE:
-       if(_screenOpts == SCREENOPTS_HIDE_ALL)
+       if (_screenOpts == SCREENOPTS_HIDE_ALL) {
          return true;
-       switch(_drawMode) {
+       }
+       switch (_drawMode) {
          case DRAWMODE_LINE:     return _lines.isEmpty();
          case DRAWMODE_RECT:     return _rects.isEmpty();
          case DRAWMODE_ARROW:    return _arrows.isEmpty();
@@ -485,33 +482,23 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
          case DRAWMODE_TEXT:     return _texts.isEmpty();
          case DRAWMODE_FREEFORM: return _freeForms.isEmpty();
        }
-       return false;
-
-    case ACTION_SAVE_TO_FILE:
-    case ACTION_SAVE_TO_CLIPBOARD:
-    case ACTION_SAVE_PROJECT:
+       // logUser(LOG_ERROR_AND_EXIT, "", "A drawing mode is not contemplated in the switch statement (%s:%d)", __FILE__, __LINE__);
        return false;
 
     case ACTION_RECORDING:
        // In theory, ffmpeg blocks the thread, so it shouldn't be possible to toggle
        // the recording while ffmpeg is running. But, just in case, we check it
-       if(IS_FFMPEG_RUNNING)
-         return true;
+       if (IS_FFMPEG_RUNNING) return true;
        return false;
 
     case ACTION_SAVE_TRIMMED_TO_IMAGE:
     case ACTION_SAVE_TRIMMED_TO_CLIPBOARD:
-      if( _state != STATE_MOVING   &&
-          _state != STATE_TRIMMING &&
-          _state != STATE_TO_TRIM
-        )
-         return true;
-      if(_screenOpts == SCREENOPTS_HIDE_ALL)
+      if (_state != STATE_MOVING && _state != STATE_TRIMMING && _state != STATE_TO_TRIM) {
         return true;
-      return false;
-
-    case ACTION_ESCAPE:
-    case ACTION_ESCAPE_CANCEL:
+      }
+      if (_screenOpts == SCREENOPTS_HIDE_ALL) {
+        return true;
+      }
       return false;
 
     case ACTION_SPACER:
@@ -523,11 +510,12 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
 
 ButtonStatus ZoomWidget::isButtonActive(Button button)
 {
-  if(isActionDisabled(button.action))
+  if (isActionDisabled(button.action)) {
     return BUTTON_DISABLED;
+  }
 
   bool actionStatus = false;
-  switch(button.action) {
+  switch (button.action) {
     case ACTION_WIDTH_1:           actionStatus = (_activePen.width() == 1);              break;
     case ACTION_WIDTH_2:           actionStatus = (_activePen.width() == 2);              break;
     case ACTION_WIDTH_3:           actionStatus = (_activePen.width() == 3);              break;
@@ -592,14 +580,16 @@ ButtonStatus ZoomWidget::isButtonActive(Button button)
 
 void ZoomWidget::generateToolBar()
 {
-  const int margin = 20;
-  const int lineHeight = 60;
+  const int margin        = 20;
+  const int lineHeight    = 60;
+  const int buttonPadding = 2;
 
   // Get the number of lines
   int numberOfLines = 0;
-  for(int i=0; i<_toolBar.buttons.size(); i++) {
-    if(_toolBar.buttons.at(i).line > numberOfLines)
+  for (int i=0; i<_toolBar.buttons.size(); i++) {
+    if (_toolBar.buttons.at(i).line > numberOfLines) {
       numberOfLines = _toolBar.buttons.at(i).line;
+    }
   }
 
   const QRect background = QRect (
@@ -609,16 +599,17 @@ void ZoomWidget::generateToolBar()
                                    lineHeight * (numberOfLines+1) - margin
                                  );
 
-  _toolBar.lineHeight = lineHeight;
-  _toolBar.margin = margin;
+  _toolBar.lineHeight    = lineHeight;
+  _toolBar.margin        = margin;
   _toolBar.numberOfLines = numberOfLines;
-  _toolBar.rect = background;
+  _toolBar.rect          = background;
 
   // Get the buttons per line
   int buttonsPerLine[numberOfLines+1];
-  for(int i=0; i<=numberOfLines; i++) buttonsPerLine[i] = 0;
-  for(int i=0; i<_toolBar.buttons.size(); i++)
+  for (int i=0; i<=numberOfLines; i++) buttonsPerLine[i] = 0;
+  for (int i=0; i<_toolBar.buttons.size(); i++) {
     buttonsPerLine[ _toolBar.buttons.at(i).line ]++;
+  }
 
   // Clear the tool list
   QList<Button> buttons;
@@ -626,11 +617,10 @@ void ZoomWidget::generateToolBar()
   _toolBar.buttons.clear();
 
   // Size the buttons
-  const int buttonPadding = 2;
   float buttonCount[numberOfLines+1];
-  for(int i=0; i<=numberOfLines; i++) buttonCount[i]=0; // Initialize to 0
+  for (int i=0; i<=numberOfLines; i++) buttonCount[i]=0;
 
-  for(int i=0; i<buttons.size(); i++) {
+  for (int i=0; i<buttons.size(); i++) {
     const int line = buttons.at(i).line;
 
     float width = (float)background.width() / (float)buttonsPerLine[line];
@@ -661,12 +651,12 @@ void ZoomWidget::generateToolBar()
 // Returns -1 if there's no button behind the cursor
 int ZoomWidget::buttonBehindCursor(QPoint cursor)
 {
-  if(!_toolBar.show)
+  if (!_toolBar.show) {
     logUser(LOG_ERROR, "Source code error", "cursorOverButton() was called, but the tool box is not visible");
+  }
 
-  for(int i=0; i<_toolBar.buttons.size(); i++) {
-    if(_toolBar.buttons.at(i).rect.contains(cursor))
-      return i;
+  for (int i=0; i<_toolBar.buttons.size(); i++) {
+    if (_toolBar.buttons.at(i).rect.contains(cursor)) return i;
   }
 
   return -1;
@@ -674,23 +664,26 @@ int ZoomWidget::buttonBehindCursor(QPoint cursor)
 
 bool ZoomWidget::isCursorOverToolBar(QPoint cursorPos)
 {
-  if(!isToolBarVisible())
+  if (!isToolBarVisible()) {
     return false;
+  }
 
   return isCursorInsideHitBox(
-      _toolBar.rect.x()      - _toolBar.margin/2,
-      _toolBar.rect.y()      - _toolBar.margin/2 ,
-      _toolBar.rect.width()  + _toolBar.margin ,
-      _toolBar.rect.height() + _toolBar.margin ,
-      cursorPos,
-      true);
+        _toolBar.rect.x()      - _toolBar.margin/2,
+        _toolBar.rect.y()      - _toolBar.margin/2 ,
+        _toolBar.rect.width()  + _toolBar.margin ,
+        _toolBar.rect.height() + _toolBar.margin ,
+        cursorPos,
+        true
+      );
 }
 
 // It doesn't make any distinction between disabled and not disabled buttons
 bool ZoomWidget::isCursorOverButton(QPoint cursorPos)
 {
-  if(!isToolBarVisible())
+  if (!isToolBarVisible()) {
     return false;
+  }
 
   const int button = buttonBehindCursor(cursorPos);
 
@@ -704,7 +697,7 @@ void ZoomWidget::saveStateToFile()
 {
   QString filePath = getFilePath(FILE_ZOOMME);
   QFile file(filePath);
-  if (!file.open(QIODevice::WriteOnly)){
+  if (!file.open(QIODevice::WriteOnly)) {
     logUser(LOG_ERROR, "", "Couldn't create the file: %s", QSTRING_TO_STRING(filePath));
     return;
   }
@@ -741,31 +734,35 @@ void ZoomWidget::saveStateToFile()
 
   // Save the drawings
   // Rectangles
-  for(int i=0; i<_rects.size(); i++)
-      out << _rects.at(i).startPoint
-          << _rects.at(i).endPoint
-          << _rects.at(i).pen
-          << _rects.at(i).highlight;
+  for (int i=0; i<_rects.size(); i++) {
+    out << _rects.at(i).startPoint
+        << _rects.at(i).endPoint
+        << _rects.at(i).pen
+        << _rects.at(i).highlight;
+  }
   // Lines
-  for(int i=0; i<_lines.size(); i++)
-      out << _lines.at(i).startPoint
-          << _lines.at(i).endPoint
-          << _lines.at(i).pen
-          << _lines.at(i).highlight;
+  for (int i=0; i<_lines.size(); i++) {
+    out << _lines.at(i).startPoint
+        << _lines.at(i).endPoint
+        << _lines.at(i).pen
+        << _lines.at(i).highlight;
+  }
   // Arrows
-  for(int i=0; i<_arrows.size(); i++)
-      out << _arrows.at(i).startPoint
-          << _arrows.at(i).endPoint
-          << _arrows.at(i).pen
-          << _arrows.at(i).highlight;
+  for (int i=0; i<_arrows.size(); i++) {
+    out << _arrows.at(i).startPoint
+        << _arrows.at(i).endPoint
+        << _arrows.at(i).pen
+        << _arrows.at(i).highlight;
+  }
   // Ellipses
-  for(int i=0; i<_ellipses.size(); i++)
-      out << _ellipses.at(i).startPoint
-          << _ellipses.at(i).endPoint
-          << _ellipses.at(i).pen
-          << _ellipses.at(i).highlight;
+  for (int i=0; i<_ellipses.size(); i++) {
+    out << _ellipses.at(i).startPoint
+        << _ellipses.at(i).endPoint
+        << _ellipses.at(i).pen
+        << _ellipses.at(i).highlight;
+  }
   // Texts
-  for(int i=0; i<_texts.size(); i++){
+  for (int i=0; i<_texts.size(); i++) {
     out << _texts.at(i).data.startPoint
         << _texts.at(i).data.endPoint
         << _texts.at(i).data.pen
@@ -775,7 +772,7 @@ void ZoomWidget::saveStateToFile()
         << _texts.at(i).text;
   }
   // Free Forms
-  for(int i=0; i<_freeForms.size(); i++){
+  for (int i=0; i<_freeForms.size(); i++) {
     out << _freeForms.at(i).points;
 
     out << _freeForms.at(i).pen
@@ -790,8 +787,9 @@ void ZoomWidget::saveStateToFile()
 void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
 {
   QFile file(path);
-  if (!file.open(QIODevice::ReadOnly))
+  if (!file.open(QIODevice::ReadOnly)) {
     logUser(LOG_ERROR_AND_EXIT, "", "Couldn't restore the state from the file");
+  }
 
   long long userRectsCount      = 0,
             userLinesCount      = 0,
@@ -838,19 +836,21 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
   float scaleFactorX = 1.0, scaleFactorY = 1.0;
   int marginTop = 0, marginLeft = 0;
 
-  if(savedScreenSize == _screenSize) {
+  if (savedScreenSize == _screenSize) {
     _canvas.originalSize = savedPixmapSize;
     _canvas.size = savedPixmapSize;
     _sourcePixmap = savedPixmap;
   } else {
-    if(config == FIT_AUTO)
+    if (config == FIT_AUTO) {
       config = (savedPixmap.width() > savedPixmap.height()) ? FIT_TO_HEIGHT : FIT_TO_WIDTH;
+    }
 
     QImage scaledPixmap = savedPixmap.toImage();
-    if(config == FIT_TO_WIDTH)
+    if (config == FIT_TO_WIDTH) {
       scaledPixmap = scaledPixmap.scaledToWidth(_screenSize.width());
-    else
+    } else {
       scaledPixmap = scaledPixmap.scaledToHeight(_screenSize.height());
+    }
 
     logUser(LOG_INFO, "The ZoomMe recovery file was scaled! This may cause loss of quality...", "Scaling ZoomMe recover file...");
     logUser(LOG_TEXT, "", "  - Recovered screen size: %dx%d", savedScreenSize.width(), savedScreenSize.height());
@@ -873,19 +873,21 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
     scaleFactorY = (float)(scaledPixmap.height()) / (float)(savedPixmap.height());
 
     // Adjust the drawings to the margin of the image after scaling
-    if(_screenSize.height() > scaledPixmap.height())
+    if (_screenSize.height() > scaledPixmap.height()) {
       marginTop = (_screenSize.height() - scaledPixmap.height()) / 2;
-    if(_screenSize.width() > scaledPixmap.width())
+    }
+    if (_screenSize.width() > scaledPixmap.width()) {
       marginLeft = (_screenSize.width() - scaledPixmap.width()) / 2;
+    }
 
     grabImage(savedPixmap, config);
   }
 
-  if(!_liveMode) showFullScreen();
+  if (!_liveMode) showFullScreen();
 
   // Read the drawings
   // Rectangles
-  for(int i=0; i<userRectsCount; i++){
+  for (int i=0; i<userRectsCount; i++) {
     UserObjectData objectData;
     in >> objectData.startPoint >> objectData.endPoint >> objectData.pen >> objectData.highlight;
 
@@ -897,7 +899,7 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
     _rects.add(objectData);
   }
   // Lines
-  for(int i=0; i<userLinesCount; i++){
+  for (int i=0; i<userLinesCount; i++) {
     UserObjectData objectData;
     in >> objectData.startPoint >> objectData.endPoint >> objectData.pen >> objectData.highlight;
 
@@ -909,7 +911,7 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
     _lines.add(objectData);
   }
   // Arrows
-  for(int i=0; i<userArrowsCount; i++){
+  for (int i=0; i<userArrowsCount; i++) {
     UserObjectData objectData;
     in >> objectData.startPoint >> objectData.endPoint >> objectData.pen >> objectData.highlight;
 
@@ -921,7 +923,7 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
     _arrows.add(objectData);
   }
   // Ellipses
-  for(int i=0; i<userEllipsesCount; i++){
+  for (int i=0; i<userEllipsesCount; i++) {
     UserObjectData objectData;
     in >> objectData.startPoint >> objectData.endPoint >> objectData.pen >> objectData.highlight;
 
@@ -933,7 +935,7 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
     _ellipses.add(objectData);
   }
   // Texts
-  for(int i=0; i<userTextsCount; i++){
+  for (int i=0; i<userTextsCount; i++) {
     UserTextData textData;
     in >> textData.data.startPoint >> textData.data.endPoint >> textData.data.pen >> textData.data.highlight;
     in >> textData.caretPos >> textData.text;
@@ -946,14 +948,14 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
     _texts.add(textData);
   }
   // Free forms
-  for(int i=0; i<userFreeFormsCount; i++){
+  for (int i=0; i<userFreeFormsCount; i++) {
     UserFreeFormData freeFormData;
     QList<QPoint> points;
 
     in >> points;
     in >> freeFormData.pen >> freeFormData.active >> freeFormData.highlight;
 
-    for(int x=0; x<points.size(); x++){
+    for (int x=0; x<points.size(); x++) {
       QPoint point = points.at(x);
 
       point.setX( marginLeft + point.x() * scaleFactorX );
@@ -965,10 +967,11 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
     _freeForms.add(freeFormData);
   }
 
-  if(in.atEnd())
+  if (in.atEnd()) {
     logUser(LOG_SUCCESS, "", "Recovery algorithm finished successfully (reached End Of File)");
-  else
+  } else {
     logUser(LOG_ERROR_AND_EXIT, "", "There is data left in the ZoomMe file that was not loaded by the recovery algorithm (because it ended before the EOF). Please check the saving and the recovery algorithm: There may be some variables missing in the recovery and not in the saving or some variables added in the saving but not in the recovery...");
+  }
 }
 
 void ZoomWidget::createVideoFFmpeg()
@@ -1012,7 +1015,7 @@ void ZoomWidget::createVideoFFmpeg()
   updateCursorShape();
 
   const int timeout = 10000;
-  if (!_ffmpeg.waitForStarted(timeout)){
+  if (!_ffmpeg.waitForStarted(timeout)) {
     logUser(LOG_ERROR, "Couldn't start FFmpeg. Maybe it is not installed...",
                        "Couldn't start ffmpeg or timeout occurred (%.1f sec.). Maybe FFmpeg is not installed. Killing the ffmpeg process...", ((float)timeout/1000.0));
     logUser(LOG_TEXT, "", "  - Error: %s", QSTRING_TO_STRING(_ffmpeg.errorString()));
@@ -1021,17 +1024,17 @@ void ZoomWidget::createVideoFFmpeg()
     return;
   }
 
-  if(!_ffmpeg.waitForFinished(-1)){
+  if (!_ffmpeg.waitForFinished(-1)) {
     logUser(LOG_ERROR, "", "An error occurred with FFmpeg: %s", QSTRING_TO_STRING(_ffmpeg.errorString()));
     return;
   }
 
-  if(_ffmpeg.exitStatus() == QProcess::CrashExit) {
+  if (_ffmpeg.exitStatus() == QProcess::CrashExit) {
     logUser(LOG_ERROR, "","FFmpeg crashed");
     return;
   }
 
-  if(_ffmpeg.exitCode() != 0) {
+  if (_ffmpeg.exitCode() != 0) {
     logUser(LOG_ERROR, "", "FFmpeg failed. Exit code: %d", _ffmpeg.exitCode());
     return;
   }
@@ -1058,8 +1061,8 @@ QRect fixQRect(int x, int y, int width, int height)
   // The width and height of the rectangle must be positive, otherwise strange
   // things happen, like only showing the first word on texts, or draw an
   // ellipse instead of rectangles
-  if(width < 0)  { x+=width;  width=abs(width);   }
-  if(height < 0) { y+=height; height=abs(height); }
+  if (width < 0)  { x+=width;  width=abs(width);   }
+  if (height < 0) { y+=height; height=abs(height); }
 
   return QRect(x, y, width, height);
 }
@@ -1080,20 +1083,22 @@ void changePenWidth(QPainter *painter, int width)
 
 ArrowHead ZoomWidget::getArrowHead(int x, int y, int width, int height)
 {
-  float opposite=-1 * height;
-  float adjacent=width;
-  float hypotenuse=sqrt(pow(opposite,2) + pow(adjacent,2));
+  const float opposite=-1 * height;
+  const float adjacent=width;
+  const float hypotenuse=sqrt(pow(opposite,2) + pow(adjacent,2));
+  const int maximumLineLength = 85;
 
-  float angle;
-  if(adjacent==0) angle=M_PI/2;
-  else angle = atanf(fabs(opposite) / fabs(adjacent));
+  float angle = (adjacent!=0) // Avoid dividing by 0
+                ? atanf(fabs(opposite) / fabs(adjacent))
+                : M_PI/2;
 
-  if( opposite>=0 && adjacent<0 )
+  if (opposite>=0 && adjacent<0) {
     angle = M_PI-angle;
-  else if( opposite<0 && adjacent<=0 )
+  } else if (opposite<0 && adjacent<=0) {
     angle = M_PI+angle;
-  else if( opposite<=0 && adjacent>0 )
+  } else if (opposite<=0 && adjacent>0) {
     angle = 2*M_PI-angle;
+  }
 
   // This proportion determines the inclination of the arrowhead's lines.
   // For example, when the arrow is horizontal, the X and Y lengths of the arrow
@@ -1107,31 +1112,33 @@ ArrowHead ZoomWidget::getArrowHead(int x, int y, int width, int height)
 
   // I've simplified this behavior with a sinusoidal function, so that:
   // 0º = 0.5 (min); 45º = 1 (max); 90º = 0.5(min); etc.
-  float lengthProportion = 0.25 * sin(4*angle-(M_PI/2)) + 0.75;
+  const float lengthProportion = 0.25 * sin(4*angle-(M_PI/2)) + 0.75;
 
   // The line's length of the arrow head is a 15% of the main line size
   int lineLength = hypotenuse * 0.15;
-  if (lineLength>85) lineLength=85;
+  if (lineLength > maximumLineLength) {
+    lineLength=maximumLineLength;
+  }
 
   // Tip of the line where the arrow head should be drawn
   int originX=width+x, originY=height+y;
 
-  int rightLineX  = lineLength,
-      rightLineY  = lineLength,
-      leftLineX = lineLength,
-      leftLineY = lineLength;
+  int rightLineX = lineLength,
+      rightLineY = lineLength,
+      leftLineX  = lineLength,
+      leftLineY  = lineLength;
 
   // Multiple the size with the direction in the axis
   rightLineX *= (angle<=(  M_PI/4)) || (angle>(5*M_PI/4)) ? -1 : 1;
   rightLineY *= (angle<=(3*M_PI/4)) || (angle>(7*M_PI/4)) ? 1 : -1;
   leftLineX  *= (angle<=(3*M_PI/4)) || (angle>(7*M_PI/4)) ? -1 : 1;
-  leftLineY  *= (angle<=(1*M_PI/4)) || (angle>(5*M_PI/4)) ? -1 : 1;
+  leftLineY  *= (angle<=(  M_PI/4)) || (angle>(5*M_PI/4)) ? -1 : 1;
 
   // Multiply the size with the proportion
-  if( (angle<=(M_PI/2)) || (angle>M_PI && angle<=(3*M_PI/2)) ) {
+  if ((angle<=(M_PI/2)) || (angle>M_PI && angle<=(3*M_PI/2))) {
     rightLineX *= (1-lengthProportion); rightLineY *= lengthProportion;
     leftLineX  *= lengthProportion;     leftLineY  *= (1-lengthProportion);
-  } else{
+  } else {
     rightLineX *= lengthProportion;     rightLineY *= (1-lengthProportion);
     leftLineX  *= (1-lengthProportion); leftLineY  *= lengthProportion;
   }
@@ -1148,8 +1155,9 @@ bool ZoomWidget::isDrawingHovered(ZoomWidgetDrawMode drawType, int vectorPos)
   const QPoint cursorPos = GET_CURSOR_POS();
   // Only if it's deleting or if it's trying to modify a text
   bool hoverMode = (_state == STATE_DELETING) || (isTextEditable(cursorPos));
-  if(!hoverMode || isCursorOverToolBar(cursorPos))
+  if (!hoverMode || isCursorOverToolBar(cursorPos)) {
     return false;
+  }
 
   // This is the position of the form (in the current draw mode) in the vector,
   // that is behind the cursor.
@@ -1158,7 +1166,8 @@ bool ZoomWidget::isDrawingHovered(ZoomWidgetDrawMode drawType, int vectorPos)
   return (_drawMode == drawType) && (posFormBehindCursor==vectorPos);
 }
 
-QColor invertColor(QColor color){
+QColor invertColor(QColor color)
+{
   color.setRed(255 - color.red());
   color.setGreen(255 - color.green());
   color.setBlue(255 - color.blue());
@@ -1194,13 +1203,13 @@ void ZoomWidget::drawButton(QPainter *screenPainter, Button button)
   const bool isDisabled    = (isButtonActive(button) == BUTTON_DISABLED);
 
   screenPainter->setPen(QCOLOR_TOOL_BAR);
-  if(isUnderCursor) {
+  if (isUnderCursor) {
     invertColorPainter(screenPainter);
   }
-  if(isActive && !isUnderCursor) {
+  if (isActive && !isUnderCursor) {
     screenPainter->setPen(QCOLOR_GREEN);
   }
-  if(isDisabled) {
+  if (isDisabled) {
     screenPainter->setPen(QCOLOR_TOOL_BAR_DISABLED);
   }
 
@@ -1228,11 +1237,12 @@ void ZoomWidget::drawToolBar(QPainter *screenPainter)
   screenPainter->fillPath(background, color);
 
   // Draw buttons
-  for(int i=0; i<_toolBar.buttons.size(); i++) {
+  for (int i=0; i<_toolBar.buttons.size(); i++) {
     const Button btn = _toolBar.buttons.at(i);
 
-    if(btn.action != ACTION_SPACER)
+    if (btn.action != ACTION_SPACER) {
       drawButton(screenPainter, btn);
+    }
   }
 }
 
@@ -1241,15 +1251,15 @@ void ZoomWidget::closePopupUnderCursor(const QPoint cursorPos)
   const qint64 time = QDateTime::currentMSecsSinceEpoch();
 
   int popupPos = -1;
-  for(int i=0; i<_popupTray.popups.size(); i++) {
+  for (int i=0; i<_popupTray.popups.size(); i++) {
     const QRect p = getPopupRect(i);
-    if( isCursorInsideHitBox(p.x(), p.y(), p.width(), p.height(), cursorPos, true) ) {
+    if (isCursorInsideHitBox(p.x(), p.y(), p.width(), p.height(), cursorPos, true)) {
       popupPos = i;
       break;
     }
   }
 
-  if(popupPos == -1) {
+  if (popupPos == -1) {
     logUser(LOG_ERROR, "", "Couldn't find the pop-up under the cursor");
     return;
   }
@@ -1257,26 +1267,31 @@ void ZoomWidget::closePopupUnderCursor(const QPoint cursorPos)
   Popup edit = _popupTray.popups.takeAt(popupPos);
 
   const int timeConsumed = time - edit.timeCreated;
-  const int visibleEnd = edit.lifetime  - POPUP_SLIDE_OUT_MSEC;
+  const int visibleEnd   = edit.lifetime  - POPUP_SLIDE_OUT_MSEC;
+
   // Don't change the time if it's already sliding out
-  if(timeConsumed < visibleEnd)
+  if (timeConsumed < visibleEnd) {
     edit.timeCreated = time - visibleEnd;
+  }
 
   _popupTray.popups.insert(popupPos, edit);
 }
 
 bool ZoomWidget::isPressingPopup(const QPoint cursorPos)
 {
-  if(_state != STATE_MOVING)
+  if (_state != STATE_MOVING) {
     return false;
+  }
 
-  if(_screenOpts == SCREENOPTS_HIDE_ALL || _screenOpts == SCREENOPTS_HIDE_FLOATING)
+  if (_screenOpts == SCREENOPTS_HIDE_ALL || _screenOpts == SCREENOPTS_HIDE_FLOATING) {
     return false;
+  }
 
-  for(int i=0; i<_popupTray.popups.size(); i++) {
+  for (int i=0; i<_popupTray.popups.size(); i++) {
     const QRect p = getPopupRect(i);
-    if( isCursorInsideHitBox(p.x(), p.y(), p.width(), p.height(), cursorPos, true) )
+    if (isCursorInsideHitBox(p.x(), p.y(), p.width(), p.height(), cursorPos, true)) {
       return true;
+    }
   }
 
   return false;
@@ -1315,10 +1330,10 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
   // |==|----------|==|
   // |e | visible  | e| (e --> effect)
   const float endVisible = (float)p.lifetime - POPUP_SLIDE_OUT_MSEC;
-  if(timeConsumed >= endVisible) {
+  if (timeConsumed >= endVisible) {
     const float lifeInLastSection = timeConsumed - endVisible;
     float percentageInLastSection = lifeInLastSection / (float)POPUP_SLIDE_OUT_MSEC; // 0.0 to 1.0
-    if(percentageInLastSection > 1) percentageInLastSection = 1; // Sometimes it overflows to 1.0XXXX
+    if (percentageInLastSection > 1) percentageInLastSection = 1; // Sometimes it overflows to 1.0XXXX
 
     // SLIDE OUT
     const int slideOut = (popupRect.x() + popupRect.width()) * percentageInLastSection;
@@ -1331,7 +1346,7 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
   // MAIN COLOR AND TITLE TEXT
   QColor color;
   QString title;
-  switch(p.urgency) {
+  switch (p.urgency) {
     case LOG_INFO:    color = QCOLOR_CYAN;  title="INFORMATION"; break;
     case LOG_SUCCESS: color = QCOLOR_GREEN; title="SUCCESS";     break;
     case LOG_ERROR:   color = QCOLOR_RED;   title="ERROR";       break;
@@ -1412,14 +1427,14 @@ void ZoomWidget::setPopupTrayPos()
 
   // SLIDE IN
   int slideInTray = 0;
-  for(int i=0; i<_popupTray.popups.size(); i++) {
+  for (int i=0; i<_popupTray.popups.size(); i++) {
     Popup p = _popupTray.popups.at(i);
     const int timeConsumed = time - p.timeCreated;
 
     // 0                lifetime
     // |==|----------|==|
     // |e | visible  | e| (e --> effect)
-    if(timeConsumed <= POPUP_SLIDE_IN_MSEC) {
+    if (timeConsumed <= POPUP_SLIDE_IN_MSEC) {
       const float percentageInFirstSection = (float)timeConsumed / (float)POPUP_SLIDE_IN_MSEC; // 0.0 to 1.0
       const int slideIn = (POPUP_HEIGHT + _popupTray.margin) * (1-percentageInFirstSection);
       slideInTray += slideIn;
@@ -1434,22 +1449,26 @@ void ZoomWidget::setPopupTrayPos()
 
 void ZoomWidget::drawPopupTray(QPainter *screenPainter)
 {
-  if(_screenOpts == SCREENOPTS_HIDE_ALL || _screenOpts == SCREENOPTS_HIDE_FLOATING)
+  if (_screenOpts == SCREENOPTS_HIDE_ALL || _screenOpts == SCREENOPTS_HIDE_FLOATING) {
     return;
+  }
 
-  if(_popupTray.popups.size() == 0)
+  if (_popupTray.popups.isEmpty()) {
     return;
+  }
 
   setPopupTrayPos();
 
-  for(int i=_popupTray.popups.size()-1; i>=0; i--)
+  for (int i=_popupTray.popups.size()-1; i>=0; i--) {
     drawPopup(screenPainter, i);
+  }
 }
 
 void ZoomWidget::drawStatus(QPainter *screenPainter)
 {
-  if(_screenOpts == SCREENOPTS_HIDE_ALL || _screenOpts == SCREENOPTS_HIDE_FLOATING)
+  if (_screenOpts == SCREENOPTS_HIDE_ALL || _screenOpts == SCREENOPTS_HIDE_FLOATING) {
     return;
+  }
 
   const int lineHeight        = 25;
   const int margin            = 20;
@@ -1459,18 +1478,17 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   const int initialLineHeight = lineHeight + 5; // lineHeight + margin
 
   int h = initialLineHeight;
-
-  // Text to display
   QString text;
 
   // Line 1 -ALWAYS DISPLAYING-
-  if(isDisabledMouseTracking())
+  if (isDisabledMouseTracking()) {
     text.append(BLOCK_ICON);
-  else
+  } else {
     text.append( (_canvas.scale == 1.0f) ? NO_ZOOM_ICON : ZOOM_ICON );
+  }
   text.append(" ");
 
-  switch(_drawMode) {
+  switch (_drawMode) {
     case DRAWMODE_LINE:      text.append("Line");        break;
     case DRAWMODE_RECT:      text.append("Rectangle");   break;
     case DRAWMODE_ARROW:     text.append("Arrow");       break;
@@ -1479,17 +1497,15 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
     case DRAWMODE_FREEFORM:  text.append("Free Form");   break;
   }
 
-  if(_highlight) {
+  if (_highlight) {
     text.append(" ");
     text.append(HIGHLIGHT_ICON);
   }
 
-  text.append(" (");
-  text.append(QString::number(_activePen.width()));
-  text.append(")");
+  text.append(" (" + QString::number(_activePen.width()) + ")");
 
   // Line 2
-  switch(_state) {
+  switch (_state) {
     case STATE_MOVING:       break;
     case STATE_DRAWING:      break;
     case STATE_TYPING:       text.append("\n-- TYPING --");     h += lineHeight; break;
@@ -1498,20 +1514,20 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
     case STATE_TO_TRIM:
     case STATE_TRIMMING:     text.append("\n-- TRIMMING --");   h += lineHeight; break;
   };
-  if(isTextEditable(GET_CURSOR_POS())){
+  if (isTextEditable(GET_CURSOR_POS())) {
     text += "\n-- SELECT --";
     h += lineHeight;
   }
 
   // Last Line
-  if(IS_RECORDING){
+  if (IS_RECORDING) {
     text.append("\n");
     text.append(RECORD_ICON);
     text.append(" Recording...");
 
     h += lineHeight;
   }
-  if(_exitConfirm) {
+  if (_exitConfirm) {
     text.append("\n");
     text.append(EXIT_ICON);
     text.append(" EXIT? ");
@@ -1526,12 +1542,13 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
 
   // If the mouse is near the hit box, don't draw it
   QRect hitBox = QRect(x-margin, y-margin, w+margin*2, h+margin*2);
-  if( isCursorInsideHitBox( hitBox.x(),
+  if (isCursorInsideHitBox( hitBox.x(),
                             hitBox.y(),
                             hitBox.width(),
                             hitBox.height(),
                             GET_CURSOR_POS(),
-                            true) ) {
+                            true)
+     ) {
     return;
   }
 
@@ -1565,8 +1582,9 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
 
 void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
 {
-  if(_screenOpts == SCREENOPTS_HIDE_ALL)
+  if (_screenOpts == SCREENOPTS_HIDE_ALL) {
     return;
+  }
 
   // Draw user rectangles.
   int x, y, w, h;
@@ -1574,10 +1592,11 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
     pixmapPainter->setPen(_rects.at(i).pen);
     getRealUserObjectPos(_rects.at(i), &x, &y, &w, &h, false);
 
-    if(isDrawingHovered(DRAWMODE_RECT, i))
+    if (isDrawingHovered(DRAWMODE_RECT, i)) {
       invertColorPainter(pixmapPainter);
+    }
 
-    if(_rects.at(i).highlight) {
+    if (_rects.at(i).highlight) {
       QColor color = pixmapPainter->pen().color();
       color.setAlpha(HIGHLIGHT_ALPHA); // Transparency
       QPainterPath background;
@@ -1593,11 +1612,12 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
     pixmapPainter->setPen(_lines.at(i).pen);
     getRealUserObjectPos(_lines.at(i), &x, &y, &w, &h, false);
 
-    if(isDrawingHovered(DRAWMODE_LINE, i))
+    if (isDrawingHovered(DRAWMODE_LINE, i)) {
       invertColorPainter(pixmapPainter);
+    }
 
     // Draw a wider semi-transparent line behind the line as the highlight
-    if(_lines.at(i).highlight) {
+    if (_lines.at(i).highlight) {
       QPen oldPen = pixmapPainter->pen();
 
       // Change the color and width of the pen
@@ -1620,13 +1640,14 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
     pixmapPainter->setPen(_arrows.at(i).pen);
     getRealUserObjectPos(_arrows.at(i), &x, &y, &w, &h, false);
 
-    if(isDrawingHovered(DRAWMODE_ARROW, i))
+    if (isDrawingHovered(DRAWMODE_ARROW, i)) {
       invertColorPainter(pixmapPainter);
+    }
 
     ArrowHead head = getArrowHead(x, y, w, h);
 
     // Draw a wider semi-transparent line behind the line as the highlight
-    if(_arrows.at(i).highlight) {
+    if (_arrows.at(i).highlight) {
       QPen oldPen = pixmapPainter->pen();
 
       // Change the color and width of the pen
@@ -1653,10 +1674,11 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
     pixmapPainter->setPen(_ellipses.at(i).pen);
     getRealUserObjectPos(_ellipses.at(i), &x, &y, &w, &h, false);
 
-    if(isDrawingHovered(DRAWMODE_ELLIPSE, i))
+    if (isDrawingHovered(DRAWMODE_ELLIPSE, i)) {
       invertColorPainter(pixmapPainter);
+    }
 
-    if(_ellipses.at(i).highlight) {
+    if (_ellipses.at(i).highlight) {
       QColor color = pixmapPainter->pen().color();
       color.setAlpha(HIGHLIGHT_ALPHA); // Transparency
       QPainterPath background;
@@ -1675,11 +1697,12 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
   for (int i = 0; i < freeFormCount; ++i) {
     pixmapPainter->setPen(_freeForms.at(i).pen);
 
-    if(isDrawingHovered(DRAWMODE_FREEFORM, i))
+    if (isDrawingHovered(DRAWMODE_FREEFORM, i)) {
       invertColorPainter(pixmapPainter);
+    }
 
     // Draw the free form with or without the highlight
-    if(_freeForms.at(i).highlight) {
+    if (_freeForms.at(i).highlight) {
       QPolygon polygon(_freeForms.at(i).points);
 
       // Highlight
@@ -1709,10 +1732,11 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
     updateFontSize(pixmapPainter);
     getRealUserObjectPos(_texts.at(i).data, &x, &y, &w, &h, false);
 
-    if(isDrawingHovered(DRAWMODE_TEXT, i))
+    if (isDrawingHovered(DRAWMODE_TEXT, i)) {
       invertColorPainter(pixmapPainter);
+    }
 
-    if(_texts.at(i).data.highlight) {
+    if (_texts.at(i).data.highlight) {
       QColor color = pixmapPainter->pen().color();
       color.setAlpha(HIGHLIGHT_ALPHA); // Transparency
       QPainterPath background;
@@ -1728,14 +1752,16 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
 
 void ZoomWidget::drawFlashlightEffect(QPainter *painter, bool drawToScreen)
 {
-  if(_state == STATE_TRIMMING)
+  if (_state == STATE_TRIMMING) {
     return;
+  }
 
   const int radius = _flashlightRadius;
   QPoint c = GET_CURSOR_POS();
 
-  if(!drawToScreen)
+  if (!drawToScreen) {
     c = screenPointToPixmapPos(c);
+  }
 
   QRect mouseFlashlightBorder = QRect(c.x()-radius, c.y()-radius, radius*2, radius*2);
   QPainterPath mouseFlashlight;
@@ -1766,11 +1792,12 @@ void ZoomWidget::drawTrimmed(QPainter *pixmapPainter)
 
 void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
 {
-  if(_screenOpts == SCREENOPTS_HIDE_ALL)
+  if (_screenOpts == SCREENOPTS_HIDE_ALL) {
     return;
+  }
 
   // If it's writing the text (active text)
-  if(_state == STATE_TYPING) {
+  if (_state == STATE_TYPING) {
     UserTextData textObject = _texts.last();
     int x, y, w, h;
     painter->setPen(textObject.data.pen);
@@ -1778,10 +1805,13 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
     getRealUserObjectPos(textObject.data, &x, &y, &w, &h, drawToScreen);
 
     QString text = textObject.text;
-    if(text.isEmpty()) text="Type some text... \nThen press Enter to finish...";
-    else text.insert(textObject.caretPos, '|');
+    if (text.isEmpty()) {
+      text="Type some text... \nThen press Enter to finish...";
+    } else {
+      text.insert(textObject.caretPos, '|');
+    }
 
-    if(_highlight) {
+    if (_highlight) {
       QColor color = textObject.data.pen.color();
       color.setAlpha(HIGHLIGHT_ALPHA); // Transparency
       QPainterPath background;
@@ -1801,13 +1831,13 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
   }
 
   // Draw active user object.
-  if(_state == STATE_DRAWING) {
+  if (_state == STATE_DRAWING) {
     painter->setPen(_activePen);
 
     QPoint startPoint = _startDrawPoint;
     QPoint endPoint   = _endDrawPoint;
 
-    if(drawToScreen){
+    if (drawToScreen) {
       startPoint = pixmapPointToScreenPos(startPoint);
       endPoint   = pixmapPointToScreenPos(endPoint);
     }
@@ -1822,18 +1852,18 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
     color.setAlpha(HIGHLIGHT_ALPHA); // Transparency
     QPainterPath background;
 
-    switch(_drawMode) {
+    switch (_drawMode) {
       case DRAWMODE_RECT:
         painter->drawRoundedRect(fixQRect(x, y, width, height), RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
 
-        if(_highlight) {
+        if (_highlight) {
           background.addRoundedRect(x, y, width, height, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
           painter->fillPath(background, color);
         }
         break;
       case DRAWMODE_LINE:
         // Draw a wider semi-transparent line behind the line as the highlight
-        if(_highlight) {
+        if (_highlight) {
           QPen oldPen = painter->pen();
 
           // Change the color and width of the pen
@@ -1854,7 +1884,7 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
           ArrowHead head = getArrowHead(x, y, width, height);
 
           // Draw a wider semi-transparent line behind the line as the highlight
-          if(_highlight) {
+          if (_highlight) {
             QPen oldPen = painter->pen();
 
             // Change the color and width of the pen
@@ -1879,7 +1909,7 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
       case DRAWMODE_ELLIPSE:
         painter->drawEllipse(x, y, width, height);
 
-        if(_highlight) {
+        if (_highlight) {
           background.addEllipse(x, y, width, height);
           painter->fillPath(background, color);
         }
@@ -1888,7 +1918,7 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
         {
           updateFontSize(painter);
 
-          if(_highlight) {
+          if (_highlight) {
             background.addRoundedRect(x, y, width, height, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
             painter->fillPath(background, color);
 
@@ -1911,19 +1941,21 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
           break;
         }
       case DRAWMODE_FREEFORM:
-        if(_freeForms.isEmpty())
+        if (_freeForms.isEmpty()) {
           break;
-        if(!_freeForms.last().active)
+        }
+        if (!_freeForms.last().active) {
           break;
+        }
 
         painter->setPen(_freeForms.last().pen);
 
         // Draw the free form with or without the highlight
-        if(_freeForms.last().highlight) {
+        if (_freeForms.last().highlight) {
           QPolygon polygon;
           for (int i = 0; i < _freeForms.last().points.size(); ++i) {
             QPoint point = _freeForms.last().points.at(i);
-            if(drawToScreen) point = pixmapPointToScreenPos(point);
+            if (drawToScreen) point = pixmapPointToScreenPos(point);
 
             polygon << point;
           }
@@ -1937,7 +1969,7 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
             QPoint current = _freeForms.last().points.at(i);
             QPoint next    = _freeForms.last().points.at(i+1);
 
-            if(drawToScreen) {
+            if (drawToScreen) {
               current = pixmapPointToScreenPos(current);
               next = pixmapPointToScreenPos(next);
             }
@@ -1955,23 +1987,27 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   (void) event;
 
   // Exit if the _sourcePixmap is not initialized (not ready)
-  if(_sourcePixmap.isNull())
+  if (_sourcePixmap.isNull()) {
     logUser(LOG_ERROR_AND_EXIT, "", "The desktop pixmap is null. Can't paint over a null pixmap");
+  }
 
   _canvas.pixmap = _sourcePixmap;
 
-  if(_liveMode)
+  if (_liveMode) {
     _canvas.pixmap.fill(Qt::transparent);
+  }
 
-  if(_boardMode)
+  if (_boardMode) {
     _canvas.pixmap.fill(QCOLOR_BLACKBOARD);
+  }
 
   QPainter pixmapPainter(&_canvas.pixmap);
   QPainter screen; screen.begin(this);
 
   drawSavedForms(&pixmapPainter);
-  if(_state == STATE_TRIMMING)
+  if (_state == STATE_TRIMMING) {
     drawTrimmed(&pixmapPainter);
+  }
 
   // By drawing the active form in the pixmap, it gives a better user feedback
   // (because the user can see how it would really look like when saved), but
@@ -1982,21 +2018,23 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   // arrow's head)
   // By the way, ¿Why would you draw when the flashlight effect is enabled? I
   // don't know why I'm allowing this... You can't even see the cursor!
-  if(_flashlightMode && !IS_RECORDING) {
+  if (_flashlightMode && !IS_RECORDING) {
     drawDrawnPixmap(&screen);
     drawFlashlightEffect(&screen, true);
     drawActiveForm(&screen, true);
   } else {
-    if(_flashlightMode)
+    if (_flashlightMode) {
       drawFlashlightEffect(&pixmapPainter, false);
+    }
     drawActiveForm(&pixmapPainter, false);
     drawDrawnPixmap(&screen);
   }
 
   drawStatus(&screen);
   drawPopupTray(&screen);
-  if(isToolBarVisible())
+  if (isToolBarVisible()) {
     drawToolBar(&screen);
+  }
 
   // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
   // int x, y, w, h;
@@ -2019,10 +2057,11 @@ void ZoomWidget::removeFormBehindCursor(QPoint cursorPos)
   // that is behind the cursor.
   int formPosBehindCursor = cursorOverForm(cursorPos);
 
-  if(formPosBehindCursor == -1)
+  if (formPosBehindCursor == -1) {
     return;
+  }
 
-  switch(_drawMode) {
+  switch (_drawMode) {
     case DRAWMODE_LINE:      _lines.remove(formPosBehindCursor);     break;
     case DRAWMODE_RECT:      _rects.remove(formPosBehindCursor);     break;
     case DRAWMODE_ARROW:     _arrows.remove(formPosBehindCursor);    break;
@@ -2042,34 +2081,36 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
   const QPoint cursorPos = event->pos();
 
   // Pre mouse processing
-  if(isCursorOverToolBar(cursorPos)) {
-    if(isCursorOverButton(cursorPos))
+  if (isCursorOverToolBar(cursorPos)) {
+    if (isCursorOverButton(cursorPos)) {
       toggleAction(_toolBar.buttons.at(buttonBehindCursor(cursorPos)).action);
+    }
 
     updateCursorShape();
     update();
     return;
   }
 
-  if(isPressingPopup(cursorPos)) {
+  if (isPressingPopup(cursorPos)) {
     closePopupUnderCursor(cursorPos);
     update();
     return;
   }
 
   // Drag the pixmap
-  if(event->button() == DRAG_MOUSE_BUTTON && isDisabledMouseTracking()) {
+  if (event->button() == DRAG_MOUSE_BUTTON && isDisabledMouseTracking()) {
     _canvas.dragging = true;
     updateCursorShape();
     update();
     return;
   }
 
-  if(_screenOpts == SCREENOPTS_HIDE_ALL)
+  if (_screenOpts == SCREENOPTS_HIDE_ALL) {
     return;
+  }
 
   // Mouse processing
-  if(_state == STATE_COLOR_PICKER){
+  if (_state == STATE_COLOR_PICKER) {
     _activePen.setColor(GET_COLOR_UNDER_CURSOR());
     _state = STATE_MOVING;
     update();
@@ -2077,15 +2118,17 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
     return;
   }
 
-  if (_state == STATE_TYPING && _texts.last().text.isEmpty())
+  if (_state == STATE_TYPING && _texts.last().text.isEmpty()) {
     _texts.destroyLast();
+  }
 
-  if(_state == STATE_DELETING)
+  if (_state == STATE_DELETING) {
     return removeFormBehindCursor(cursorPos);
+  }
 
   // If you're in text mode (without drawing nor writing) and you press a text
   // with shift pressed, you access it and you can modify it
-  if(isTextEditable(cursorPos)) {
+  if (isTextEditable(cursorPos)) {
     _state = STATE_TYPING;
     updateCursorShape();
 
@@ -2093,17 +2136,17 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
     // Put the text at the top of the list, to edit it
     _texts.moveToTop(formPosBehindCursor);
 
-    if(event->modifiers() == Qt::ShiftModifier)
+    if (event->modifiers() == Qt::ShiftModifier) {
       _canvas.freezePos = FREEZE_BY_TEXT;
+    }
 
     update();
     return;
   }
 
-  if(_state == STATE_TO_TRIM)
-    _state = STATE_TRIMMING;
-  else
-    _state = STATE_DRAWING;
+  _state = (_state == STATE_TO_TRIM)
+           ? STATE_TRIMMING
+           : STATE_DRAWING;
 
   _startDrawPoint = screenPointToPixmapPos(cursorPos);
   _endDrawPoint = _startDrawPoint;
@@ -2113,9 +2156,9 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
 // saved in the clipboard
 void ZoomWidget::saveImage(QPixmap pixmap, bool toImage)
 {
-  if(toImage) {
+  if (toImage) {
      QString path = getFilePath(FILE_IMAGE);
-     if(pixmap.save(path)) {
+     if (pixmap.save(path)) {
        QApplication::beep();
        logUser(LOG_SUCCESS, "Image saved correctly!", "Image saved correctly: %s", QSTRING_TO_STRING(path));
      } else {
@@ -2134,29 +2177,29 @@ void ZoomWidget::saveImage(QPixmap pixmap, bool toImage)
   QString fileName(CLIPBOARD_TEMP_FILENAME); fileName.append(".png");
   QString path(tempFile.absoluteFilePath(fileName));
 
-  if(!pixmap.save(path)) {
-   logUser(LOG_ERROR, "", "Couldn't save the image to the temp location for the clipboard: %s", QSTRING_TO_STRING(path));
-   return;
+  if (!pixmap.save(path)) {
+    logUser(LOG_ERROR, "", "Couldn't save the image to the temp location for the clipboard: %s", QSTRING_TO_STRING(path));
+    return;
   }
 
   QProcess process;
   QString appName;
-  if(QGuiApplication::platformName() == QString("wayland")) {
-   appName = "wl-copy";
+  if (QGuiApplication::platformName() == QString("wayland")) {
+    appName = "wl-copy";
 
-   process.setProgram("bash");
-   QList<QString> procArgs;
-   procArgs << "-c" << QString("wl-copy < " + path);
-   process.setArguments(procArgs);
+    process.setProgram("bash");
+    QList<QString> procArgs;
+    procArgs << "-c" << QString("wl-copy < " + path);
+    process.setArguments(procArgs);
   } else { // X11
-   appName = "xclip";
-   process.setProgram(appName);
+    appName = "xclip";
+    process.setProgram(appName);
 
-   QList<QString> procArgs;
-   procArgs << "-selection" << "clipboard"
-            << "-target"    << "image/png"
-            << "-i"         << path;
-   process.setArguments(procArgs);
+    QList<QString> procArgs;
+    procArgs << "-selection" << "clipboard"
+      << "-target"    << "image/png"
+      << "-i"         << path;
+    process.setArguments(procArgs);
   }
 
   logUser(LOG_TEXT, "", "Trying to save the image to the clipboard with %s...", QSTRING_TO_STRING(appName));
@@ -2165,22 +2208,23 @@ void ZoomWidget::saveImage(QPixmap pixmap, bool toImage)
 
   // Check for errors.
   if (!process.waitForStarted(5000)) {
-   logUser(LOG_ERROR, "", "Couldn't start %s, maybe is not installed...", QSTRING_TO_STRING(appName));
-   logUser(LOG_TEXT, "", "  - Error: %s", QSTRING_TO_STRING(process.errorString()));
-   logUser(LOG_TEXT, "", "  - Executed command: %s %s", QSTRING_TO_STRING(process.program()), QSTRING_TO_STRING(process.arguments().join(" ")));
-   process.kill();
-  } else if(!process.waitForFinished(-1))
-   logUser(LOG_ERROR, "", "An error occurred with %s: %s", QSTRING_TO_STRING(appName), QSTRING_TO_STRING(process.errorString()));
-  else if(process.exitStatus() == QProcess::CrashExit)
-   logUser(LOG_ERROR, "", "%s crashed", QSTRING_TO_STRING(appName));
-  else if(process.exitCode() != 0)
-   logUser(LOG_ERROR, "", "%s failed. Exit code: %d", QSTRING_TO_STRING(appName), process.exitCode());
+    logUser(LOG_ERROR, "", "Couldn't start %s, maybe is not installed...", QSTRING_TO_STRING(appName));
+    logUser(LOG_TEXT, "", "  - Error: %s", QSTRING_TO_STRING(process.errorString()));
+    logUser(LOG_TEXT, "", "  - Executed command: %s %s", QSTRING_TO_STRING(process.program()), QSTRING_TO_STRING(process.arguments().join(" ")));
+    process.kill();
+  } else if (!process.waitForFinished(-1)) {
+    logUser(LOG_ERROR, "", "An error occurred with %s: %s", QSTRING_TO_STRING(appName), QSTRING_TO_STRING(process.errorString()));
+  } else if (process.exitStatus() == QProcess::CrashExit) {
+    logUser(LOG_ERROR, "", "%s crashed", QSTRING_TO_STRING(appName));
+  } else if (process.exitCode() != 0) {
+    logUser(LOG_ERROR, "", "%s failed. Exit code: %d", QSTRING_TO_STRING(appName), process.exitCode());
+  }
 
   // If there's no errors, beep and exit
   else {
-   logUser(LOG_SUCCESS, "","Saving image to clipboard with %s was successful!", QSTRING_TO_STRING(appName));
-   QApplication::beep();
-   return;
+    logUser(LOG_SUCCESS, "","Saving image to clipboard with %s was successful!", QSTRING_TO_STRING(appName));
+    QApplication::beep();
+    return;
   }
 
   // If there's an error with 'xclip' or 'wl-copy', copy the image path
@@ -2190,7 +2234,7 @@ void ZoomWidget::saveImage(QPixmap pixmap, bool toImage)
   // there's not a standard way to save a path in linux afaik (in example,
   // Dolphin will copy the image, but Thunar and GIMP will not recognize
   // it).
-  if(!_clipboard) {
+  if (!_clipboard) {
    logUser(LOG_ERROR, "", "There's no clipboard to save the image into");
    return;
   }
@@ -2206,7 +2250,7 @@ void ZoomWidget::saveImage(QPixmap pixmap, bool toImage)
   // Copy the image into clipboard (this causes some problems with the
   // clipboard manager in Linux, because when the app exits, the image gets
   // deleted with it. The clipboard only save a pointer to that image)
-  if(!_clipboard) {
+  if (!_clipboard) {
    logUser(LOG_ERROR, "", "There's no clipboard to save the image into");
    return;
   }
@@ -2224,7 +2268,7 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
   const QPoint cursorPos = event->pos();
 
   // Pre mouse processing
-  if(_state == STATE_TRIMMING) {
+  if (_state == STATE_TRIMMING) {
     _endDrawPoint = screenPointToPixmapPos(cursorPos);
     const QPoint s = _startDrawPoint;
     const QPoint e = _endDrawPoint;
@@ -2239,19 +2283,21 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
     return;
   }
 
-  if(_canvas.dragging) {
+  if (_canvas.dragging) {
     _canvas.dragging = false;
     updateCursorShape();
     update();
     return;
   }
 
-  if(_screenOpts == SCREENOPTS_HIDE_ALL)
+  if (_screenOpts == SCREENOPTS_HIDE_ALL) {
     return;
+  }
 
   // Mouse processing
-  if (_state != STATE_DRAWING)
+  if (_state != STATE_DRAWING) {
     return;
+  }
 
   _endDrawPoint = screenPointToPixmapPos(cursorPos);
 
@@ -2260,7 +2306,7 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
   data.startPoint = _startDrawPoint;
   data.endPoint = _endDrawPoint;
   data.highlight = _highlight;
-  switch(_drawMode) {
+  switch (_drawMode) {
     case DRAWMODE_LINE:      _lines.add(data);      break;
     case DRAWMODE_RECT:      _rects.add(data);      break;
     case DRAWMODE_ARROW:     _arrows.add(data);     break;
@@ -2273,8 +2319,9 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
         textData.caretPos = 0;
         _texts.add(textData);
 
-        if (event->modifiers() == Qt::ShiftModifier)
+        if (event->modifiers() == Qt::ShiftModifier) {
           _canvas.freezePos = FREEZE_BY_TEXT;
+        }
 
         _state = STATE_TYPING;
         update();
@@ -2285,8 +2332,7 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
         // BUG: If the Freeform is empty or the last one is inactive, it is because
         // the user had pressed the mouse but didn't move it, so the free form was
         // not created. This if statement fixes the segfault
-        if(_freeForms.isEmpty())
-          break;
+        if (_freeForms.isEmpty()) break;
 
         // The registration of the points of the FreeForms are in mouseMoveEvent()
         // This only indicates that the drawing is no longer being actively drawn
@@ -2314,70 +2360,76 @@ void ZoomWidget::updateCursorShape()
 
   // Pick color
   QPixmap pickColorPixmap(":/resources/color-picker-16.png");
-  if (pickColorPixmap.isNull()) logUser(LOG_ERROR, "", "Failed to load pixmap for the color-picker cursor");
+  if (pickColorPixmap.isNull()) {
+    logUser(LOG_ERROR, "", "Failed to load pixmap for the color-picker cursor");
+  }
   QCursor pickColor = QCursor(pickColorPixmap, 0, pickColorPixmap.height()-1);
 
   QPoint cursorPos = GET_CURSOR_POS();
 
-  if(IS_FFMPEG_RUNNING)
+  if (IS_FFMPEG_RUNNING) {
     setCursor(waiting);
 
-  else if(isCursorOverButton(cursorPos)) {
+  } else if (isCursorOverButton(cursorPos)) {
     const Button button = _toolBar.buttons.at(buttonBehindCursor(cursorPos));
-    if(isActionDisabled(button.action))
+    if (isActionDisabled(button.action)) {
       setCursor(denied);
-    else
+    } else {
       setCursor(pointHand);
+    }
 
-  } else if(_canvas.dragging)
+  } else if (_canvas.dragging) {
     setCursor(drag);
 
-  else if(_state == STATE_COLOR_PICKER)
+  } else if (_state == STATE_COLOR_PICKER) {
     setCursor(pickColor);
 
-  else if(_state == STATE_DELETING)
+  } else if (_state == STATE_DELETING) {
     setCursor(pointHand);
 
-  else if(isTextEditable(cursorPos))
+  } else if (isTextEditable(cursorPos)) {
     setCursor(pointHand);
 
-  else if(_flashlightMode && _state != STATE_TRIMMING)
+  } else if (_flashlightMode && _state != STATE_TRIMMING) {
     setCursor(blank);
 
-  else
+  } else {
     setCursor(cursorDefault);
+
+  }
 }
 
 void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 {
   // The cursor pos is relative to the resolution of scaled monitor
-  const QPoint cursorPos = event->pos();
+  const QPoint cursorPos   = event->pos();
   const bool buttonPressed = (event->buttons() != Qt::NoButton);
 
   // If the app lost focus, request it again
-  if(!QWidget::isActiveWindow())
+  if (!QWidget::isActiveWindow()) {
     QWidget::activateWindow();
+  }
 
   updateCursorShape();
 
   updateAtMousePos(cursorPos);
 
-  if(_canvas.dragging || _screenOpts == SCREENOPTS_HIDE_ALL || isCursorOverToolBar(cursorPos)){
+  if (_canvas.dragging || _screenOpts == SCREENOPTS_HIDE_ALL || isCursorOverToolBar(cursorPos)) {
     update();
     return;
   }
 
-  if(_state == STATE_COLOR_PICKER){
+  if (_state == STATE_COLOR_PICKER) {
     _activePen.setColor(GET_COLOR_UNDER_CURSOR());
     update();
     return;
   }
 
   // Register the position of the cursor for the FreeForm
-  if(_state == STATE_DRAWING && _drawMode == DRAWMODE_FREEFORM && buttonPressed) {
+  if (_state == STATE_DRAWING && _drawMode == DRAWMODE_FREEFORM && buttonPressed) {
     const QPoint cursorInPixmap = screenPointToPixmapPos(cursorPos);
 
-    if( _freeForms.isEmpty() || (!_freeForms.isEmpty() && !_freeForms.last().active) ) {
+    if (_freeForms.isEmpty() || (!_freeForms.isEmpty() && !_freeForms.last().active)) {
       UserFreeFormData data;
       data.pen = _activePen;
       data.active = true;
@@ -2386,7 +2438,7 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
       _freeForms.add(data);
 
     // It's not empty and the last is active
-    } else if(_freeForms.last().points.last() != cursorInPixmap) {
+    } else if (_freeForms.last().points.last() != cursorInPixmap) {
       UserFreeFormData data = _freeForms.last();
       _freeForms.destroyLast();
       data.points.append(cursorInPixmap);
@@ -2400,50 +2452,53 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
 // The mouse pos shouldn't be fixed to the hdpi scaling
 void ZoomWidget::updateAtMousePos(QPoint mousePos)
 {
-  if(_canvas.freezePos == FREEZE_BY_TEXT && _state != STATE_TYPING)
+  if (_canvas.freezePos == FREEZE_BY_TEXT && _state != STATE_TYPING) {
     _canvas.freezePos = FREEZE_FALSE;
+  }
 
-  if(!isDisabledMouseTracking())
+  if (!isDisabledMouseTracking()) {
     shiftPixmap(mousePos);
+  }
 
-  if(_canvas.dragging)
+  if (_canvas.dragging) {
     dragPixmap(mousePos - _lastMousePos);
+  }
 
   checkPixmapPos();
 
   _lastMousePos = mousePos;
 
-  if (_state == STATE_DRAWING || _state == STATE_TRIMMING)
+  if (_state == STATE_DRAWING || _state == STATE_TRIMMING) {
     _endDrawPoint = screenPointToPixmapPos(mousePos);
+  }
 }
 
 void ZoomWidget::wheelEvent(QWheelEvent *event)
 {
-  if (_state == STATE_DRAWING || _state == STATE_TYPING)
+  if (_state == STATE_DRAWING || _state == STATE_TYPING) {
     return;
+  }
 
   const int sign = (event->angleDelta().y() > 0) ? 1 : -1;
   const bool shiftPressed = (event->modifiers() == Qt::ShiftModifier);
 
   // Adjust flashlight radius
-  if(_flashlightMode && shiftPressed) {
+  if (_flashlightMode && shiftPressed) {
     _flashlightRadius -= sign * SCALE_SENSIVITY * 50;
 
-    if( _flashlightRadius < 20)
-      _flashlightRadius=20;
-    if( _flashlightRadius > 180)
-      _flashlightRadius=180;
+    if (_flashlightRadius < 20)  _flashlightRadius=20;
+    if (_flashlightRadius > 180) _flashlightRadius=180;
 
     update();
     return;
   }
 
-  if(_liveMode)
+  if (_liveMode) {
     return;
+  }
 
   _canvas.scale += sign * SCALE_SENSIVITY;
-  if (_canvas.scale < 1.0f)
-    _canvas.scale = 1.0f;
+  if (_canvas.scale < 1.0f) _canvas.scale = 1.0f;
 
   scalePixmapAt(GET_CURSOR_POS());
   checkPixmapPos();
@@ -2461,12 +2516,13 @@ QString ZoomWidget::getFilePath(FileType type)
     QString fileName;
     const QString date = QDateTime::currentDateTime().toString(DATE_FORMAT_FOR_FILE);
     fileName = (_fileConfig.name.isEmpty()) ? ("ZoomMe " + date) : _fileConfig.name;
-    if(fileIndex != 0)
+    if (fileIndex != 0) {
       fileName.append(FILE_INDEX_DIVIDER + QString::number(fileIndex));
+    }
 
     // Select extension
     fileName.append(".");
-    switch(type) {
+    switch (type) {
       case FILE_IMAGE:  fileName.append(_fileConfig.imageExt);  break;
       case FILE_VIDEO:  fileName.append(_fileConfig.videoExt);  break;
       case FILE_ZOOMME: fileName.append(_fileConfig.zoommeExt); break;
@@ -2476,7 +2532,7 @@ QString ZoomWidget::getFilePath(FileType type)
     filePath = _fileConfig.folder.absoluteFilePath(fileName);
 
     fileIndex++;
-  } while(QFile(filePath).exists());
+  } while (QFile(filePath).exists());
 
   return filePath;
 }
@@ -2484,13 +2540,14 @@ QString ZoomWidget::getFilePath(FileType type)
 void ZoomWidget::initFileConfig(QString path, QString name, QString imgExt, QString vidExt)
 {
   // Path
-  if(path.isEmpty()){
+  if (path.isEmpty()) {
     QString picturesFolder = QStandardPaths::writableLocation(DEFAULT_FOLDER);
     _fileConfig.folder = (picturesFolder.isEmpty()) ? QDir::currentPath() : picturesFolder;
   } else {
     _fileConfig.folder = QDir(path);
-    if(!_fileConfig.folder.exists())
+    if (!_fileConfig.folder.exists()) {
       logUser(LOG_ERROR_AND_EXIT, "", "The given path doesn't exits or it's a file");
+    }
   }
 
   // Name
@@ -2498,8 +2555,9 @@ void ZoomWidget::initFileConfig(QString path, QString name, QString imgExt, QStr
 
   // Check if image extension is supported
   QList supportedExtensions = QImageWriter::supportedImageFormats();
-  if( (!imgExt.isEmpty()) && (!supportedExtensions.contains(imgExt)) )
+  if (!imgExt.isEmpty() && !supportedExtensions.contains(imgExt)) {
     logUser(LOG_ERROR_AND_EXIT, "", "Image extension not supported");
+  }
 
   // Extension
   const char* defaultImgExt = "png";
@@ -2517,16 +2575,15 @@ void ZoomWidget::initFileConfig(QString path, QString name, QString imgExt, QStr
 bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos, bool isFloating)
 {
   // Minimum size of the hit box
-  int minimumSize =  25;
-  if(!isFloating)
-    minimumSize *= _canvas.scale;
+  int minimumSize = 25;
+  if (!isFloating) minimumSize *= _canvas.scale;
 
-  if(abs(w) < minimumSize) {
+  if (abs(w) < minimumSize) {
     int direction = (w >= 0) ? 1 : -1;
     x -= (minimumSize*direction-w)/2;
     w = minimumSize * direction;
   }
-  if(abs(h) < minimumSize) {
+  if (abs(h) < minimumSize) {
     int direction = (h >= 0) ? 1 : -1;
     y -= (minimumSize*direction-h)/2;
     h = minimumSize * direction;
@@ -2550,22 +2607,22 @@ bool ZoomWidget::isCursorOverLine(int x, int y, int w, int h, QPoint cursorPos)
 
   // Divide the line in chunks (depending of the line size)
   int chunkCount = std::hypot(w / _canvas.scale, h / _canvas.scale) / segmentSize;
-  if(chunkCount == 0) chunkCount = 1;
+  if (chunkCount == 0) chunkCount = 1;
 
   const QSizeF chunkSize(
-        (float)w /(float)chunkCount,
-        (float)h /(float)chunkCount
+        (float)w / (float)chunkCount,
+        (float)h / (float)chunkCount
       );
 
-  for(int i=0; i<chunkCount; i++) {
-    if(isCursorInsideHitBox(
-        x + chunkSize.width() * i,
-        y + chunkSize.height() * i,
-        chunkSize.width(),
-        chunkSize.height(),
-        cursorPos,
-        false)
-    ) {
+  for (int i=0; i<chunkCount; i++) {
+    if (isCursorInsideHitBox(
+          x + chunkSize.width() * i,
+          y + chunkSize.height() * i,
+          chunkSize.width(),
+          chunkSize.height(),
+          cursorPos,
+          false)
+       ) {
       return true;
     }
   }
@@ -2582,26 +2639,29 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos)
   // _tests.clear();
   /////////////////////////
   int x, y, w, h;
-  switch(_drawMode) {
+  switch (_drawMode) {
     case DRAWMODE_LINE:
       for (int i = 0; i < _lines.size(); ++i) {
         getRealUserObjectPos(_lines.at(i), &x, &y, &w, &h, true);
-        if(isCursorOverLine(x, y, w, h, cursorPos))
+        if (isCursorOverLine(x, y, w, h, cursorPos)) {
           return i;
+        }
       }
       break;
     case DRAWMODE_RECT:
       for (int i = 0; i < _rects.size(); ++i) {
         getRealUserObjectPos(_rects.at(i), &x, &y, &w, &h, true);
-        if(isCursorInsideHitBox(x, y, w, h, cursorPos, false))
+        if (isCursorInsideHitBox(x, y, w, h, cursorPos, false)) {
           return i;
+        }
       }
       break;
     case DRAWMODE_ARROW:
       for (int i = 0; i < _arrows.size(); ++i) {
         getRealUserObjectPos(_arrows.at(i), &x, &y, &w, &h, true);
-        if(isCursorOverLine(x, y, w, h, cursorPos))
+        if (isCursorOverLine(x, y, w, h, cursorPos)) {
           return i;
+        }
 
         // Get the arrow's coordinates relative to the pixmap to calculate the
         // arrow head properly
@@ -2610,27 +2670,27 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos)
         // Arrow head
         ArrowHead head = getArrowHead(x, y, w, h);
         // Convert the pixmap points of the arrow to screen points
-        head.startPoint = pixmapPointToScreenPos(head.startPoint);
-        head.leftLineEnd = pixmapPointToScreenPos(head.leftLineEnd);
+        head.startPoint   = pixmapPointToScreenPos(head.startPoint);
+        head.leftLineEnd  = pixmapPointToScreenPos(head.leftLineEnd);
         head.rightLineEnd = pixmapPointToScreenPos(head.rightLineEnd);
           // Left Line check
-        if(isCursorOverLine(
-              head.startPoint.x(),
-              head.startPoint.y(),
-              head.leftLineEnd.x() - head.startPoint.x(),
-              head.leftLineEnd.y() - head.startPoint.y(),
-              cursorPos)
-          ) {
+        if (isCursorOverLine(
+               head.startPoint.x(),
+               head.startPoint.y(),
+               head.leftLineEnd.x() - head.startPoint.x(),
+               head.leftLineEnd.y() - head.startPoint.y(),
+               cursorPos)
+           ) {
             return i;
         }
           // Right Line check
-        if(isCursorOverLine(
-              head.startPoint.x(),
-              head.startPoint.y(),
-              head.rightLineEnd.x() - head.startPoint.x(),
-              head.rightLineEnd.y() - head.startPoint.y(),
-              cursorPos)
-          ) {
+        if (isCursorOverLine(
+               head.startPoint.x(),
+               head.startPoint.y(),
+               head.rightLineEnd.x() - head.startPoint.x(),
+               head.rightLineEnd.y() - head.startPoint.y(),
+               cursorPos)
+           ) {
             return i;
         }
       }
@@ -2638,20 +2698,22 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos)
     case DRAWMODE_ELLIPSE:
       for (int i = 0; i < _ellipses.size(); ++i) {
         getRealUserObjectPos(_ellipses.at(i), &x, &y, &w, &h, true);
-        if(isCursorInsideHitBox(x, y, w, h, cursorPos, false))
+        if (isCursorInsideHitBox(x, y, w, h, cursorPos, false)) {
           return i;
+        }
       }
       break;
     case DRAWMODE_TEXT:
       for (int i = 0; i < _texts.size(); ++i) {
         getRealUserObjectPos(_texts.at(i).data, &x, &y, &w, &h, true);
-        if(isCursorInsideHitBox(x, y, w, h, cursorPos, false))
+        if (isCursorInsideHitBox(x, y, w, h, cursorPos, false)) {
           return i;
+        }
       }
       break;
     case DRAWMODE_FREEFORM:
       for (int i = 0; i < _freeForms.size(); ++i) {
-        for(int z = 0; z < _freeForms.at(i).points.size()-1; ++z) {
+        for (int z = 0; z < _freeForms.at(i).points.size()-1; ++z) {
           QPoint current = _freeForms.at(i).points.at(z);
           QPoint next    = _freeForms.at(i).points.at(z+1);
 
@@ -2663,8 +2725,9 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos)
           w = next.x() - x;
           h = next.y() - y;
 
-          if(isCursorInsideHitBox(x, y, w, h, cursorPos, false))
+          if (isCursorInsideHitBox(x, y, w, h, cursorPos, false)) {
             return i;
+          }
         }
       }
       break;
@@ -2678,24 +2741,25 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
   const bool shiftPressed = (event->modifiers() == Qt::ShiftModifier);
   const bool controlPressed = (event->key() == Qt::Key_Control);
 
-  if(key == Qt::Key_Shift && _state != STATE_TYPING)
+  if (key == Qt::Key_Shift && _state != STATE_TYPING) {
     _canvas.freezePos = FREEZE_BY_SHIFT;
+  }
 
-  if(controlPressed)
+  if (controlPressed) {
     _toolBar.show = true;
+  }
 
-  if(_state == STATE_TYPING) {
+  if (_state == STATE_TYPING) {
     // If it's pressed Enter (without Shift) or Escape
     if ((!shiftPressed && key == Qt::Key_Return) || key == Qt::Key_Escape) {
-      if( _texts.last().text.isEmpty() )
-        _texts.destroyLast();
+      if (_texts.last().text.isEmpty()) _texts.destroyLast();
       _state = STATE_MOVING;
       update();
       return;
     }
 
     UserTextData textData = _texts.last();
-    switch(key) {
+    switch (key) {
       case Qt::Key_Backspace:
         textData.caretPos--;
         textData.text.remove(textData.caretPos, 1);
@@ -2707,33 +2771,32 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
         textData.caretPos++;
         break;
       case Qt::Key_Left:
-        if(textData.caretPos == 0) return;
+        if (textData.caretPos == 0) return;
         textData.caretPos--;
         break;
       case Qt::Key_Right:
-        if(textData.caretPos == textData.text.size()) return;
+        if (textData.caretPos == textData.text.size()) return;
         textData.caretPos++;
         break;
       case Qt::Key_Up:
-        for(int i = textData.caretPos-1; i > 0; --i) {
-          if(textData.text.at(i-1) == '\n') {
+        for (int i = textData.caretPos-1; i > 0; --i) {
+          if (textData.text.at(i-1) == '\n') {
             textData.caretPos = i;
             break;
           }
-          if(i == 1) textData.caretPos = 0;
+          if (i == 1) textData.caretPos = 0;
         }
         break;
       case Qt::Key_Down:
-        for(int i = textData.caretPos+1; i <= textData.text.size(); ++i) {
-          if(textData.text.at(i-1) == '\n' || i == textData.text.size()) {
+        for (int i = textData.caretPos+1; i <= textData.text.size(); ++i) {
+          if (textData.text.at(i-1) == '\n' || i == textData.text.size()) {
             textData.caretPos = i;
             break;
           }
         }
         break;
       default:
-        if(event->text().isEmpty())
-          break;
+        if (event->text().isEmpty()) break;
         textData.text.insert(textData.caretPos, event->text());
         textData.caretPos++;
         break;
@@ -2745,7 +2808,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
   }
 
   ZoomWidgetAction action = ACTION_SPACER;
-  switch(key) {
+  switch (key) {
     case Qt::Key_G: action = ACTION_COLOR_GREEN;   break;
     case Qt::Key_B: action = ACTION_COLOR_BLUE;    break;
     case Qt::Key_C: action = ACTION_COLOR_CYAN;    break;
@@ -2755,10 +2818,11 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     case Qt::Key_W: action = ACTION_COLOR_WHITE;   break;
     case Qt::Key_D: action = ACTION_COLOR_BLACK;   break;
     case Qt::Key_R:
-                    if(shiftPressed)
+                    if (shiftPressed) {
                       action = ACTION_REDO;
-                    else
+                    } else {
                       action = ACTION_COLOR_RED;
+                    }
                     break;
 
     case Qt::Key_Z: action = ACTION_LINE;          break;
@@ -2769,17 +2833,19 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     case Qt::Key_H: action = ACTION_HIGHLIGHT;     break;
 
     case Qt::Key_E:
-                    if(shiftPressed)
+                    if (shiftPressed) {
                       action = ACTION_SAVE_PROJECT;
-                    else
+                    } else {
                       action = ACTION_ELLIPSE;
+                    }
                     break;
 
     case Qt::Key_S:
-                    if(shiftPressed)
+                    if (shiftPressed) {
                       action = ACTION_SAVE_TO_CLIPBOARD;
-                    else
+                    } else {
                       action = ACTION_SAVE_TO_FILE;
+                    }
                     break;
 
     case Qt::Key_Escape: action = ACTION_ESCAPE;         break;
@@ -2813,16 +2879,17 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
 
 void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
 {
-  const bool shiftReleased = (event->key() == Qt::Key_Shift);
+  const bool shiftReleased   = (event->key() == Qt::Key_Shift);
   const bool controlReleased = (event->key() == Qt::Key_Control);
 
-  if(shiftReleased && _canvas.freezePos == FREEZE_BY_SHIFT) {
+  if (shiftReleased && _canvas.freezePos == FREEZE_BY_SHIFT) {
     _canvas.freezePos = FREEZE_FALSE;
     updateAtMousePos(GET_CURSOR_POS());
   }
 
-  if(controlReleased)
+  if (controlReleased) {
     _toolBar.show = false;
+  }
 
   updateCursorShape();
   update();
@@ -2837,24 +2904,26 @@ void ZoomWidget::grabFromClipboard(FitImage config)
 {
   QImage image;
 
-  if(!_clipboard)
+  if (!_clipboard) {
     logUser(LOG_ERROR_AND_EXIT, "", "The clipboard is uninitialized");
+  }
 
   image = _clipboard->image();
-  if(image.isNull())
+  if (image.isNull()) {
     logUser(LOG_ERROR_AND_EXIT, "", "The clipboard doesn't contain an image or its format is not supported");
+  }
 
   grabImage(QPixmap::fromImage(image), config);
 }
 
 void ZoomWidget::createBlackboard(QSize size)
 {
-  if(size.width() < _screenSize.width()) {
+  if (size.width() < _screenSize.width()) {
     logUser(LOG_INFO, "", "The given width is less than the screen's width, so the width is now the screen's width");
     size.setWidth(_screenSize.width());
   }
 
-  if(size.height() < _screenSize.height()) {
+  if (size.height() < _screenSize.height()) {
     logUser(LOG_INFO, "", "The given height is less than the screen's height, so the height is now the screen's height");
     size.setHeight(_screenSize.height());
   }
@@ -2874,17 +2943,18 @@ void ZoomWidget::grabDesktop()
   // The desktop pixmap is null if it couldn't capture the screenshot. For
   // example, in Wayland, it will be null because Wayland doesn't support screen
   // grabbing
-  if(desktop.isNull()){
-    if(_liveMode){
+  if (desktop.isNull()) {
+    if (_liveMode) {
       _sourcePixmap = QPixmap(_screenSize);
       _sourcePixmap.fill(Qt::transparent);
       return;
     }
 
-    if(QGuiApplication::platformName() == QString("wayland"))
+    if (QGuiApplication::platformName() == QString("wayland")) {
       logUser(LOG_ERROR_AND_EXIT, "", "Couldn't grab the desktop. It seems you're using Wayland: try to use the '-l' flag (live mode)");
-    else
+    } else {
       logUser(LOG_ERROR_AND_EXIT, "", "Couldn't grab the desktop");
+    }
   }
 
   // Paint the desktop over _sourcePixmap
@@ -2895,40 +2965,50 @@ void ZoomWidget::grabDesktop()
   painter.drawPixmap(0, 0, desktop.width(), desktop.height(), desktop);
   painter.end();
 
-  if(!_liveMode) showFullScreen();
+  if (!_liveMode) showFullScreen();
 }
 
 void ZoomWidget::grabImage(QPixmap img, FitImage config)
 {
-  if(img.isNull())
+  if (img.isNull()) {
     logUser(LOG_ERROR_AND_EXIT, "", "Couldn't open the image");
+  }
 
   // Auto detect the fit config
-  if(config == FIT_AUTO){
-    if(img.width() > img.height()) config = FIT_TO_HEIGHT;
+  if (config == FIT_AUTO) {
+    if (img.width() > img.height()) config = FIT_TO_HEIGHT;
     else config = FIT_TO_WIDTH;
   }
 
   // Scale
   int width, height, x = 0, y = 0;
-  if(config == FIT_TO_WIDTH){
+  if (config == FIT_TO_WIDTH) {
     width = _screenSize.width();
     img = img.scaledToWidth(width, Qt::SmoothTransformation);
 
     // Take the largest height for the pixmap: the image or the screen height
-    height = (_screenSize.height() > img.height()) ? _screenSize.height() : img.height();
+    height = (_screenSize.height() > img.height())
+             ? _screenSize.height()
+             : img.height();
 
     // Center the image in the screen
-    if(_screenSize.height() > img.height()) y = (height - img.height()) / 2;
+    if (_screenSize.height() > img.height()) {
+      y = (height - img.height()) / 2;
+    }
+
   } else { // FIT_TO_HEIGHT
     height = _screenSize.height();
     img = img.scaledToHeight(height, Qt::SmoothTransformation);
 
     // Take the largest width: the image or the screen width
-    width = (_screenSize.width() > img.width()) ? _screenSize.width() : img.width();
+    width = (_screenSize.width() > img.width())
+            ? _screenSize.width()
+            : img.width();
 
     // Center the image in the screen
-    if(_screenSize.width() > img.width()) x = (width - img.width()) / 2;
+    if (_screenSize.width() > img.width()) {
+      x = (width - img.width()) / 2;
+    }
   }
 
   // Draw the image into the pixmap
@@ -2941,7 +3021,7 @@ void ZoomWidget::grabImage(QPixmap img, FitImage config)
   _canvas.size = _sourcePixmap.size();
   _canvas.originalSize = _canvas.size;
 
-  if(!_liveMode) showFullScreen();
+  if (!_liveMode) showFullScreen();
 }
 
 void ZoomWidget::dragPixmap(QPoint delta)
@@ -3039,8 +3119,9 @@ void ZoomWidget::drawDrawnPixmap(QPainter *painter)
 
 bool ZoomWidget::isDisabledMouseTracking()
 {
-  if(DISABLE_MOUSE_TRACKING)
+  if (DISABLE_MOUSE_TRACKING) {
     return true;
+  }
 
   return (_canvas.freezePos == FREEZE_BY_TEXT)  ||
          (_canvas.freezePos == FREEZE_BY_SHIFT) ||
@@ -3055,8 +3136,9 @@ bool ZoomWidget::isTextEditable(QPoint cursorPos)
                                 (_drawMode == DRAWMODE_TEXT) &&
                                 (_screenOpts != SCREENOPTS_HIDE_ALL);
 
-  return (isInEditTextMode) &&
-         (cursorOverForm(cursorPos) != -1);
+  const bool isCursorOverForm = (cursorOverForm(cursorPos) != -1);
+
+  return isInEditTextMode && isCursorOverForm;
 }
 
 // Function taken from https://github.com/tsoding/musializer/blob/master/src/nob.h
@@ -3090,14 +3172,16 @@ void ZoomWidget::logUser(Log_Urgency type, QString popupMsg, const char *fmt, ..
 
   fprintf(output, "%s\n", msg);
 
-  if(exitApp)
+  if (exitApp) {
     exit(EXIT_FAILURE);
+  }
 
-  if(type == LOG_TEXT)
+  if (type == LOG_TEXT) {
     return;
+  }
 
   // Popup
-  if(popupMsg.isEmpty()) popupMsg=QString(msg);
+  if (popupMsg.isEmpty()) popupMsg = QString(msg);
   int lifetime = 0;
   switch (type) {
     case LOG_SUCCESS: lifetime = POPUP_SUCCESS_MSEC; break;
@@ -3111,25 +3195,36 @@ void ZoomWidget::logUser(Log_Urgency type, QString popupMsg, const char *fmt, ..
   }
 
   const qint64 time = QDateTime::currentMSecsSinceEpoch();
-  _popupTray.popups.append(Popup{ time, lifetime, popupMsg, type });
-  if(!_popupTray.updateTimer->isActive())
+
+  _popupTray.popups.append(Popup{
+        time,
+        lifetime,
+        popupMsg,
+        type
+      });
+
+  if (!_popupTray.updateTimer->isActive()) {
     _popupTray.updateTimer->start(POPUP_UPDATE_MSEC);
+  }
+
   update();
 }
 
 void ZoomWidget::updateForPopups()
 {
-  if(_popupTray.popups.size() == 0)
+  if (_popupTray.popups.isEmpty()) {
     _popupTray.updateTimer->stop();
+  }
 
   const qint64 time = QDateTime::currentMSecsSinceEpoch();
 
   // Remove old pop-ups
-  for(int i=_popupTray.popups.size()-1; i>=0; i--) {
+  for (int i=_popupTray.popups.size()-1; i>=0; i--) {
     Popup p = _popupTray.popups.at(i);
 
-    if((time-p.timeCreated) >= p.lifetime)
+    if ((time-p.timeCreated) >= p.lifetime) {
       _popupTray.popups.removeAt(i);
+    }
   }
 
   update();
@@ -3142,7 +3237,7 @@ void ZoomWidget::getRealUserObjectPos(const UserObjectData &userObj, int *x, int
   size.setWidth(userObj.endPoint.x() - startPoint.x());
   size.setHeight(userObj.endPoint.y() - startPoint.y());
 
-  if (posRelativeToScreen){
+  if (posRelativeToScreen) {
     startPoint = pixmapPointToScreenPos(startPoint);
     size = pixmapSizeToScreenSize(size);
   }
