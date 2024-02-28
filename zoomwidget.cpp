@@ -3119,11 +3119,8 @@ void ZoomWidget::drawDrawnPixmap(QPainter *painter)
 
 bool ZoomWidget::isDisabledMouseTracking()
 {
-  if (DISABLE_MOUSE_TRACKING) {
-    return true;
-  }
-
-  return (_canvas.freezePos == FREEZE_BY_TEXT)  ||
+  return (DISABLE_MOUSE_TRACKING)               ||
+         (_canvas.freezePos == FREEZE_BY_TEXT)  ||
          (_canvas.freezePos == FREEZE_BY_SHIFT) ||
          (_toolBar.show)                        ||
          (_canvas.dragging);
