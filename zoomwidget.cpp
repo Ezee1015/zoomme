@@ -439,7 +439,7 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
          case DRAWMODE_TEXT:      return _texts.isDeletedEmpty();
          case DRAWMODE_FREEFORM:  return _freeForms.isDeletedEmpty();
        }
-       return false;
+       logUser(LOG_ERROR_AND_EXIT, "", "A drawing mode is not contemplated in the switch statement (%s:%d)", __FILE__, __LINE__);
 
     case ACTION_UNDO:
        if (_screenOpts == SCREENOPTS_HIDE_ALL) {
@@ -453,7 +453,7 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
          case DRAWMODE_TEXT:     return _texts.isEmpty();
          case DRAWMODE_FREEFORM: return _freeForms.isEmpty();
        }
-       return false;
+       logUser(LOG_ERROR_AND_EXIT, "", "A drawing mode is not contemplated in the switch statement (%s:%d)", __FILE__, __LINE__);
 
     case ACTION_CLEAR:
        if (_screenOpts == SCREENOPTS_HIDE_ALL) {
@@ -482,8 +482,7 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
          case DRAWMODE_TEXT:     return _texts.isEmpty();
          case DRAWMODE_FREEFORM: return _freeForms.isEmpty();
        }
-       // logUser(LOG_ERROR_AND_EXIT, "", "A drawing mode is not contemplated in the switch statement (%s:%d)", __FILE__, __LINE__);
-       return false;
+       logUser(LOG_ERROR_AND_EXIT, "", "A drawing mode is not contemplated in the switch statement (%s:%d)", __FILE__, __LINE__);
 
     case ACTION_RECORDING:
        // In theory, ffmpeg blocks the thread, so it shouldn't be possible to toggle
@@ -505,7 +504,8 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
       logUser(LOG_ERROR, "", "You shouldn't check if a 'spacer' is disabled");
       return false;
   }
-  return false;
+
+  logUser(LOG_ERROR_AND_EXIT, "", "An action is not contemplated in the switch statement (%s:%d)", __FILE__, __LINE__);
 }
 
 ButtonStatus ZoomWidget::isButtonActive(Button button)
