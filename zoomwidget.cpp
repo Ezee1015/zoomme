@@ -503,6 +503,7 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
   }
 
   logUser(LOG_ERROR_AND_EXIT, "", "An action is not contemplated in the switch statement (%s:%d)", __FILE__, __LINE__);
+  return true;
 }
 
 ButtonStatus ZoomWidget::isButtonActive(Button button)
