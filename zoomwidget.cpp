@@ -637,13 +637,11 @@ void ZoomWidget::generateToolBar()
     // Add the button to the count
     buttonCount[line]++;
 
-    QRect rect(x, y, width, height);
-
     _toolBar.buttons.append(Button{
         buttons.at(i).action,
         buttons.at(i).name,
         line,
-        rect
+        QRect(x, y, width, height)
     });
   }
 }
