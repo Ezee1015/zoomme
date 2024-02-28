@@ -269,7 +269,7 @@ enum ZoomWidgetAction {
 struct Button {
   ZoomWidgetAction action;
   QString name;
-  int line;
+  int row; // Starting from 0
   QRect rect;
 };
 
@@ -278,9 +278,8 @@ struct ToolBar {
   bool show;
 
   // Configuration
-  int lineHeight;
+  int rowHeight;
   int margin;
-  int numberOfLines;
   QRect rect;
 };
 

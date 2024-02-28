@@ -581,34 +581,34 @@ ButtonStatus ZoomWidget::isButtonActive(Button button)
 void ZoomWidget::generateToolBar()
 {
   const int margin        = 20;
-  const int lineHeight    = 60;
+  const int rowHeight     = 60;
   const int buttonPadding = 2;
 
-  // Get the number of lines
-  int numberOfLines = 0;
+  // Get the rows count
+  int rows = 0;
   for (int i=0; i<_toolBar.buttons.size(); i++) {
-    if (_toolBar.buttons.at(i).line > numberOfLines) {
-      numberOfLines = _toolBar.buttons.at(i).line;
+    const int rowNumber = _toolBar.buttons.at(i).row + 1; // 1 is the first row (don't start from 0)
+    if (rowNumber > rows) {
+      rows = rowNumber;
     }
   }
 
-  const QRect background = QRect (
-                                   margin,
-                                   _screenSize.height() - margin - lineHeight*(numberOfLines+1),
-                                   _screenSize.width() - margin*2,
-                                   lineHeight * (numberOfLines+1) - margin
-                                 );
+  const QRect background(
+                          margin,
+                          _screenSize.height() - margin - rowHeight*rows,
+                          _screenSize.width() - margin*2,
+                          rowHeight * rows - margin
+                        );
 
-  _toolBar.lineHeight    = lineHeight;
-  _toolBar.margin        = margin;
-  _toolBar.numberOfLines = numberOfLines;
-  _toolBar.rect          = background;
+  _toolBar.margin    = margin;
+  _toolBar.rowHeight = rowHeight;
+  _toolBar.rect      = background;
 
-  // Get the buttons per line
-  int buttonsPerLine[numberOfLines+1];
-  for (int i=0; i<=numberOfLines; i++) buttonsPerLine[i] = 0;
+  // Get the count of buttons per row
+  int buttonsPerLine[rows];
+  for (int i=0; i<rows; i++) buttonsPerLine[i] = 0;
   for (int i=0; i<_toolBar.buttons.size(); i++) {
-    buttonsPerLine[ _toolBar.buttons.at(i).line ]++;
+    buttonsPerLine[ _toolBar.buttons.at(i).row ]++;
   }
 
   // Clear the tool list
@@ -617,16 +617,16 @@ void ZoomWidget::generateToolBar()
   _toolBar.buttons.clear();
 
   // Size the buttons
-  float buttonCount[numberOfLines+1];
-  for (int i=0; i<=numberOfLines; i++) buttonCount[i]=0;
+  float buttonCount[rows];
+  for (int i=0; i<rows; i++) buttonCount[i]=0;
 
   for (int i=0; i<buttons.size(); i++) {
-    const int line = buttons.at(i).line;
+    const int row = buttons.at(i).row;
 
-    float width = (float)background.width() / (float)buttonsPerLine[line];
-    int height  = lineHeight - (float)margin / (float)(numberOfLines+1);
-    int x       = background.x() + buttonCount[line] * width;
-    int y       = background.y() + line * height;
+    float width = (float)background.width() / (float)buttonsPerLine[row];
+    int height  = rowHeight - (float)margin / (float)rows;
+    int x       = background.x() + buttonCount[row] * width;
+    int y       = background.y() + row * height;
 
     // Padding
     x+=buttonPadding;
@@ -635,12 +635,12 @@ void ZoomWidget::generateToolBar()
     height-=buttonPadding*2;
 
     // Add the button to the count
-    buttonCount[line]++;
+    buttonCount[row]++;
 
     _toolBar.buttons.append(Button{
         buttons.at(i).action,
         buttons.at(i).name,
-        line,
+        row,
         QRect(x, y, width, height)
     });
   }
