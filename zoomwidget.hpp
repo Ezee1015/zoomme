@@ -461,13 +461,15 @@ class ZoomWidget : public QWidget
     PopupTray _popupTray;
 
     // Modes
-    bool _exitConfirm;
     bool _boardMode;
     bool _liveMode;
     bool _flashlightMode;
     int _flashlightRadius;
     bool _highlight;
     TrimOptions _trimDestination;
+
+    // Timer that cancels the escape after some time
+    QTimer *_exitTimer;
 
     ZoomWidgetScreenOpts _screenOpts;
 

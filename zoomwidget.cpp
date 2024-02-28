@@ -40,7 +40,6 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _state                 = STATE_MOVING;
   _drawMode              = DRAWMODE_LINE;
   _screenOpts            = SCREENOPTS_SHOW_ALL;
-  _exitConfirm           = false;
   _boardMode             = false;
   _highlight             = false;
   _liveMode              = false;
@@ -51,15 +50,17 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
 
   _lastMousePos          = GET_CURSOR_POS();
   _clipboard             = QApplication::clipboard();
+
   _recordTimer           = new QTimer(this);
   _popupTray.updateTimer = new QTimer(this);
-
+  _exitTimer             = new QTimer(this);
+  connect(_recordTimer, &QTimer::timeout, this, &ZoomWidget::saveFrameToFile);
   connect(_popupTray.updateTimer, &QTimer::timeout, this, &ZoomWidget::updateForPopups);
+  connect(_exitTimer, &QTimer::timeout, this, [=]() { toggleAction(ACTION_ESCAPE_CANCEL); });
 
   QDir tempFolder(QStandardPaths::writableLocation(QStandardPaths::TempLocation));
   _recordTempFile = new QFile(tempFolder.absoluteFilePath(RECORD_TEMP_FILENAME));
 
-  connect(_recordTimer, &QTimer::timeout, this, &ZoomWidget::saveFrameToFile);
   _ffmpeg.setProcessChannelMode(_ffmpeg.ForwardedChannels); // Show the ffmpeg output on the screen
   // Don't create a file if the setProcessChannelMode is set, because it's an
   // inconsistency
@@ -256,7 +257,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
     case ACTION_WIDTH_9:       _activePen.setWidth(9);              break;
 
     case ACTION_ESCAPE:
-      if (_exitConfirm) {
+      if (_exitTimer->isActive()) {
         QApplication::beep();
         QApplication::quit();
         break;
@@ -286,17 +287,13 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
         toggleAction(ACTION_RECORDING);
 
       } else {
-        _exitConfirm = true;
-        // Timer that cancels the escape after some time
-        QTimer::singleShot(EXIT_CONFIRM_MSECS, this, [=]() { toggleAction(ACTION_ESCAPE_CANCEL); });
-
+        _exitTimer->start(EXIT_CONFIRM_MSECS);
         loadButtons();
         generateToolBar();
       }
       break;
     case ACTION_ESCAPE_CANCEL:
-      _exitConfirm = false;
-
+      _exitTimer->stop();
       loadButtons();
       generateToolBar();
       break;
@@ -357,7 +354,7 @@ void ZoomWidget::loadButtons()
 
   _toolBar.buttons.append(Button{ACTION_SPACER,            "",                    2, nullRect});
 
-  if (_exitConfirm) {
+  if (_exitTimer->isActive()) {
     _toolBar.buttons.append(Button{ACTION_ESCAPE,            "Confirm Exit",        2, nullRect});
     _toolBar.buttons.append(Button{ACTION_ESCAPE_CANCEL,     "Cancel Exit",         2, nullRect});
   } else {
@@ -567,7 +564,7 @@ ButtonStatus ZoomWidget::isButtonActive(Button button)
                                                   (_trimDestination == TRIM_SAVE_TO_CLIPBOARD);
                                    break;
 
-    case ACTION_ESCAPE:            actionStatus = _exitConfirm;                           break;
+    case ACTION_ESCAPE:            actionStatus = _exitTimer->isActive();                 break;
     case ACTION_ESCAPE_CANCEL:     return BUTTON_NO_STATUS;
 
     case ACTION_SPACER:            logUser(LOG_ERROR, "", "You shouldn't check if a 'spacer' is active");
@@ -1522,7 +1519,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
 
     h += lineHeight;
   }
-  if (_exitConfirm) {
+  if (_exitTimer->isActive()) {
     text.append("\n");
     text.append(EXIT_ICON);
     text.append(" EXIT? ");
