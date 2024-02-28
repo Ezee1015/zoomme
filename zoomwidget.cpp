@@ -1133,7 +1133,9 @@ ArrowHead ZoomWidget::getArrowHead(int x, int y, int width, int height)
   leftLineY  *= (angle<=(  M_PI/4)) || (angle>(5*M_PI/4)) ? -1 : 1;
 
   // Multiply the size with the proportion
-  if ((angle<=(M_PI/2)) || (angle>M_PI && angle<=(3*M_PI/2))) {
+  const bool firstQuadrant = (angle<=(M_PI/2));
+  const bool thirdQuadrant = (angle>M_PI && angle<=(3*M_PI/2));
+  if (firstQuadrant || thirdQuadrant) {
     rightLineX *= (1-lengthProportion); rightLineY *= lengthProportion;
     leftLineX  *= lengthProportion;     leftLineY  *= (1-lengthProportion);
   } else {
