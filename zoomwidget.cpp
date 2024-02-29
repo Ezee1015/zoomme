@@ -1758,7 +1758,9 @@ void ZoomWidget::drawFlashlightEffect(QPainter *painter, bool drawToScreen)
 
   QRect mouseFlashlightBorder = QRect(c.x()-radius, c.y()-radius, radius*2, radius*2);
   QPainterPath mouseFlashlight;
-  mouseFlashlight.addEllipse( mouseFlashlightBorder );
+  if (!isCursorOverToolBar(c)) {
+    mouseFlashlight.addEllipse( mouseFlashlightBorder );
+  }
 
   // painter->setPen(QColor(186,186,186,200));
   // painter->drawEllipse( mouseFlashlightBorder );
@@ -2383,7 +2385,7 @@ void ZoomWidget::updateCursorShape()
   } else if (isTextEditable(cursorPos)) {
     setCursor(pointHand);
 
-  } else if (_flashlightMode && _state != STATE_TRIMMING) {
+  } else if (_flashlightMode && _state != STATE_TRIMMING && !isCursorOverToolBar(cursorPos)) {
     setCursor(blank);
 
   } else {
