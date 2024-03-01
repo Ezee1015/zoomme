@@ -207,7 +207,8 @@ int main(int argc, char *argv[])
 
       backupFile = nextToken(argc, argv, &i, "Backup file path");
       if (QFileInfo(backupFile).suffix() != "zoomme") {
-        printHelp("It's not a '.zoomme' file");
+        QString errorMsg("It's not a '.zoomme' file: " + backupFile);
+        printHelp(QSTRING_TO_STRING(errorMsg));
       }
 
     } else if (strcmp(argv[i], "-c") == 0) {
