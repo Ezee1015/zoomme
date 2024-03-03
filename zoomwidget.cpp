@@ -1740,9 +1740,9 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
       QColor color = pixmapPainter->pen().color();
       color.setAlpha(HIGHLIGHT_ALPHA); // Transparency
       QPainterPath background;
-      background.addRect(x, y, w, h);
+      background.addRoundedRect(x, y, w, h, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
       pixmapPainter->fillPath(background, color);
-      pixmapPainter->drawRect(x, y, w, h);
+      pixmapPainter->drawRoundedRect(fixQRect(x, y, w, h), RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
     }
 
     QString text = _texts.at(i).text;
@@ -1817,17 +1817,14 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
       QColor color = textObject.data.pen.color();
       color.setAlpha(HIGHLIGHT_ALPHA); // Transparency
       QPainterPath background;
-      background.addRect(x, y, w, h);
+      background.addRoundedRect(x, y, w, h, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
       painter->fillPath(background, color);
-
-      invertColorPainter(painter);
-      painter->drawRect(x, y, w, h);
     } else {
       changePenWidth(painter, 1);
-      invertColorPainter(painter);
-      painter->drawRoundedRect(fixQRect(x, y, w, h), RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
     }
 
+    invertColorPainter(painter);
+    painter->drawRoundedRect(fixQRect(x, y, w, h), RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
     invertColorPainter(painter);
     painter->drawText(fixQRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
   }
@@ -1923,15 +1920,9 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
           if (_highlight) {
             background.addRoundedRect(x, y, width, height, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
             painter->fillPath(background, color);
-
-            invertColorPainter(painter);
-            painter->drawRoundedRect(x, y, width, height, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
           } else {
             changePenWidth(painter, 1);
-            invertColorPainter(painter);
-            painter->drawRoundedRect(fixQRect(x, y, width, height), RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
           }
-          invertColorPainter(painter);
 
           QString defaultText;
           defaultText.append("Sizing... (");
@@ -1939,6 +1930,11 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
           defaultText.append("x");
           defaultText.append(QString::number(abs(height)));
           defaultText.append(")");
+
+          invertColorPainter(painter);
+          painter->drawRoundedRect(fixQRect(x, y, width, height), RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
+
+          invertColorPainter(painter);
           painter->drawText(fixQRect(x, y, width, height), Qt::AlignCenter | Qt::TextWordWrap, defaultText);
           break;
         }
