@@ -581,6 +581,7 @@ void ZoomWidget::generateToolBar()
   const int margin        = 20;
   const int rowHeight     = 60;
   const int buttonPadding = 2;
+  const float spacerSize  = 0.4; // Percentage from the button width of that row
 
   // Get the rows count
   int rows = 0;
@@ -603,10 +604,16 @@ void ZoomWidget::generateToolBar()
   _toolBar.rect      = background;
 
   // Get the count of buttons per row
-  int buttonsPerLine[rows];
+  float buttonsPerLine[rows];
   for (int i=0; i<rows; i++) buttonsPerLine[i] = 0;
   for (int i=0; i<_toolBar.buttons.size(); i++) {
-    buttonsPerLine[ _toolBar.buttons.at(i).row ]++;
+    float *line = &buttonsPerLine[ _toolBar.buttons.at(i).row ];
+
+    if (_toolBar.buttons.at(i).action == ACTION_SPACER) {
+      *line += spacerSize;
+    } else {
+      *line += 1;
+    }
   }
 
   // Size and position the buttons
@@ -616,7 +623,7 @@ void ZoomWidget::generateToolBar()
   for (int i=0; i<_toolBar.buttons.size(); i++) {
     const Button btn = _toolBar.buttons.at(i);
 
-    float width = (float)background.width() / (float)buttonsPerLine[btn.row];
+    float width = (float)background.width() / buttonsPerLine[btn.row];
     int height  = rowHeight - (float)margin / (float)rows;
     int x       = background.x() + buttonCount[btn.row] * width;
     int y       = background.y() + btn.row * height;
@@ -628,7 +635,7 @@ void ZoomWidget::generateToolBar()
     height -= buttonPadding*2;
 
     // Add the button to the count
-    buttonCount[btn.row]++;
+    buttonCount[btn.row] += (btn.action == ACTION_SPACER) ? spacerSize : 1;
 
     _toolBar.buttons.replace(i, Button{
         btn.action,
