@@ -1589,10 +1589,11 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
 
 ArrowHead ZoomWidget::getFreeFormArrowHead(UserFreeFormData ff)
 {
-  const int points = 10; // Number of points to take the average for the arrow head start
+  const int pointsCount = 8; // Number of points to take the average for the arrow head start
+  const int minPointDistance = 5; // Minimal pixel of the distance between the points for the average
   const int lineSize = MAX_ARROWHEAD_LENGTH / 2;
 
-  if (ff.points.size() < points) { // Too short
+  if (ff.points.size() <= pointsCount) { // Too short
     return ArrowHead {
       QPoint(0,0),
       QPoint(0,0),
@@ -1600,11 +1601,27 @@ ArrowHead ZoomWidget::getFreeFormArrowHead(UserFreeFormData ff)
     };
   }
 
-  QPoint start(0,0);
+  // Get the points for the average
+  QList<QPoint> points;
+  points.append(ff.points.at(ff.points.size()-2));
+  for (int i=ff.points.size()-2; i>0; i--) { // It start from the penultimate to give more importance to that last point
+    if (points.size() == pointsCount) {
+      break;
+    }
 
-  for (int z = 1; z <= points; z++) {
-    const QPoint point = ff.points.at(ff.points.size()-z);
-    start += point / points;
+    const QPoint newPoint = ff.points.at(i);
+    const QPoint last = points.last();
+
+    float distance = hypot(newPoint.x() - last.x(), newPoint.y() - last.y());
+
+    if (distance > minPointDistance) {
+      points.append(newPoint);
+    }
+  }
+
+  QPoint start(0,0);
+  for (int i=0; i < points.size(); i++) {
+    start += points.at(i) / points.size();
   }
 
   return getArrowHead(
