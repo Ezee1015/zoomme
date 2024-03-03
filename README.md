@@ -103,11 +103,11 @@ The Escape key performs the following actions in a sequential order. If one cond
 |:-------:|-------------------------------------------------------|
 | **`Z`** | To change the mode to drawing Lines (mode by default) |
 | **`X`** | To change the mode to drawing Rectangles              |
-| **`A`** | To change the mode to drawing Arrows                  |
 | **`E`** | To change the mode to drawing Ellipses                |
 | **`F`** | To change the mode to drawing Free forms / Hand draws |
 | **`T`** | To change the mode to insert Text                     |
 | **`H`** | To highlight the background of the forms/drawings     |
+| **`A`** | To draw an arrow at the end of the line               |
 
 #### Available Actions for the drawing modes
 
