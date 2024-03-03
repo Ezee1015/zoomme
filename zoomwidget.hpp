@@ -41,7 +41,7 @@
 #define ZOOM_ICON       "🔍"
 #define RECORD_ICON     "●"
 #define HIGHLIGHT_ICON  "🖍️"
-#define ARROW_ICON      ""
+#define ARROW_ICON      ""
 #define EXIT_ICON       "⊗" // ✖
 
 #define RECORD_FPS 16
