@@ -628,6 +628,8 @@ void ZoomWidget::generateToolBar()
     int x       = background.x() + buttonCount[btn.row] * width;
     int y       = background.y() + btn.row * height;
 
+    if (btn.action == ACTION_SPACER) width *= spacerSize;
+
     // Padding
     x += buttonPadding;
     y += buttonPadding;
