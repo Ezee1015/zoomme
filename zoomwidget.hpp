@@ -65,6 +65,8 @@
 
 #define MAX_ARROWHEAD_LENGTH 50
 
+#define FREEFORM_SMOOTHING 2 // 0 --> No smoothing
+
 #define DISABLE_MOUSE_TRACKING false
 
 #define POPUP_ERROR_MSEC 8000
@@ -576,6 +578,8 @@ class ZoomWidget : public QWidget
     bool isDrawingHovered(ZoomWidgetDrawMode drawMode, int i);
     bool isDisabledMouseTracking();
     bool isTextEditable(QPoint cursorPos);
+
+    UserFreeFormData smoothFreeForm(UserFreeFormData form);
 
     // The X, Y, W and H arguments must be a point in the SCREEN, not in the pixmap
     // If floating is enabled, the form (the width and height) is not affected by zoom/scaling

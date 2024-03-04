@@ -303,6 +303,20 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
   update();
 }
 
+UserFreeFormData ZoomWidget::smoothFreeForm(UserFreeFormData form)
+{
+  // Iterate over the points, and make the average between the previous and the
+  // next point
+  for (int i=1; i<form.points.size()-1; i++) {
+    const QPoint start = form.points.at(i-1);
+    const QPoint end   = form.points.at(i+1);
+
+    form.points.replace(i, (start + end) / 2);
+  }
+
+  return form;
+}
+
 void ZoomWidget::loadButtons()
 {
   _toolBar.buttons.clear();
@@ -2394,6 +2408,9 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
         data.active = false;
         data.highlight = _highlight;
         data.arrow = _arrow;
+        for (int i=0; i<FREEFORM_SMOOTHING; i++) {
+          data = smoothFreeForm(data);
+        }
         _freeForms.add(data);
         break;
       }
