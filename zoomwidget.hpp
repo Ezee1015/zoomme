@@ -502,7 +502,6 @@ class ZoomWidget : public QWidget
     QPoint _startDrawPoint;
     QPoint _endDrawPoint;
 
-    int getFreeFormWidth(const QPoint point, const QPoint next);
     void drawDrawnPixmap(QPainter *painter);
     void drawSavedForms(QPainter *pixmapPainter);
     // Opaque the area outside the circle of the cursor
@@ -583,6 +582,7 @@ class ZoomWidget : public QWidget
     bool isDisabledMouseTracking();
     bool isTextEditable(QPoint cursorPos);
 
+    QList<int> getFreeFormWidth(UserFreeFormData form);
     UserFreeFormData smoothFreeForm(UserFreeFormData form);
 
     // The X, Y, W and H arguments must be a point in the SCREEN, not in the pixmap

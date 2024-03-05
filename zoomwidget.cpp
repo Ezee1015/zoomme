@@ -1675,26 +1675,62 @@ ArrowHead ZoomWidget::getFreeFormArrowHead(UserFreeFormData ff)
       );
 }
 
-int ZoomWidget::getFreeFormWidth(const QPoint point, const QPoint next)
+QList<int> ZoomWidget::getFreeFormWidth(UserFreeFormData form)
 {
-  const int minPixels = 5;
-  const int maxPixels = 40;
   const int minWidth  = 1;
   const int maxWidth  = 9;
 
-  const int hypotenuse = hypot(next.x() - point.x(), next.y() - point.y());
+  // If there's no enough points, return the width of the form.
+  // When saving, it only saves the free forms with more than 1 point. I leave
+  // this check just to be sure
+  if (form.points.size() < 2) {
+    logUser(LOG_ERROR, "", "Not enough point in the free form to calculate the dynamic width");
 
-  int width = (hypotenuse-minPixels) * maxWidth / maxPixels;
-
-  if (width < minWidth) {
-    return minWidth;
+    QList<int> r;
+    for (int i=0; i<form.points.size()-1; i++) r.append(form.pen.width());
+    return r;
   }
 
-  if (width > maxWidth) {
-    return maxWidth;
+  // Initialize min and max distance values
+  const int hypotFirst = hypot(
+        form.points.at(1).x() - form.points.at(0).x(),
+        form.points.at(1).y() - form.points.at(0).y()
+      );
+  int minPixels = hypotFirst;
+  int maxPixels = hypotFirst;
+
+  for (int i=1; i<form.points.size()-1; i++) {
+    const QPoint point = form.points.at(i);
+    const QPoint next = form.points.at(i+1);
+    const int hypotenuse = hypot(next.x() - point.x(), next.y() - point.y());
+
+    if (hypotenuse > maxPixels) {
+      maxPixels = hypotenuse;
+    }
+    if (hypotenuse < minPixels) {
+      minPixels = hypotenuse;
+    }
   }
 
-  return width;
+  // Populate the array with the widths
+  QList<int> widths;
+  for (int i=0; i<form.points.size()-1; i++) {
+    const QPoint point = form.points.at(i);
+    const QPoint next = form.points.at(i+1);
+    const int hypotenuse = hypot(next.x() - point.x(), next.y() - point.y());
+
+    // The Rule of Three
+    // const int width = (hypotenuse-minPixels) * (maxWidth-minWidth) / (maxPixels-minPixels) + minWidth;
+    // Percentage of the max pixels of distance
+    int width = (float)(hypotenuse-minPixels) / (float)(maxPixels-minPixels) * (float)(maxWidth-minWidth) + minWidth;
+
+    if (width > maxWidth) width = maxWidth;
+    if (width < minWidth) width = minWidth;
+
+    widths.append(width);
+  }
+
+  return widths;
 }
 
 void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
@@ -1804,12 +1840,17 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
 
       pixmapPainter->drawPolygon(polygon);
     } else {
+      QList<int> penWidths;
+      if (_freeForms.at(i).dynamicWidth) {
+        penWidths.append(getFreeFormWidth(_freeForms.at(i)));
+      }
+
       for (int z = 0; z < _freeForms.at(i).points.size()-1; ++z) {
         QPoint current = _freeForms.at(i).points.at(z);
         QPoint next    = _freeForms.at(i).points.at(z+1);
 
         if (_freeForms.at(i).dynamicWidth) {
-          changePenWidth(pixmapPainter, getFreeFormWidth(current, next));
+          changePenWidth(pixmapPainter, penWidths.at(z));
         }
 
         pixmapPainter->drawLine(current.x(), current.y(), next.x(), next.y());
