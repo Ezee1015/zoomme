@@ -2025,8 +2025,6 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
           break;
         }
 
-        painter->setPen(_freeForms.last().pen);
-
         // Draw the free form with or without the highlight
         if (_highlight) {
           QPolygon polygon;
