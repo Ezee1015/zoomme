@@ -396,7 +396,7 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
     case ACTION_WIDTH_7:
     case ACTION_WIDTH_8:
     case ACTION_WIDTH_9:
-      if (_dynamicWidth) {
+      if (_drawMode == DRAWMODE_FREEFORM && _dynamicWidth) {
         return true;
       }
       return false;
@@ -411,8 +411,6 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
     case ACTION_COLOR_WHITE:
     case ACTION_COLOR_BLACK:
 
-    case ACTION_LINE:
-
     case ACTION_FLASHLIGHT:
     case ACTION_BLACKBOARD:
 
@@ -425,22 +423,25 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
       return false;
 
     case ACTION_DYNAMIC_WIDTH:
-      if (_drawMode == DRAWMODE_FREEFORM) {
+      if (_drawMode == DRAWMODE_FREEFORM && !_highlight) {
         return false;
       }
       return true;
 
     case ACTION_HIGHLIGHT:
-      if (_arrow && _drawMode == DRAWMODE_FREEFORM) {
+      if (_arrow || _dynamicWidth) {
         return true;
       }
       return false;
 
-    case ACTION_FREEFORM:
-      if (_highlight && _arrow) {
+    case ACTION_ARROW:
+      if (_highlight) {
         return true;
       }
-      return false;
+      if (_drawMode == DRAWMODE_LINE || _drawMode == DRAWMODE_FREEFORM) {
+        return false;
+      }
+      return true;
 
     case ACTION_RECTANGLE:
     case ACTION_ELLIPSE:
@@ -448,13 +449,24 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
       if (_arrow) {
         return true;
       }
+      // If it's drawing a free form, it's disabled
+      if (!_freeForms.isEmpty() && _freeForms.last().active) {
+        return true;
+      }
       return false;
 
-    case ACTION_ARROW:
-      if (_drawMode == DRAWMODE_LINE || (_drawMode == DRAWMODE_FREEFORM && !_highlight)) {
-        return false;
+    case ACTION_LINE:
+      // If it's drawing a free form, it's disabled
+      if (!_freeForms.isEmpty() && _freeForms.last().active) {
+        return true;
       }
-      return true;
+      return false;
+
+    case ACTION_FREEFORM:
+      if (_state == STATE_DRAWING) {
+        return true;
+      }
+      return false;
 
     case ACTION_SCREEN_OPTS:
        if (_state != STATE_MOVING) return true;
@@ -555,16 +567,16 @@ ButtonStatus ZoomWidget::isButtonActive(Button button)
 
   bool actionStatus = false;
   switch (button.action) {
-    case ACTION_WIDTH_1:           actionStatus = (_activePen.width() == 1 && !_dynamicWidth); break;
-    case ACTION_WIDTH_2:           actionStatus = (_activePen.width() == 2 && !_dynamicWidth); break;
-    case ACTION_WIDTH_3:           actionStatus = (_activePen.width() == 3 && !_dynamicWidth); break;
-    case ACTION_WIDTH_4:           actionStatus = (_activePen.width() == 4 && !_dynamicWidth); break;
-    case ACTION_WIDTH_5:           actionStatus = (_activePen.width() == 5 && !_dynamicWidth); break;
-    case ACTION_WIDTH_6:           actionStatus = (_activePen.width() == 6 && !_dynamicWidth); break;
-    case ACTION_WIDTH_7:           actionStatus = (_activePen.width() == 7 && !_dynamicWidth); break;
-    case ACTION_WIDTH_8:           actionStatus = (_activePen.width() == 8 && !_dynamicWidth); break;
-    case ACTION_WIDTH_9:           actionStatus = (_activePen.width() == 9 && !_dynamicWidth); break;
-    case ACTION_DYNAMIC_WIDTH:     actionStatus = (_dynamicWidth);                             break;
+    case ACTION_WIDTH_1:           actionStatus = (_activePen.width() == 1);              break;
+    case ACTION_WIDTH_2:           actionStatus = (_activePen.width() == 2);              break;
+    case ACTION_WIDTH_3:           actionStatus = (_activePen.width() == 3);              break;
+    case ACTION_WIDTH_4:           actionStatus = (_activePen.width() == 4);              break;
+    case ACTION_WIDTH_5:           actionStatus = (_activePen.width() == 5);              break;
+    case ACTION_WIDTH_6:           actionStatus = (_activePen.width() == 6);              break;
+    case ACTION_WIDTH_7:           actionStatus = (_activePen.width() == 7);              break;
+    case ACTION_WIDTH_8:           actionStatus = (_activePen.width() == 8);              break;
+    case ACTION_WIDTH_9:           actionStatus = (_activePen.width() == 9);              break;
+    case ACTION_DYNAMIC_WIDTH:     actionStatus = (_dynamicWidth);                        break;
 
     case ACTION_COLOR_RED:         actionStatus = (_activePen.color() == QCOLOR_RED);     break;
     case ACTION_COLOR_GREEN:       actionStatus = (_activePen.color() == QCOLOR_GREEN);   break;
@@ -1739,25 +1751,6 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
 
     if (_lines.at(i).arrow) {
       ArrowHead head = getArrowHead(x, y, w, h, 0);
-
-      // Draw a wider semi-transparent line behind the line as the highlight
-      if (_lines.at(i).highlight) {
-        QPen oldPen = pixmapPainter->pen();
-
-        // Change the color and width of the pen
-        QPen newPen = oldPen;
-        QColor color = oldPen.color(); color.setAlpha(HIGHLIGHT_ALPHA); newPen.setColor(color);
-        newPen.setWidth(newPen.width() * 4);
-        pixmapPainter->setPen(newPen);
-
-        pixmapPainter->drawLine(x, y, x+w, y+h);
-        pixmapPainter->drawLine(head.startPoint, head.rightLineEnd);
-        pixmapPainter->drawLine(head.startPoint, head.leftLineEnd);
-
-        // Reset pen
-        pixmapPainter->setPen(oldPen);
-      }
-
       pixmapPainter->drawLine(head.startPoint, head.rightLineEnd);
       pixmapPainter->drawLine(head.startPoint, head.leftLineEnd);
     }
@@ -1985,25 +1978,6 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
 
         if (_arrow) {
           ArrowHead head = getArrowHead(x, y, width, height, 0);
-
-          // Draw a wider semi-transparent line behind the line as the highlight
-          if (_highlight) {
-            QPen oldPen = painter->pen();
-
-            // Change the color and width of the pen
-            QPen newPen = oldPen;
-            newPen.setColor(color);
-            newPen.setWidth(newPen.width() * 4);
-            painter->setPen(newPen);
-
-            painter->drawLine(x, y, x+width, y+height);
-            painter->drawLine(head.startPoint, head.rightLineEnd);
-            painter->drawLine(head.startPoint, head.leftLineEnd);
-
-            // Reset pen
-            painter->setPen(oldPen);
-          }
-
           painter->drawLine(head.startPoint, head.rightLineEnd);
           painter->drawLine(head.startPoint, head.leftLineEnd);
         }
@@ -2259,6 +2233,16 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
 
   _startDrawPoint = screenPointToPixmapPos(cursorPos);
   _endDrawPoint = _startDrawPoint;
+
+  // Save first point of the free form
+  if (_state == STATE_DRAWING && _drawMode == DRAWMODE_FREEFORM) {
+    if (_freeForms.isEmpty() || (!_freeForms.isEmpty() && !_freeForms.last().active)) {
+      UserFreeFormData data;
+      data.active = true;
+      data.points.append(screenPointToPixmapPos(cursorPos));
+      _freeForms.add(data);
+    }
+  }
 }
 
 // If toImage it's true, then it's saved in a image file, otherwise, it gets
@@ -2438,19 +2422,21 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
       }
     case DRAWMODE_FREEFORM:
       {
-        // BUG: If the Freeform is empty or the last one is inactive, it is because
-        // the user had pressed the mouse but didn't move it, so the free form was
-        // not created. This if statement fixes the segfault
-        if (_freeForms.isEmpty()) break;
-
-        // The registration of the points of the FreeForms are in mouseMoveEvent()
-        // This only indicates that the drawing is no longer being actively drawn
+        // The registration of the points of the FreeForms are in
+        // mouseMoveEvent(). This function indicates that the drawing is no
+        // longer being actively drawn, and saves the current state to it
         UserFreeFormData data = _freeForms.last();
         _freeForms.destroyLast();
-        data.active = false;
-        data.highlight = _highlight;
+        // The free form is just a point
+        if (data.points.size() == 1) {
+          break;
+        }
+
+        data.active       = false;
+        data.pen          = _activePen;
+        data.highlight    = _highlight;
         data.dynamicWidth = _dynamicWidth;
-        data.arrow = _arrow;
+        data.arrow        = _arrow;
         for (int i=0; i<FREEFORM_SMOOTHING; i++) {
           data = smoothFreeForm(data);
         }
@@ -2544,17 +2530,11 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
     const QPoint cursorInPixmap = screenPointToPixmapPos(cursorPos);
 
     if (_freeForms.isEmpty() || (!_freeForms.isEmpty() && !_freeForms.last().active)) {
-      UserFreeFormData data;
-      data.pen = _activePen;
-      data.active = true;
-      data.dynamicWidth = _dynamicWidth;
-      data.highlight = _highlight;
-      data.arrow = _arrow;
-      data.points.append(cursorInPixmap);
-      _freeForms.add(data);
+      logUser(LOG_ERROR_AND_EXIT, "", "Can't add the point to the free form, because the free form was not created...");
+    }
 
     // It's not empty and the last is active
-    } else if (_freeForms.last().points.last() != cursorInPixmap) {
+    if (_freeForms.last().points.last() != cursorInPixmap) {
       UserFreeFormData data = _freeForms.last();
       _freeForms.destroyLast();
       data.points.append(cursorInPixmap);
