@@ -829,7 +829,7 @@ void ZoomWidget::saveStateToFile()
   for (int i=0; i<_freeForms.size(); i++) {
     out << _freeForms.at(i).points
         << _freeForms.at(i).pen
-        << _freeForms.at(i).dynamicWidth
+        << _freeForms.at(i).penWidths
         << _freeForms.at(i).active
         << _freeForms.at(i).highlight
         << _freeForms.at(i).arrow;
@@ -992,7 +992,7 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
 
     in >> points
        >> freeFormData.pen
-       >> freeFormData.dynamicWidth
+       >> freeFormData.penWidths
        >> freeFormData.active
        >> freeFormData.highlight
        >> freeFormData.arrow;
@@ -1679,16 +1679,19 @@ QList<int> ZoomWidget::getFreeFormWidth(UserFreeFormData form)
 {
   const int minWidth  = 1;
   const int maxWidth  = 9;
+  QList<int> widths;
 
   // If there's no enough points, return the width of the form.
   // When saving, it only saves the free forms with more than 1 point. I leave
   // this check just to be sure
   if (form.points.size() < 2) {
     logUser(LOG_ERROR, "", "Not enough point in the free form to calculate the dynamic width");
+    return widths;
+  }
 
-    QList<int> r;
-    for (int i=0; i<form.points.size()-1; i++) r.append(form.pen.width());
-    return r;
+  if (!_dynamicWidth) {
+    for (int i=0; i<form.points.size()-1; i++) widths.append(form.pen.width());
+    return widths;
   }
 
   // Initialize min and max distance values
@@ -1713,7 +1716,6 @@ QList<int> ZoomWidget::getFreeFormWidth(UserFreeFormData form)
   }
 
   // Populate the array with the widths
-  QList<int> widths;
   for (int i=0; i<form.points.size()-1; i++) {
     const QPoint point = form.points.at(i);
     const QPoint next = form.points.at(i+1);
@@ -1728,6 +1730,10 @@ QList<int> ZoomWidget::getFreeFormWidth(UserFreeFormData form)
     if (width < minWidth) width = minWidth;
 
     widths.append(width);
+  }
+
+  if ((form.points.size()-1) != widths.size()) {
+    logUser(LOG_ERROR, "", "Couldn't calculate the pen's width for each point in the free form");
   }
 
   return widths;
@@ -1840,18 +1846,11 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
 
       pixmapPainter->drawPolygon(polygon);
     } else {
-      QList<int> penWidths;
-      if (_freeForms.at(i).dynamicWidth) {
-        penWidths.append(getFreeFormWidth(_freeForms.at(i)));
-      }
-
       for (int z = 0; z < _freeForms.at(i).points.size()-1; ++z) {
         QPoint current = _freeForms.at(i).points.at(z);
         QPoint next    = _freeForms.at(i).points.at(z+1);
 
-        if (_freeForms.at(i).dynamicWidth) {
-          changePenWidth(pixmapPainter, penWidths.at(z));
-        }
+        changePenWidth(pixmapPainter, _freeForms.at(i).penWidths.at(z));
 
         pixmapPainter->drawLine(current.x(), current.y(), next.x(), next.y());
       }
@@ -2474,11 +2473,11 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
         data.active       = false;
         data.pen          = _activePen;
         data.highlight    = _highlight;
-        data.dynamicWidth = _dynamicWidth;
         data.arrow        = _arrow;
         for (int i=0; i<FREEFORM_SMOOTHING; i++) {
           data = smoothFreeForm(data);
         }
+        data.penWidths.append(getFreeFormWidth(data));
         _freeForms.add(data);
         break;
       }

@@ -133,7 +133,8 @@ struct UserTextData {
 struct UserFreeFormData {
   QList<QPoint> points;
   QPen pen;
-  bool dynamicWidth;
+  QList<int> penWidths; // The pen width of each point
+
   bool highlight;
   bool arrow;
   bool active;
