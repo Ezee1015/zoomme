@@ -287,7 +287,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
         toggleAction(ACTION_RECORDING);
 
       } else {
-        _exitTimer->start(EXIT_CONFIRM_MSECS);
+        _exitTimer->start(EXIT_CONFIRMATION);
         loadButtons();
         generateToolBar();
       }
@@ -1093,7 +1093,7 @@ void ZoomWidget::saveFrameToFile()
   // compressed)
   QByteArray imageBytes;
   QBuffer buffer(&imageBytes); buffer.open(QIODevice::WriteOnly);
-  image.save(&buffer, "JPEG", RECORD_QUALITY);
+  image.save(&buffer, "JPEG", RECORD_FRAME_QUALITY);
 
   _recordTempFile->write(imageBytes);
 }
@@ -1238,7 +1238,7 @@ void ZoomWidget::drawButton(QPainter *screenPainter, Button button)
   QColor color = QCOLOR_TOOL_BAR;
   color.setAlpha(55); // Transparency
   QPainterPath buttonBg;
-  buttonBg.addRoundedRect(button.rect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
+  buttonBg.addRoundedRect(button.rect, POPUP_ROUNDNESS, POPUP_ROUNDNESS);
   screenPainter->fillPath(buttonBg, color);
 
   // Button
@@ -1257,7 +1257,7 @@ void ZoomWidget::drawButton(QPainter *screenPainter, Button button)
     screenPainter->setPen(QCOLOR_TOOL_BAR_DISABLED);
   }
 
-  screenPainter->drawRoundedRect(button.rect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
+  screenPainter->drawRoundedRect(button.rect, POPUP_ROUNDNESS, POPUP_ROUNDNESS);
   screenPainter->drawText(button.rect, Qt::AlignCenter | Qt::TextWrapAnywhere, button.name);
 }
 
@@ -1277,7 +1277,7 @@ void ZoomWidget::drawToolBar(QPainter *screenPainter)
 
   // Paint
   QPainterPath background;
-  background.addRoundedRect(bgRect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
+  background.addRoundedRect(bgRect, POPUP_ROUNDNESS, POPUP_ROUNDNESS);
   screenPainter->fillPath(background, color);
 
   // Draw buttons
@@ -1311,7 +1311,7 @@ void ZoomWidget::closePopupUnderCursor(const QPoint cursorPos)
   Popup edit = _popupTray.popups.takeAt(popupPos);
 
   const int timeConsumed = time - edit.timeCreated;
-  const int visibleEnd   = edit.lifetime  - POPUP_SLIDE_OUT_MSEC;
+  const int visibleEnd   = edit.lifetime  - POPUP_SLIDE_OUT;
 
   // Don't change the time if it's already sliding out
   if (timeConsumed < visibleEnd) {
@@ -1361,7 +1361,11 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
   const int timeConsumed = time - p.timeCreated;
   const int fontSize   = 16;
   const int penWidth   = 5;
-  const int progressCircleRadius = 4 + 2 * sin((float)timeConsumed/POPUP_CIRCLE_INTENSITY); // the sin of time/intensity
+  // This is the intensity of the flashing circle in the progress bar. The bigger
+  // the number, the less intense it is (my recommendation: don't touch it)
+  const int circleInternsity = 140;
+
+  const int progressCircleRadius = 4 + 2 * sin((float)timeConsumed/circleInternsity); // the sin of time/intensity
   // const int progressCircleRadius = 4;
   const int titleBorderWidth     = 1;
   const int titleHeight = 30;
@@ -1373,10 +1377,10 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
   // 0                lifetime
   // |==|----------|==|
   // |e | visible  | e| (e --> effect)
-  const float endVisible = (float)p.lifetime - POPUP_SLIDE_OUT_MSEC;
+  const float endVisible = (float)p.lifetime - POPUP_SLIDE_OUT;
   if (timeConsumed >= endVisible) {
     const float lifeInLastSection = timeConsumed - endVisible;
-    float percentageInLastSection = lifeInLastSection / (float)POPUP_SLIDE_OUT_MSEC; // 0.0 to 1.0
+    float percentageInLastSection = lifeInLastSection / (float)POPUP_SLIDE_OUT; // 0.0 to 1.0
     if (percentageInLastSection > 1) percentageInLastSection = 1; // Sometimes it overflows to 1.0XXXX
 
     // SLIDE OUT
@@ -1409,7 +1413,7 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
 
   // BACKGROUND
   QPainterPath background;
-  background.addRoundedRect(popupRect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
+  background.addRoundedRect(popupRect, POPUP_ROUNDNESS, POPUP_ROUNDNESS);
     // Contrast
   QColor contrast = QCOLOR_BLACK;
   contrast.setAlpha(175 * alphaPercentage); // Transparency
@@ -1419,7 +1423,7 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
   screenPainter->fillPath(background, color);
 
   // MAIN TEXT AND BORDERS
-  screenPainter->drawRoundedRect(popupRect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
+  screenPainter->drawRoundedRect(popupRect, POPUP_ROUNDNESS, POPUP_ROUNDNESS);
   screenPainter->drawText(
         popupRect.x() + textPadding,
         popupRect.y() + textPadding + titleHeight,
@@ -1478,8 +1482,8 @@ void ZoomWidget::setPopupTrayPos()
     // 0                lifetime
     // |==|----------|==|
     // |e | visible  | e| (e --> effect)
-    if (timeConsumed <= POPUP_SLIDE_IN_MSEC) {
-      const float percentageInFirstSection = (float)timeConsumed / (float)POPUP_SLIDE_IN_MSEC; // 0.0 to 1.0
+    if (timeConsumed <= POPUP_SLIDE_IN) {
+      const float percentageInFirstSection = (float)timeConsumed / (float)POPUP_SLIDE_IN; // 0.0 to 1.0
       const int slideIn = (POPUP_HEIGHT + _popupTray.margin) * (1-percentageInFirstSection);
       slideInTray += slideIn;
     }
@@ -1610,7 +1614,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
 
   // Rounded background
   QPainterPath bgPath;
-  bgPath.addRoundedRect(rect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
+  bgPath.addRoundedRect(rect, POPUP_ROUNDNESS, POPUP_ROUNDNESS);
 
   // Background (highlight) to improve contrast
   QColor color = (_activePen.color() == QCOLOR_BLACK) ? QCOLOR_WHITE : QCOLOR_BLACK;
@@ -1623,7 +1627,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   screenPainter->fillPath(bgPath, color);
 
   // Border
-  screenPainter->drawRoundedRect(rect, POPUP_ROUNDNESS_FACTOR, POPUP_ROUNDNESS_FACTOR);
+  screenPainter->drawRoundedRect(rect, POPUP_ROUNDNESS, POPUP_ROUNDNESS);
 
   // Text
   screenPainter->drawText(rect, Qt::AlignCenter | Qt::TextWordWrap, text);
@@ -1759,11 +1763,11 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
       QColor color = pixmapPainter->pen().color();
       color.setAlpha(HIGHLIGHT_ALPHA); // Transparency
       QPainterPath background;
-      background.addRoundedRect(x, y, w, h, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
+      background.addRoundedRect(x, y, w, h, RECT_ROUNDNESS, RECT_ROUNDNESS);
       pixmapPainter->fillPath(background, color);
     }
 
-    pixmapPainter->drawRoundedRect(fixQRect(x, y, w, h), RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
+    pixmapPainter->drawRoundedRect(fixQRect(x, y, w, h), RECT_ROUNDNESS, RECT_ROUNDNESS);
   }
 
   // Draw user lines.
@@ -1879,9 +1883,9 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
       QColor color = pixmapPainter->pen().color();
       color.setAlpha(HIGHLIGHT_ALPHA); // Transparency
       QPainterPath background;
-      background.addRoundedRect(x, y, w, h, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
+      background.addRoundedRect(x, y, w, h, RECT_ROUNDNESS, RECT_ROUNDNESS);
       pixmapPainter->fillPath(background, color);
-      pixmapPainter->drawRoundedRect(fixQRect(x, y, w, h), RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
+      pixmapPainter->drawRoundedRect(fixQRect(x, y, w, h), RECT_ROUNDNESS, RECT_ROUNDNESS);
     }
 
     QString text = _texts.at(i).text;
@@ -1956,14 +1960,14 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
       QColor color = textObject.data.pen.color();
       color.setAlpha(HIGHLIGHT_ALPHA); // Transparency
       QPainterPath background;
-      background.addRoundedRect(x, y, w, h, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
+      background.addRoundedRect(x, y, w, h, RECT_ROUNDNESS, RECT_ROUNDNESS);
       painter->fillPath(background, color);
     } else {
       changePenWidth(painter, 1);
     }
 
     invertColorPainter(painter);
-    painter->drawRoundedRect(fixQRect(x, y, w, h), RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
+    painter->drawRoundedRect(fixQRect(x, y, w, h), RECT_ROUNDNESS, RECT_ROUNDNESS);
     invertColorPainter(painter);
     painter->drawText(fixQRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
   }
@@ -1992,10 +1996,10 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
 
     switch (_drawMode) {
       case DRAWMODE_RECT:
-        painter->drawRoundedRect(fixQRect(x, y, width, height), RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
+        painter->drawRoundedRect(fixQRect(x, y, width, height), RECT_ROUNDNESS, RECT_ROUNDNESS);
 
         if (_highlight) {
-          background.addRoundedRect(x, y, width, height, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
+          background.addRoundedRect(x, y, width, height, RECT_ROUNDNESS, RECT_ROUNDNESS);
           painter->fillPath(background, color);
         }
         break;
@@ -2037,7 +2041,7 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
           updateFontSize(painter);
 
           if (_highlight) {
-            background.addRoundedRect(x, y, width, height, RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
+            background.addRoundedRect(x, y, width, height, RECT_ROUNDNESS, RECT_ROUNDNESS);
             painter->fillPath(background, color);
           } else {
             changePenWidth(painter, 1);
@@ -2051,7 +2055,7 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
           defaultText.append(")");
 
           invertColorPainter(painter);
-          painter->drawRoundedRect(fixQRect(x, y, width, height), RECT_ROUNDNESS_FACTOR, RECT_ROUNDNESS_FACTOR);
+          painter->drawRoundedRect(fixQRect(x, y, width, height), RECT_ROUNDNESS, RECT_ROUNDNESS);
 
           invertColorPainter(painter);
           painter->drawText(fixQRect(x, y, width, height), Qt::AlignCenter | Qt::TextWordWrap, defaultText);
@@ -3318,9 +3322,9 @@ void ZoomWidget::logUser(Log_Urgency type, QString popupMsg, const char *fmt, ..
   if (popupMsg.isEmpty()) popupMsg = QString(msg);
   int lifetime = 0;
   switch (type) {
-    case LOG_SUCCESS: lifetime = POPUP_SUCCESS_MSEC; break;
-    case LOG_INFO:    lifetime = POPUP_INFO_MSEC;    break;
-    case LOG_ERROR:   lifetime = POPUP_ERROR_MSEC;   break;
+    case LOG_SUCCESS: lifetime = POPUP_SUCCESS; break;
+    case LOG_INFO:    lifetime = POPUP_INFO;    break;
+    case LOG_ERROR:   lifetime = POPUP_ERROR;   break;
 
     case LOG_TEXT:
     case LOG_ERROR_AND_EXIT:
@@ -3338,7 +3342,7 @@ void ZoomWidget::logUser(Log_Urgency type, QString popupMsg, const char *fmt, ..
       });
 
   if (!_popupTray.updateTimer->isActive()) {
-    _popupTray.updateTimer->start(POPUP_UPDATE_MSEC);
+    _popupTray.updateTimer->start(1000/POPUP_FPS);
   }
 
   update();

@@ -15,7 +15,10 @@
 #include <QSize>
 #include <QPoint>
 
-// CUSTOMIZATION
+//////////////////////////////////////////// CUSTOMIZATION
+
+/// Color scheme
+                             //( R ,  G ,  B )
 #define QCOLOR_RED       QColor(224,  49,  49)
 #define QCOLOR_GREEN     QColor( 47, 158,  68)
 #define QCOLOR_BLUE      QColor( 25, 113, 194)
@@ -30,59 +33,86 @@
 #define QCOLOR_TOOL_BAR          QCOLOR_BLUE
 #define QCOLOR_TOOL_BAR_DISABLED QColor( 70, 70, 70)
 
-// Font size = (1 to 9 -keys-) * FONT_SIZE_FACTOR
+/// This is the scale factor for the font.
+/// Font size = (1 to 9 -pen's width-) * FONT_SIZE_FACTOR
 #define FONT_SIZE_FACTOR 4
 
+/// Default folder where to export the different files
 #define DEFAULT_FOLDER QStandardPaths::DesktopLocation // QStandardPaths::PicturesLocation
+/// Default date format (used for the generic name when exporting files)
 #define DATE_FORMAT_FOR_FILE "dd-MM-yyyy hh.mm.ss"
 
-#define BLOCK_ICON      "🔒"
-#define NO_ZOOM_ICON    "⛶"
-#define ZOOM_ICON       "🔍"
-#define RECORD_ICON     "●"
-#define HIGHLIGHT_ICON  "🖍️"
-#define ARROW_ICON      ""
-#define EXIT_ICON       "⊗" // ✖
+/// Icons for the status bar
+#define BLOCK_ICON     "🔒"
+#define NO_ZOOM_ICON   "⛶"
+#define ZOOM_ICON      "🔍"
+#define RECORD_ICON    "●"
+#define HIGHLIGHT_ICON "🖍️"
+#define ARROW_ICON     ""
+#define EXIT_ICON      "⊗" // ✖
 
+/// Recording settings
 #define RECORD_FPS 16
-#define RECORD_QUALITY 70 // 0-100
+#define RECORD_FRAME_QUALITY 70 // 0-100 | This is the JPEG compression of the frame
+// This is the name for the file located in the temporal folder which is going
+// to save the frames for the video
 #define RECORD_TEMP_FILENAME "ZoomMe_video_bytes"
 
+/// This is the name for the file located in the temporal folder, which is
+/// going to save the screenshot taken in order to pass it to the Linux clipboard
+/// manager (xclip or wl-copy)
 #define CLIPBOARD_TEMP_FILENAME "zoomme_clipboard"
 
-#define DRAG_MOUSE_BUTTON Qt::RightButton
-
-#define EXIT_CONFIRM_MSECS 1500
-
-#define HIGHLIGHT_ALPHA 75
-
+/// This is what separates the file name of the exported file and the index
+/// number when a file with the same name and extension already exist
 #define FILE_INDEX_DIVIDER " "
 
-#define POPUP_ROUNDNESS_FACTOR 12.0f
-#define RECT_ROUNDNESS_FACTOR 5.0f
+/// This assigns the button of the mouse that is going to be in charge of
+/// dragging the desktop/background
+#define DRAG_MOUSE_BUTTON Qt::RightButton
 
-#define SCALE_SENSIVITY 0.2f // For the sensibility of the mouse wheel
+/// This is the time that the exit confirmation is shown. After this time the
+/// confirmation gets canceled
+#define EXIT_CONFIRMATION 1500 // msec
 
-#define MAX_ARROWHEAD_LENGTH 50
+/// This is the transparency of the highlight for the forms
+#define HIGHLIGHT_ALPHA 75 // 0-255
 
+/// Roundness for the rectangles
+#define POPUP_ROUNDNESS 12.0f // Status bar, pop-ups, tool bar and its buttons
+#define RECT_ROUNDNESS  5.0f  // Drawn rectangles
+
+/// This is the sensitivity of the mouse wheel for zooming in and out and
+/// adjusting the radius of the flashlight effect
+#define SCALE_SENSIVITY 0.2f // the higher the number, the more sensitive it is
+
+/// This is the maximum length for the lines of the arrow head
+#define MAX_ARROWHEAD_LENGTH 50 // pixels
+
+/// This is the number of iterations of the smoothing function over the free form
 #define FREEFORM_SMOOTHING 2 // 0 --> No smoothing
 
+/// This macro allows you to quickly disable the mouse tracking function, that
+/// moves the desktop/background when zoomed in by following the mouse.
+/// If disabled, you can move the background with the mouse button specified in
+/// DRAG_MOUSE_BUTTON (just like you can with the mouse tracking enabled and by
+/// pressing shift)
 #define DISABLE_MOUSE_TRACKING false
 
-#define POPUP_ERROR_MSEC 8000
-#define POPUP_INFO_MSEC 6000
-#define POPUP_SUCCESS_MSEC 3000
-#define POPUP_SLIDE_IN_MSEC 350
-#define POPUP_SLIDE_OUT_MSEC 350
-#define POPUP_UPDATE_MSEC 20
-#define POPUP_WIDTH 300
-#define POPUP_HEIGHT 120
-// The intensity of the flashing circle in the progress bar. The bigger the
-// number, the less intense it is
-#define POPUP_CIRCLE_INTENSITY 140
-// END OF CUSTOMIZATION
+/// Pop-ups settings
+#define POPUP_WIDTH     300  // pixels
+#define POPUP_HEIGHT    120  // pixels
+#define POPUP_ERROR     8000 // msec
+#define POPUP_INFO      6000 // msec
+#define POPUP_SUCCESS   3000 // msec
+#define POPUP_SLIDE_IN  350  // msec
+#define POPUP_SLIDE_OUT 350  // msec
+// This is the amount of refreshes of the screen per second, in order to give
+// the pop-ups its various animation effects
+#define POPUP_FPS    50   // msec
 
-// CODE
+//////////////////////////////////////////// END OF CUSTOMIZATION
+
 #define QSTRING_TO_STRING(string) string.toStdString().c_str()
 
 // It will give the mouse position relative to the resolution of scaled monitor
