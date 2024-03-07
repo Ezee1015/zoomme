@@ -43,7 +43,7 @@
 #define DATE_FORMAT_FOR_FILE "dd-MM-yyyy hh.mm.ss"
 
 /// Icons
-#define ENABLE_TOOLBAR_ICONS true
+#define ENABLE_TOOLBAR_ICONS // Comment this line to disable toolbar icons
 
 #define BLOCK_ICON            "🔒"
 #define NO_ZOOM_ICON          "⛶"
@@ -82,6 +82,15 @@
 #define EXPORT_PROJECT_ICON   "" // 
 #define RECORD_ICON           ""
 
+/// Show a border around the tool bar buttons (I think its prettier without a
+/// border). You can:
+///  - Draw always: you have to uncomment BUTTON_BORDER_ALWAYS and comment
+///      BUTTON_BORDER_ACTIVE
+///  - Draw when active (default)
+///  - Never draw it, by commenting both lines
+// #define BUTTON_BORDER_ALWAYS // Always draw the button's border
+#define BUTTON_BORDER_ACTIVE // Only draw the button's border if they're active
+
 /// Recording settings
 #define RECORD_FPS 16
 #define RECORD_FRAME_QUALITY 70 // 0-100 | This is the JPEG compression of the frame
@@ -113,15 +122,6 @@
 #define POPUP_ROUNDNESS 12.0f // Status bar, pop-ups, tool bar and its buttons
 #define RECT_ROUNDNESS  5.0f  // Drawn rectangles
 
-/// Show a border around the tool bar buttons (I think its prettier without a
-/// border). You can:
-///  - Draw always: you have to uncomment BUTTON_BORDER_ALWAYS and comment
-///      BUTTON_BORDER_ACTIVE
-///  - Draw when active (default)
-///  - Never draw it, by commenting both lines
-// #define BUTTON_BORDER_ALWAYS // Always draw the button's border
-#define BUTTON_BORDER_ACTIVE // Only draw the button's border if they're active
-
 /// This is the sensitivity of the mouse wheel for zooming in and out and
 /// adjusting the radius of the flashlight effect
 #define SCALE_SENSIVITY 0.2f // the higher the number, the more sensitive it is
@@ -132,12 +132,12 @@
 /// This is the number of iterations of the smoothing function over the free form
 #define FREEFORM_SMOOTHING 2 // 0 --> No smoothing
 
-/// This macro allows you to quickly disable the mouse tracking function, that
-/// moves the desktop/background when zoomed in by following the mouse.
-/// If disabled, you can move the background with the mouse button specified in
-/// DRAG_MOUSE_BUTTON (just like you can with the mouse tracking enabled and by
-/// pressing shift)
-#define DISABLE_MOUSE_TRACKING false
+/// By uncommenting the DISABLE_MOUSE_TRACKING, you can disable the mouse
+/// tracking function, that moves the desktop/background when zoomed in by
+/// following the mouse. If disabled, you can move the background with the mouse
+/// button specified in DRAG_MOUSE_BUTTON (just like you can with the mouse
+/// tracking enabled and by pressing shift)
+// #define DISABLE_MOUSE_TRACKING
 
 /// Pop-ups settings
 #define POPUP_WIDTH     300  // pixels

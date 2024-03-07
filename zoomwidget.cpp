@@ -1293,9 +1293,11 @@ void ZoomWidget::drawButton(QPainter *screenPainter, Button button)
   }
 
   QString text;
-  if (ENABLE_TOOLBAR_ICONS && !button.icon.isEmpty()) {
+#ifdef ENABLE_TOOLBAR_ICONS
+  if (!button.icon.isEmpty()) {
     text.append(button.icon + "\n");
   }
+#endif // ENABLE_TOOLBAR_ICONS
   text.append(button.name);
 
   // Adjust the font size to the width
@@ -3329,11 +3331,14 @@ void ZoomWidget::drawDrawnPixmap(QPainter *painter)
 
 bool ZoomWidget::isDisabledMouseTracking()
 {
-  return (DISABLE_MOUSE_TRACKING)               ||
-         (_canvas.freezePos == FREEZE_BY_TEXT)  ||
+#ifdef DISABLE_MOUSE_TRACKING
+  return true;
+#else
+  return (_canvas.freezePos == FREEZE_BY_TEXT)  ||
          (_canvas.freezePos == FREEZE_BY_SHIFT) ||
          (_toolBar.show)                        ||
          (_canvas.dragging);
+#endif // DISABLE_MOUSE_TRACKING
 }
 
 // The cursor pos shouldn't be fixed to HDPI scaling
