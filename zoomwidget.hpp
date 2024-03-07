@@ -141,7 +141,6 @@
 
 /// Pop-ups settings
 #define POPUP_WIDTH     300  // pixels
-#define POPUP_HEIGHT    120  // pixels
 #define POPUP_ERROR     8000 // msec
 #define POPUP_INFO      6000 // msec
 #define POPUP_SUCCESS   3000 // msec

@@ -1399,35 +1399,57 @@ bool ZoomWidget::isPressingPopup(const QPoint cursorPos)
 
 QRect ZoomWidget::getPopupRect(const int listPos)
 {
-  // Invert the position for the calculation of the 'y' axis: newest at the top
-  const int popupLevel = (_popupTray.popups.size()-1) - listPos;
+  if (listPos < 0 || listPos > _popupTray.popups.size()-1) {
+    logUser(LOG_ERROR_AND_EXIT, "", "Trying to access an nonexistent pop-up (index out of bounds)");
+  }
+
+  // Get pop-up start point (in the 'y' axis)
+  int startY = 0;
+  if (listPos == (_popupTray.popups.size()-1)) {
+    startY = _popupTray.start.y();
+  } else {
+    const QRect previousPopup = getPopupRect(listPos+1);
+    startY = previousPopup.y() + previousPopup.height() + _popupTray.margin;
+  }
+
+  // Pop-up height
+  const int minimumLines  = 3;
+  const int lineHeight    = fontMetrics().height();
+  const int newLinesCount = _popupTray.popups.at(listPos).message.split("\n").size();
+  // Add the title height + a padding
+  int height = fontMetrics().height() + 4;
+  // Add the text height
+  height += (newLinesCount < minimumLines)
+            ? (lineHeight * minimumLines)
+            : (lineHeight * newLinesCount);
 
   return QRect(
         _popupTray.start.x(),
-        _popupTray.start.y() + popupLevel * (_popupTray.margin+POPUP_HEIGHT),
+        startY,
         POPUP_WIDTH,
-        POPUP_HEIGHT
+        height
       );
 }
 
 void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
 {
-  const Popup p = _popupTray.popups.at(listPos);
-  const qint64 time = QDateTime::currentMSecsSinceEpoch();
+  const Popup p          = _popupTray.popups.at(listPos);
+  const qint64 time      = QDateTime::currentMSecsSinceEpoch();
   const int timeConsumed = time - p.timeCreated;
-  const int fontSize   = 4 * FONT_SIZE_FACTOR;
-  const int penWidth   = 5;
+
+  const int fontSize         = 4 * FONT_SIZE_FACTOR;
+  const int penWidth         = 5;
+  const int textPadding      = 10;
+  const int titleBorderWidth = 1;
+
+  QRect popupRect = getPopupRect(listPos);
+  const int titleHeight = fontMetrics().height() + 4; // title height + a padding
+
   // This is the intensity of the flashing circle in the progress bar. The bigger
   // the number, the less intense it is (my recommendation: don't touch it)
   const int circleInternsity = 140;
-
   const int progressCircleRadius = 4 + 2 * sin((float)timeConsumed/circleInternsity); // the sin of time/intensity
-  // const int progressCircleRadius = 4;
-  const int titleBorderWidth     = 1;
-  const int titleHeight = 30;
-  const int textPadding = 10;
 
-  QRect popupRect = getPopupRect(listPos);
   float alphaPercentage = 1;
 
   // 0                lifetime
@@ -1540,7 +1562,7 @@ void ZoomWidget::setPopupTrayPos()
     // |e | visible  | e| (e --> effect)
     if (timeConsumed <= POPUP_SLIDE_IN) {
       const float percentageInFirstSection = (float)timeConsumed / (float)POPUP_SLIDE_IN; // 0.0 to 1.0
-      const int slideIn = (POPUP_HEIGHT + _popupTray.margin) * (1-percentageInFirstSection);
+      const int slideIn = (getPopupRect(i).height() + _popupTray.margin) * (1-percentageInFirstSection);
       slideInTray += slideIn;
     }
   }
