@@ -1304,7 +1304,14 @@ void ZoomWidget::drawButton(QPainter *screenPainter, Button button)
   adjustFontSize(&font, text, button.rect.width()-textMargin*2, minFontSize);
   screenPainter->setFont(font);
 
-  if (SHOW_BUTTON_BORDER) screenPainter->drawRoundedRect(button.rect, POPUP_ROUNDNESS, POPUP_ROUNDNESS);
+#ifdef BUTTON_BORDER_ALWAYS
+  screenPainter->drawRoundedRect(button.rect, POPUP_ROUNDNESS, POPUP_ROUNDNESS);
+#endif // BUTTON_BORDER_ALWAYS
+#ifdef BUTTON_BORDER_ACTIVE
+    if (isButtonActive(button) == BUTTON_ACTIVE) {
+      screenPainter->drawRoundedRect(button.rect, POPUP_ROUNDNESS, POPUP_ROUNDNESS);
+    }
+#endif // BUTTON_BORDER_ACTIVE
   screenPainter->drawText(button.rect, Qt::AlignCenter | Qt::TextWrapAnywhere, text);
 }
 

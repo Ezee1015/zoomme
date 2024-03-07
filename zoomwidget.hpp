@@ -114,8 +114,13 @@
 #define RECT_ROUNDNESS  5.0f  // Drawn rectangles
 
 /// Show a border around the tool bar buttons (I think its prettier without a
-/// border). Set it to 'true' to enable the border
-#define SHOW_BUTTON_BORDER false
+/// border). You can:
+///  - Draw always: you have to uncomment BUTTON_BORDER_ALWAYS and comment
+///      BUTTON_BORDER_ACTIVE
+///  - Draw when active (default)
+///  - Never draw it, by commenting both lines
+// #define BUTTON_BORDER_ALWAYS // Always draw the button's border
+#define BUTTON_BORDER_ACTIVE // Only draw the button's border if they're active
 
 /// This is the sensitivity of the mouse wheel for zooming in and out and
 /// adjusting the radius of the flashlight effect
