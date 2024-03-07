@@ -325,63 +325,63 @@ void ZoomWidget::loadButtons()
 
   QRect nullRect(0, 0, 0, 0);
 
-  _toolBar.buttons.append(Button{ACTION_WIDTH_1,           "1",                   0, nullRect});
-  _toolBar.buttons.append(Button{ACTION_WIDTH_2,           "2",                   0, nullRect});
-  _toolBar.buttons.append(Button{ACTION_WIDTH_3,           "3",                   0, nullRect});
-  _toolBar.buttons.append(Button{ACTION_WIDTH_4,           "4",                   0, nullRect});
-  _toolBar.buttons.append(Button{ACTION_WIDTH_5,           "5",                   0, nullRect});
-  _toolBar.buttons.append(Button{ACTION_WIDTH_6,           "6",                   0, nullRect});
-  _toolBar.buttons.append(Button{ACTION_WIDTH_7,           "7",                   0, nullRect});
-  _toolBar.buttons.append(Button{ACTION_WIDTH_8,           "8",                   0, nullRect});
-  _toolBar.buttons.append(Button{ACTION_WIDTH_9,           "9",                   0, nullRect});
-  _toolBar.buttons.append(Button{ACTION_DYNAMIC_WIDTH,     "Dynamic",             0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_WIDTH_1,           WIDTH_ICON,       "1",             0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_WIDTH_2,           WIDTH_ICON,       "2",             0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_WIDTH_3,           WIDTH_ICON,       "3",             0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_WIDTH_4,           WIDTH_ICON,       "4",             0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_WIDTH_5,           WIDTH_ICON,       "5",             0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_WIDTH_6,           WIDTH_ICON,       "6",             0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_WIDTH_7,           WIDTH_ICON,       "7",             0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_WIDTH_8,           WIDTH_ICON,       "8",             0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_WIDTH_9,           WIDTH_ICON,       "9",             0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_DYNAMIC_WIDTH,     DYNAMIC_ICON,     "Dynamic",       0, nullRect});
 
-  _toolBar.buttons.append(Button{ACTION_SPACER,            "",                    0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SPACER,            "",               "",              0, nullRect});
 
-  _toolBar.buttons.append(Button{ACTION_COLOR_RED,         "Red",                 0, nullRect});
-  _toolBar.buttons.append(Button{ACTION_COLOR_GREEN,       "Green",               0, nullRect});
-  _toolBar.buttons.append(Button{ACTION_COLOR_BLUE,        "Blue",                0, nullRect});
-  _toolBar.buttons.append(Button{ACTION_COLOR_YELLOW,      "Yellow",              0, nullRect});
-  _toolBar.buttons.append(Button{ACTION_COLOR_ORANGE,      "Orange",              0, nullRect});
-  _toolBar.buttons.append(Button{ACTION_COLOR_MAGENTA,     "Magenta",             0, nullRect});
-  _toolBar.buttons.append(Button{ACTION_COLOR_CYAN,        "Cyan",                0, nullRect});
-  _toolBar.buttons.append(Button{ACTION_COLOR_WHITE,       "White",               0, nullRect});
-  _toolBar.buttons.append(Button{ACTION_COLOR_BLACK,       "Black",               0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_COLOR_RED,         COLOR_ICON,       "Red",           0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_COLOR_GREEN,       COLOR_ICON,       "Green",         0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_COLOR_BLUE,        COLOR_ICON,       "Blue",          0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_COLOR_YELLOW,      COLOR_ICON,       "Yellow",        0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_COLOR_ORANGE,      COLOR_ICON,       "Orange",        0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_COLOR_MAGENTA,     COLOR_ICON,       "Magenta",       0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_COLOR_CYAN,        COLOR_ICON,       "Cyan",          0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_COLOR_WHITE,       COLOR_ICON,       "White",         0, nullRect});
+  _toolBar.buttons.append(Button{ACTION_COLOR_BLACK,       COLOR_ICON,       "Black",         0, nullRect});
 
-  _toolBar.buttons.append(Button{ACTION_LINE,              "Line",                1, nullRect});
-  _toolBar.buttons.append(Button{ACTION_RECTANGLE,         "Rectangle",           1, nullRect});
-  _toolBar.buttons.append(Button{ACTION_ELLIPSE,           "Ellipse",             1, nullRect});
-  _toolBar.buttons.append(Button{ACTION_FREEFORM,          "Free form",           1, nullRect});
-  _toolBar.buttons.append(Button{ACTION_TEXT,              "Text",                1, nullRect});
-  _toolBar.buttons.append(Button{ACTION_SPACER,            "",                    1, nullRect});
-  _toolBar.buttons.append(Button{ACTION_ARROW,             "Arrow",               1, nullRect});
-  _toolBar.buttons.append(Button{ACTION_HIGHLIGHT,         "Highlight",           1, nullRect});
+  _toolBar.buttons.append(Button{ACTION_LINE,              LINE_ICON,        "Line",          1, nullRect});
+  _toolBar.buttons.append(Button{ACTION_RECTANGLE,         RECT_ICON,        "Rectangle",     1, nullRect});
+  _toolBar.buttons.append(Button{ACTION_ELLIPSE,           ELLIPSE_ICON,     "Ellipse",       1, nullRect});
+  _toolBar.buttons.append(Button{ACTION_FREEFORM,          FREEFORM_ICON,    "Free form",     1, nullRect});
+  _toolBar.buttons.append(Button{ACTION_TEXT,              TEXT_ICON,        "Text",          1, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SPACER,            "" ,              "",              1, nullRect});
+  _toolBar.buttons.append(Button{ACTION_ARROW,             ARROW_ICON,       "Arrow",         1, nullRect});
+  _toolBar.buttons.append(Button{ACTION_HIGHLIGHT,         HIGHLIGHT_ICON,   "Highlight",     1, nullRect});
 
 
-  _toolBar.buttons.append(Button{ACTION_FLASHLIGHT,        "Flashlight",          2, nullRect});
-  _toolBar.buttons.append(Button{ACTION_BLACKBOARD,        "Blackboard",          2, nullRect});
-  _toolBar.buttons.append(Button{ACTION_PICK_COLOR,        "Pick color",          2, nullRect});
-  _toolBar.buttons.append(Button{ACTION_SCREEN_OPTS,       "Hide elements",       2, nullRect});
-  _toolBar.buttons.append(Button{ACTION_CLEAR,             "Clear",               2, nullRect});
-  _toolBar.buttons.append(Button{ACTION_DELETE,            "Delete",              2, nullRect});
-  _toolBar.buttons.append(Button{ACTION_UNDO,              "Undo",                2, nullRect});
-  _toolBar.buttons.append(Button{ACTION_REDO,              "Redo",                2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_FLASHLIGHT,        FLASHLIGHT_ICON,  "Flashlight",    2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_BLACKBOARD,        BLACKBOARD_ICON,  "Blackboard",    2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_PICK_COLOR,        PICK_COLOR_ICON,  "Pick color",    2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SCREEN_OPTS,       SCREEN_OPTS_ICON, "Hide elements", 2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_CLEAR,             CLEAR_ICON,       "Clear",         2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_DELETE,            DELETE_ICON,      "Delete",        2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_UNDO,              UNDO_ICON,        "Undo",          2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_REDO,              REDO_ICON,        "Redo",          2, nullRect});
 
-  _toolBar.buttons.append(Button{ACTION_SPACER,            "",                    2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SPACER,            " ",              "",              2, nullRect});
 
   if (_exitTimer->isActive()) {
-    _toolBar.buttons.append(Button{ACTION_ESCAPE,            "Confirm Exit",        2, nullRect});
-    _toolBar.buttons.append(Button{ACTION_ESCAPE_CANCEL,     "Cancel Exit",         2, nullRect});
+    _toolBar.buttons.append(Button{ACTION_ESCAPE,            EXIT_ICON,      "Confirm Exit",  2, nullRect});
+    _toolBar.buttons.append(Button{ACTION_ESCAPE_CANCEL,     CANCEL_ICON,    "Cancel Exit",   2, nullRect});
   } else {
-    _toolBar.buttons.append(Button{ACTION_ESCAPE,            "Escape",              2, nullRect});
+    _toolBar.buttons.append(Button{ACTION_ESCAPE,            ESCAPE_ICON,    "Escape",        2, nullRect});
   }
 
-  _toolBar.buttons.append(Button{ACTION_SAVE_TO_FILE,              "Export image",                3, nullRect});
-  _toolBar.buttons.append(Button{ACTION_SAVE_TO_CLIPBOARD,         "Export to clipboard",         3, nullRect});
-  _toolBar.buttons.append(Button{ACTION_SAVE_TRIMMED_TO_IMAGE,     "Export trimmed image",        3, nullRect});
-  _toolBar.buttons.append(Button{ACTION_SAVE_TRIMMED_TO_CLIPBOARD, "Export trimmed to clipboard", 3, nullRect});
-  _toolBar.buttons.append(Button{ACTION_SAVE_PROJECT,              "Save project",                3, nullRect});
-  _toolBar.buttons.append(Button{ACTION_RECORDING,                 "Record",                      3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SAVE_TO_FILE,              EXPORT_IMG_ICON,       "Export image",                3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SAVE_TO_CLIPBOARD,         EXPORT_CLIP_ICON,      "Export to clipboard",         3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SAVE_TRIMMED_TO_IMAGE,     EXPORT_TRIM_IMG_ICON,  "Export trimmed image",        3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SAVE_TRIMMED_TO_CLIPBOARD, EXPORT_TRIM_CLIP_ICON, "Export trimmed to clipboard", 3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SAVE_PROJECT,              EXPORT_PROJECT_ICON,   "Save project",                3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_RECORDING,                 RECORD_ICON,           "Record",                      3, nullRect});
 }
 
 bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
@@ -695,6 +695,7 @@ void ZoomWidget::generateToolBar()
 
     _toolBar.buttons.replace(i, Button{
         btn.action,
+        btn.icon,
         btn.name,
         btn.row,
         QRect(x, y, width, height)
@@ -1228,11 +1229,27 @@ void invertColorPainter(QPainter *painter)
   painter->setPen(pen);
 }
 
+void ZoomWidget::adjustFontSize(QFont *font, const QString text, const int rectWidth, const int minPixelSize)
+{
+  int fontSize = font->pixelSize();
+  if (fontSize <= minPixelSize) {
+    return;
+  }
+
+  QFontMetrics fontMetric(*font);
+  int fontWidth = fontMetric.horizontalAdvance(text);
+
+  if (fontWidth > rectWidth) {
+    font->setPixelSize(fontSize-1);
+    adjustFontSize(font, text, rectWidth, minPixelSize);
+  }
+}
+
 void ZoomWidget::drawButton(QPainter *screenPainter, Button button)
 {
-  QFont font;
-  font.setPixelSize(16);
-  screenPainter->setFont(font);
+  const int maxFontSize = 16;
+  const int minFontSize = 12;
+  const int textMargin  = 2; // Pixels
 
   // Background
   QColor color = QCOLOR_TOOL_BAR;
@@ -1257,8 +1274,20 @@ void ZoomWidget::drawButton(QPainter *screenPainter, Button button)
     screenPainter->setPen(QCOLOR_TOOL_BAR_DISABLED);
   }
 
+  QString text;
+  if (ENABLE_TOOLBAR_ICONS && !button.icon.isEmpty()) {
+    text.append(button.icon + "\n");
+  }
+  text.append(button.name);
+
+  // Adjust the font size to the width
+  QFont font;
+  font.setPixelSize(maxFontSize);
+  adjustFontSize(&font, text, button.rect.width()-textMargin*2, minFontSize);
+  screenPainter->setFont(font);
+
   screenPainter->drawRoundedRect(button.rect, POPUP_ROUNDNESS, POPUP_ROUNDNESS);
-  screenPainter->drawText(button.rect, Qt::AlignCenter | Qt::TextWrapAnywhere, button.name);
+  screenPainter->drawText(button.rect, Qt::AlignCenter | Qt::TextWrapAnywhere, text);
 }
 
 void ZoomWidget::drawToolBar(QPainter *screenPainter)
@@ -1581,16 +1610,16 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   // Last Line
   if (IS_RECORDING) {
     text.append("\n");
-    text.append(RECORD_ICON);
+    text.append(RECORD_STATUS_ICON);
     text.append(" Recording...");
 
     h += lineHeight;
   }
   if (_exitTimer->isActive()) {
     text.append("\n");
-    text.append(EXIT_ICON);
+    text.append(EXIT_STATUS_ICON);
     text.append(" EXIT? ");
-    text.append(EXIT_ICON);
+    text.append(EXIT_STATUS_ICON);
 
     h += lineHeight;
   }

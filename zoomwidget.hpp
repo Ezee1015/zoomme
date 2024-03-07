@@ -42,15 +42,45 @@
 /// Default date format (used for the generic name when exporting files)
 #define DATE_FORMAT_FOR_FILE "dd-MM-yyyy hh.mm.ss"
 
-/// Icons for the status bar
-#define BLOCK_ICON     "🔒"
-#define NO_ZOOM_ICON   "⛶"
-#define ZOOM_ICON      "🔍"
-#define RECORD_ICON    "●"
-#define HIGHLIGHT_ICON "🖍️"
-#define ARROW_ICON     ""
-#define EXIT_ICON      "⊗" // ✖
-#define DYNAMIC_ICON   " " //  󰐰 
+/// Icons
+#define ENABLE_TOOLBAR_ICONS true
+
+#define BLOCK_ICON            "🔒"
+#define NO_ZOOM_ICON          "⛶"
+#define ZOOM_ICON             "🔍"
+#define RECORD_STATUS_ICON    "●"
+#define EXIT_STATUS_ICON      "⊗" // ✖
+#define DYNAMIC_ICON          " " //  󰐰  ⟺
+
+#define LINE_ICON             "󰕞"
+#define RECT_ICON             "󰗆"
+#define ELLIPSE_ICON          "󰢓" // 󰺡
+#define FREEFORM_ICON         "󱦹"
+#define TEXT_ICON             "󰦨"
+#define HIGHLIGHT_ICON        "󰙒 "
+#define ARROW_ICON            ""
+
+#define WIDTH_ICON            "󱍓" //  󰳂 󰺾 󰑭 
+#define COLOR_ICON            "" //  󰉦
+
+#define FLASHLIGHT_ICON       "󰉄"
+#define BLACKBOARD_ICON       "󰃥"
+#define PICK_COLOR_ICON       ""
+#define SCREEN_OPTS_ICON      ""
+#define CLEAR_ICON            "󱘕"
+#define DELETE_ICON           "󰷭" // 󰷮
+#define UNDO_ICON             "󰕍" // 
+#define REDO_ICON             "󰑏"
+#define EXIT_ICON             "󰩈" // 
+#define ESCAPE_ICON           "󰿅"
+#define CANCEL_ICON           "󰜺"
+
+#define EXPORT_IMG_ICON       ""
+#define EXPORT_CLIP_ICON      ""
+#define EXPORT_TRIM_IMG_ICON  "" // 
+#define EXPORT_TRIM_CLIP_ICON "" // 
+#define EXPORT_PROJECT_ICON   "" // 
+#define RECORD_ICON           ""
 
 /// Recording settings
 #define RECORD_FPS 16
@@ -309,6 +339,7 @@ enum ZoomWidgetAction {
 
 struct Button {
   ZoomWidgetAction action;
+  QString icon;
   QString name;
   int row; // Starting from 0
   QRect rect;
@@ -576,6 +607,7 @@ class ZoomWidget : public QWidget
     // isToolActive(ACTION_DELETE)), for example.
     ButtonStatus isButtonActive(Button button);
     bool isActionDisabled(ZoomWidgetAction action);
+    void adjustFontSize(QFont *font, const QString text, const int rectWidth, const int minPixelSize);
 
     void updateAtMousePos(QPoint mousePos);
     void dragPixmap(QPoint delta);
