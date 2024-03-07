@@ -150,6 +150,7 @@ The Escape key performs the following actions in a sequential order. If one cond
 - `build-essential`
 - `qt6`
 - `libopengl-dev`
+- A [nerd font](https://github.com/ryanoasis/nerd-fonts/releases/latest). I use [Hack nerd font](https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.tar.xz)
 
 ### Optional
 - `xclip` (for Linux and X11)
@@ -164,6 +165,10 @@ Choose one build system:
 Install dependencies:
 - Debian-based: `sudo apt install build-essential qt6-base-dev libqt6opengl6-dev libqt5opengl5-dev cmake`
 - Arch-based: `sudo pacman -S base-devel qt6-base cmake`
+
+Install a compatible font (nerd font): [download font](https://github.com/ryanoasis/nerd-fonts/releases/latest).
+
+> Personally, I use [Hack nerd font](https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.tar.xz)
 
 Compile:
 ```bash
