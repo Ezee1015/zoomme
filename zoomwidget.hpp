@@ -113,6 +113,10 @@
 #define POPUP_ROUNDNESS 12.0f // Status bar, pop-ups, tool bar and its buttons
 #define RECT_ROUNDNESS  5.0f  // Drawn rectangles
 
+/// Show a border around the tool bar buttons (I think its prettier without a
+/// border). Set it to 'true' to enable the border
+#define SHOW_BUTTON_BORDER false
+
 /// This is the sensitivity of the mouse wheel for zooming in and out and
 /// adjusting the radius of the flashlight effect
 #define SCALE_SENSIVITY 0.2f // the higher the number, the more sensitive it is
