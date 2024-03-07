@@ -1599,19 +1599,17 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
     case DRAWMODE_TEXT:      text.append("Text");        break;
     case DRAWMODE_FREEFORM:  text.append("Free Form");   break;
   }
+  text.append(" ");
 
   if (_highlight) {
-    text.append(" ");
     text.append(HIGHLIGHT_ICON);
-  }
-
-  if (_arrow) {
     text.append(" ");
+  } else if (_arrow) {
     text.append(ARROW_ICON);
     text.append(" ");
   }
 
-  text.append(" (");
+  text.append("(");
   if (_dynamicWidth && _drawMode == DRAWMODE_FREEFORM) {
     text.append(DYNAMIC_ICON);
   } else {

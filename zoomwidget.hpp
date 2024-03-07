@@ -57,7 +57,7 @@
 #define ELLIPSE_ICON          "󰢓" // 󰺡
 #define FREEFORM_ICON         "󱦹"
 #define TEXT_ICON             "󰦨"
-#define HIGHLIGHT_ICON        "󰙒 "
+#define HIGHLIGHT_ICON        "󰙒"
 #define ARROW_ICON            ""
 
 #define WIDTH_ICON            "󱍓" //  󰳂 󰺾 󰑭 
