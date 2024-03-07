@@ -1438,20 +1438,18 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
   const int timeConsumed = time - p.timeCreated;
 
   const int fontSize         = 4 * FONT_SIZE_FACTOR;
-  const int penWidth         = 5;
+  const int borderWidth      = 4;
   const int textPadding      = 10;
-  const int titleBorderWidth = 1;
 
   QRect popupRect = getPopupRect(listPos);
-  const int titleHeight = fontMetrics().height() + 4; // title height + a padding
+  const int titleHeight = fontMetrics().height() + borderWidth; // title height + a padding
 
   // This is the intensity of the flashing circle in the progress bar. The bigger
   // the number, the less intense it is (my recommendation: don't touch it)
   const int circleInternsity = 140;
-  const int progressCircleRadius = 4 + 2 * sin((float)timeConsumed/circleInternsity); // the sin of time/intensity
+  const int progressCircleRadius = borderWidth + (borderWidth/2.0) * sin((float)timeConsumed/circleInternsity); // the sin of time/intensity
 
   float alphaPercentage = 1;
-
   // 0                lifetime
   // |==|----------|==|
   // |e | visible  | e| (e --> effect)
@@ -1487,7 +1485,7 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
   QFont font; font.setPixelSize(fontSize); screenPainter->setFont(font);
   color.setAlpha(255 * alphaPercentage);
   screenPainter->setPen(color);
-  changePenWidth(screenPainter, penWidth);
+  changePenWidth(screenPainter, borderWidth);
 
   // BACKGROUND
   QPainterPath background;
@@ -1543,7 +1541,7 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
       );
   screenPainter->setBrush(QBrush()); // No fill
     // Static divider Line
-  changePenWidth(screenPainter, titleBorderWidth);
+  changePenWidth(screenPainter, borderWidth/4);
   screenPainter->drawLine(endDividerProgress, endDivider);
 }
 
