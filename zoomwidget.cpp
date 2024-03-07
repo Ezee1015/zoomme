@@ -35,7 +35,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   QFontDatabase::addApplicationFont(":/resources/Hack Nerd Font/HackNerdFont-Bold.ttf");
   QFontDatabase::addApplicationFont(":/resources/Hack Nerd Font/HackNerdFont-Italic.ttf");
   QFontDatabase::addApplicationFont(":/resources/Hack Nerd Font/HackNerdFont-BoldItalic.ttf");
-  setFont(QFont("Hack Nerd Font"));
+  setFont(QFont("Hack Nerd Font", 4*FONT_SIZE_FACTOR));
 
   _desktopScreen         = QGuiApplication::screenAt(QCursor::pos());
   _screenSize            = _desktopScreen->geometry().size();
@@ -1265,8 +1265,8 @@ void ZoomWidget::adjustFontSize(QFont *font, const QString text, const int rectW
 
 void ZoomWidget::drawButton(QPainter *screenPainter, Button button)
 {
-  const int maxFontSize = 16;
-  const int minFontSize = 12;
+  const int maxFontSize = 4 * FONT_SIZE_FACTOR;
+  const int minFontSize = 3 * FONT_SIZE_FACTOR;
   const int textMargin  = 2; // Pixels
 
   // Background
@@ -1406,7 +1406,7 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
   const Popup p = _popupTray.popups.at(listPos);
   const qint64 time = QDateTime::currentMSecsSinceEpoch();
   const int timeConsumed = time - p.timeCreated;
-  const int fontSize   = 16;
+  const int fontSize   = 4 * FONT_SIZE_FACTOR;
   const int penWidth   = 5;
   // This is the intensity of the flashing circle in the progress bar. The bigger
   // the number, the less intense it is (my recommendation: don't touch it)
@@ -1568,7 +1568,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   const int lineHeight        = 25;
   const int margin            = 20;
   const int penWidth          = 5;
-  const int fontSize          = 16;
+  const int fontSize          = 4 * FONT_SIZE_FACTOR;
   const int w                 = 180;
   const int initialLineHeight = lineHeight + 5; // lineHeight + margin
 
