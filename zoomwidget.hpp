@@ -50,6 +50,7 @@
 #define HIGHLIGHT_ICON "🖍️"
 #define ARROW_ICON     ""
 #define EXIT_ICON      "⊗" // ✖
+#define DYNAMIC_ICON   " " //  󰐰 
 
 /// Recording settings
 #define RECORD_FPS 16

@@ -1555,7 +1555,13 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
     text.append(" ");
   }
 
-  text.append(" (" + QString::number(_activePen.width()) + ")");
+  text.append(" (");
+  if (_dynamicWidth && _drawMode == DRAWMODE_FREEFORM) {
+    text.append(DYNAMIC_ICON);
+  } else {
+    text.append(QString::number(_activePen.width()));
+  }
+  text.append(")");
 
   // Line 2
   switch (_state) {
