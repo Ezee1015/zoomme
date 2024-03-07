@@ -694,11 +694,11 @@ void ZoomWidget::generateToolBar()
     buttonCount[btn.row] += (btn.action == ACTION_SPACER) ? spacerSize : 1;
 
     _toolBar.buttons.replace(i, Button{
-        btn.action,
-        btn.icon,
-        btn.name,
-        btn.row,
-        QRect(x, y, width, height)
+        .action = btn.action,
+        .icon   = btn.icon,
+        .name   = btn.name,
+        .row    = btn.row,
+        .rect   = QRect(x, y, width, height)
     });
   }
 }
@@ -3370,10 +3370,10 @@ void ZoomWidget::logUser(Log_Urgency type, QString popupMsg, const char *fmt, ..
   const qint64 time = QDateTime::currentMSecsSinceEpoch();
 
   _popupTray.popups.append(Popup{
-        time,
-        lifetime,
-        popupMsg,
-        type
+        .timeCreated = time,
+        .lifetime    = lifetime,
+        .message     = popupMsg,
+        .urgency     = type
       });
 
   if (!_popupTray.updateTimer->isActive()) {
