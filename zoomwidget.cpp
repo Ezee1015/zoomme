@@ -1245,7 +1245,7 @@ void ZoomWidget::adjustFontSize(QFont *font, const QString text, const int rectW
     return;
   }
 
-  QFontMetrics fontMetric(*font);
+  QFontMetrics fontMetric = fontMetrics();
   int fontWidth = fontMetric.horizontalAdvance(text);
 
   if (fontWidth > rectWidth) {
