@@ -1251,7 +1251,16 @@ void ZoomWidget::adjustFontSize(QFont *font, const QString text, const int rectW
   if (fontWidth > rectWidth) {
     font->setPixelSize(fontSize-1);
     adjustFontSize(font, text, rectWidth, minPixelSize);
+    return;
   }
+
+  // ONLY FOR DEBUG PURPOSE OF THE FONT WIDTH
+  // UserObjectData data;
+  // data.pen = QColor(Qt::green);
+  // data.startPoint = QPoint( rect.x()+rect.width()/2 - fontWidth/2, rect.y() );
+  // data.endPoint = QPoint( data.startPoint.x()+fontWidth, data.startpoint.y()+rect.height() );
+  // _tests.append(data);
+  ///////////////////////////////////
 }
 
 void ZoomWidget::drawButton(QPainter *screenPainter, Button button)
@@ -2214,6 +2223,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   //
   //   screen.drawRect(x, y, w, h);
   // }
+  // _tests.clear();
   ///////////////////////////////////
 
   screen.end();
