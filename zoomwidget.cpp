@@ -2884,26 +2884,34 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos)
       break;
     case DRAWMODE_FREEFORM:
       for (int i = 0; i < _freeForms.size(); ++i) {
-        for (int z = 0; z < _freeForms.at(i).points.size()-1; ++z) {
-          QPoint current = _freeForms.at(i).points.at(z);
-          QPoint next    = _freeForms.at(i).points.at(z+1);
+        if (_freeForms.at(i).highlight) {
+          QPolygon polygon(_freeForms.at(i).points);
 
-          current = pixmapPointToScreenPos(current);
-          next = pixmapPointToScreenPos(next);
-
-          x = current.x();
-          y = current.y();
-          w = next.x() - x;
-          h = next.y() - y;
-
-          if (isCursorInsideHitBox(x, y, w, h, cursorPos, false)) {
+          if (polygon.containsPoint(cursorPos, Qt::OddEvenFill)) {
             return i;
           }
-        }
+        } else {
+          for (int z = 0; z < _freeForms.at(i).points.size()-1; ++z) {
+            QPoint current = _freeForms.at(i).points.at(z);
+            QPoint next    = _freeForms.at(i).points.at(z+1);
 
-        if (_freeForms.at(i).arrow) {
-          ArrowHead head = getFreeFormArrowHead(_freeForms.at(i));
-          if (isCursorOverArrowHead(head, cursorPos)) return i;
+            current = pixmapPointToScreenPos(current);
+            next = pixmapPointToScreenPos(next);
+
+            x = current.x();
+            y = current.y();
+            w = next.x() - x;
+            h = next.y() - y;
+
+            if (isCursorInsideHitBox(x, y, w, h, cursorPos, false)) {
+              return i;
+            }
+          }
+
+          if (_freeForms.at(i).arrow) {
+            ArrowHead head = getFreeFormArrowHead(_freeForms.at(i));
+            if (isCursorOverArrowHead(head, cursorPos)) return i;
+          }
         }
       }
       break;
