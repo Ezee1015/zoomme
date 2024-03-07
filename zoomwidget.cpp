@@ -2896,7 +2896,7 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos)
         if (_freeForms.at(i).highlight) {
           QPolygon polygon(_freeForms.at(i).points);
 
-          if (polygon.containsPoint(cursorPos, Qt::OddEvenFill)) {
+          if (polygon.containsPoint(screenPointToPixmapPos(cursorPos), Qt::OddEvenFill)) {
             return i;
           }
         } else {
