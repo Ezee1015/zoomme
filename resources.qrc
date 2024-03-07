@@ -4,5 +4,10 @@
         <file>./resources/color-picker-16.png</file>
         <file>./resources/color-picker-32.png</file>
         <file>./resources/Icon.png</file>
+
+        <file>./resources/Hack Nerd Font/HackNerdFont-Regular.ttf</file>
+        <file>./resources/Hack Nerd Font/HackNerdFont-Bold.ttf</file>
+        <file>./resources/Hack Nerd Font/HackNerdFont-Italic.ttf</file>
+        <file>./resources/Hack Nerd Font/HackNerdFont-BoldItalic.ttf</file>
     </qresource>
 </RCC>

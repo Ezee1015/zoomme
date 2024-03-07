@@ -19,6 +19,8 @@
 #include <QFileInfo>
 #include <QMimeData>
 #include <QUrl>
+#include <QFontMetrics>
+#include <QFontDatabase>
 
 ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget)
 {
@@ -27,6 +29,13 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
 
   _activePen.setColor(QCOLOR_RED);
   _activePen.setWidth(4);
+
+  // Fonts
+  QFontDatabase::addApplicationFont(":/resources/Hack Nerd Font/HackNerdFont-Regular.ttf");
+  QFontDatabase::addApplicationFont(":/resources/Hack Nerd Font/HackNerdFont-Bold.ttf");
+  QFontDatabase::addApplicationFont(":/resources/Hack Nerd Font/HackNerdFont-Italic.ttf");
+  QFontDatabase::addApplicationFont(":/resources/Hack Nerd Font/HackNerdFont-BoldItalic.ttf");
+  setFont(QFont("Hack Nerd Font"));
 
   _desktopScreen         = QGuiApplication::screenAt(QCursor::pos());
   _screenSize            = _desktopScreen->geometry().size();
