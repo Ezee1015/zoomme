@@ -1122,7 +1122,7 @@ QRect fixQRect(int x, int y, int width, int height)
 void updateFontSize(QPainter *painter)
 {
   QFont font;
-  font.setPixelSize(painter->pen().width() * FONT_SIZE_FACTOR);
+  font.setPointSize(painter->pen().width() * FONT_SIZE_FACTOR);
   painter->setFont(font);
 }
 
@@ -1238,10 +1238,10 @@ void invertColorPainter(QPainter *painter)
   painter->setPen(pen);
 }
 
-void ZoomWidget::adjustFontSize(QFont *font, const QString text, const int rectWidth, const int minPixelSize)
+void ZoomWidget::adjustFontSize(QFont *font, const QString text, const int rectWidth, const int minPointSize)
 {
-  int fontSize = font->pixelSize();
-  if (fontSize <= minPixelSize) {
+  int fontSize = font->pointSize();
+  if (fontSize <= minPointSize) {
     return;
   }
 
@@ -1249,8 +1249,8 @@ void ZoomWidget::adjustFontSize(QFont *font, const QString text, const int rectW
   int fontWidth = fontMetric.horizontalAdvance(text);
 
   if (fontWidth > rectWidth) {
-    font->setPixelSize(fontSize-1);
-    adjustFontSize(font, text, rectWidth, minPixelSize);
+    font->setPointSize(fontSize-1);
+    adjustFontSize(font, text, rectWidth, minPointSize);
     return;
   }
 
@@ -1302,7 +1302,7 @@ void ZoomWidget::drawButton(QPainter *screenPainter, Button button)
 
   // Adjust the font size to the width
   QFont font;
-  font.setPixelSize(maxFontSize);
+  font.setPointSize(maxFontSize);
   adjustFontSize(&font, text, button.rect.width()-textMargin*2, minFontSize);
   screenPainter->setFont(font);
 
@@ -1482,7 +1482,7 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
   }
 
   // PAINTER CONFIGURATIONS
-  QFont font; font.setPixelSize(fontSize); screenPainter->setFont(font);
+  QFont font; font.setPointSize(fontSize); screenPainter->setFont(font);
   color.setAlpha(255 * alphaPercentage);
   screenPainter->setPen(color);
   changePenWidth(screenPainter, borderWidth);
@@ -1595,9 +1595,9 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   }
 
   const int margin      = 20;
-  const int padding     = fontMetrics().height()/2;
+  const int padding     = fontMetrics().height()*2.0/3.0;
   const int borderWidth = 5;
-  const int fontSize    = 4 * FONT_SIZE_FACTOR;
+  const int fontSize    = fontInfo().pointSize();
 
   QString text;
 
@@ -1689,7 +1689,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
 
   // Settings
   screenPainter->setPen(_activePen);
-  QFont font; font.setPixelSize(fontSize); screenPainter->setFont(font);
+  QFont font; font.setPointSize(fontSize); screenPainter->setFont(font);
   changePenWidth(screenPainter, borderWidth);
 
   // Rounded background

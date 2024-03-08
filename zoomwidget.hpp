@@ -35,7 +35,7 @@
 
 /// This is the scale factor for the font.
 /// Font size = (1 to 9 -pen's width-) * FONT_SIZE_FACTOR
-#define FONT_SIZE_FACTOR 4
+#define FONT_SIZE_FACTOR 3
 
 /// Default folder where to export the different files
 #define DEFAULT_FOLDER QStandardPaths::DesktopLocation // QStandardPaths::PicturesLocation
@@ -615,7 +615,7 @@ class ZoomWidget : public QWidget
     // isToolActive(ACTION_DELETE)), for example.
     ButtonStatus isButtonActive(Button button);
     bool isActionDisabled(ZoomWidgetAction action);
-    void adjustFontSize(QFont *font, const QString text, const int rectWidth, const int minPixelSize);
+    void adjustFontSize(QFont *font, const QString text, const int rectWidth, const int minPointSize);
 
     void updateAtMousePos(QPoint mousePos);
     void dragPixmap(QPoint delta);

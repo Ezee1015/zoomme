@@ -323,6 +323,7 @@ This will override the [file name, video extension and image extension configura
 > The customizable elements are:
 >
 > - Color codes for the color of the drawings
+> - The font size (increase/decrease the size factor, when the default font size is too small or too big)
 > - The date format when saving screenshots, recordings and `.zoomme` files
 > - Icons in the status bar
 > - FPS and quality of the recording
