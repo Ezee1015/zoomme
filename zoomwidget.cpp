@@ -642,7 +642,7 @@ ButtonStatus ZoomWidget::isButtonActive(Button button)
 void ZoomWidget::generateToolBar()
 {
   const int toolbarMargin = 20;
-  const int rowHeight     = fontMetrics().height() * 2.5;
+  const int rowHeight     = fontMetrics().height() * 3;
   const int buttonPadding = 2;
   const float spacerWidth  = 0.4; // Percentage from the button width of that row
 
@@ -1595,7 +1595,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   }
 
   const int margin      = 20;
-  const int padding     = 5;
+  const int padding     = fontMetrics().height()/2;
   const int borderWidth = 5;
   const int fontSize    = 4 * FONT_SIZE_FACTOR;
 
