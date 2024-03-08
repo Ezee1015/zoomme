@@ -45,9 +45,9 @@
 /// Icons
 #define ENABLE_TOOLBAR_ICONS // Comment this line to disable toolbar icons
 
-#define BLOCK_ICON            "🔒"
+#define BLOCK_ICON            ""
 #define NO_ZOOM_ICON          "⛶"
-#define ZOOM_ICON             "🔍"
+#define ZOOM_ICON             "󰍉"
 #define RECORD_STATUS_ICON    "●"
 #define EXIT_STATUS_ICON      "⊗" // ✖
 #define DYNAMIC_ICON          " " //  󰐰  ⟺
