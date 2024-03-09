@@ -28,14 +28,14 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   setMouseTracking(true);
 
   _activePen.setColor(QCOLOR_RED);
-  _activePen.setWidth(4);
+  _activePen.setWidth(4*LINE_WIDTH_SCALE);
 
   // Fonts
   QFontDatabase::addApplicationFont(":/resources/Hack Nerd Font/HackNerdFont-Regular.ttf");
   QFontDatabase::addApplicationFont(":/resources/Hack Nerd Font/HackNerdFont-Bold.ttf");
   QFontDatabase::addApplicationFont(":/resources/Hack Nerd Font/HackNerdFont-Italic.ttf");
   QFontDatabase::addApplicationFont(":/resources/Hack Nerd Font/HackNerdFont-BoldItalic.ttf");
-  setFont(QFont("Hack Nerd Font", 4*FONT_SIZE_FACTOR));
+  setFont(QFont("Hack Nerd Font", 4*FONT_SCALE));
 
   _desktopScreen         = QGuiApplication::screenAt(QCursor::pos());
   _screenSize            = _desktopScreen->geometry().size();
@@ -255,15 +255,15 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
     case ACTION_COLOR_WHITE:   _activePen.setColor(QCOLOR_WHITE);   break;
     case ACTION_COLOR_BLACK:   _activePen.setColor(QCOLOR_BLACK);   break;
 
-    case ACTION_WIDTH_1:       _activePen.setWidth(1);              break;
-    case ACTION_WIDTH_2:       _activePen.setWidth(2);              break;
-    case ACTION_WIDTH_3:       _activePen.setWidth(3);              break;
-    case ACTION_WIDTH_4:       _activePen.setWidth(4);              break;
-    case ACTION_WIDTH_5:       _activePen.setWidth(5);              break;
-    case ACTION_WIDTH_6:       _activePen.setWidth(6);              break;
-    case ACTION_WIDTH_7:       _activePen.setWidth(7);              break;
-    case ACTION_WIDTH_8:       _activePen.setWidth(8);              break;
-    case ACTION_WIDTH_9:       _activePen.setWidth(9);              break;
+    case ACTION_WIDTH_1:       _activePen.setWidth(1*LINE_WIDTH_SCALE);  break;
+    case ACTION_WIDTH_2:       _activePen.setWidth(2*LINE_WIDTH_SCALE);  break;
+    case ACTION_WIDTH_3:       _activePen.setWidth(3*LINE_WIDTH_SCALE);  break;
+    case ACTION_WIDTH_4:       _activePen.setWidth(4*LINE_WIDTH_SCALE);  break;
+    case ACTION_WIDTH_5:       _activePen.setWidth(5*LINE_WIDTH_SCALE);  break;
+    case ACTION_WIDTH_6:       _activePen.setWidth(6*LINE_WIDTH_SCALE);  break;
+    case ACTION_WIDTH_7:       _activePen.setWidth(7*LINE_WIDTH_SCALE);  break;
+    case ACTION_WIDTH_8:       _activePen.setWidth(8*LINE_WIDTH_SCALE);  break;
+    case ACTION_WIDTH_9:       _activePen.setWidth(9*LINE_WIDTH_SCALE);  break;
 
     case ACTION_ESCAPE:
       if (_exitTimer->isActive()) {
@@ -576,15 +576,15 @@ ButtonStatus ZoomWidget::isButtonActive(Button button)
 
   bool actionStatus = false;
   switch (button.action) {
-    case ACTION_WIDTH_1:           actionStatus = (_activePen.width() == 1);              break;
-    case ACTION_WIDTH_2:           actionStatus = (_activePen.width() == 2);              break;
-    case ACTION_WIDTH_3:           actionStatus = (_activePen.width() == 3);              break;
-    case ACTION_WIDTH_4:           actionStatus = (_activePen.width() == 4);              break;
-    case ACTION_WIDTH_5:           actionStatus = (_activePen.width() == 5);              break;
-    case ACTION_WIDTH_6:           actionStatus = (_activePen.width() == 6);              break;
-    case ACTION_WIDTH_7:           actionStatus = (_activePen.width() == 7);              break;
-    case ACTION_WIDTH_8:           actionStatus = (_activePen.width() == 8);              break;
-    case ACTION_WIDTH_9:           actionStatus = (_activePen.width() == 9);              break;
+    case ACTION_WIDTH_1:           actionStatus = (_activePen.width() == 1*LINE_WIDTH_SCALE);              break;
+    case ACTION_WIDTH_2:           actionStatus = (_activePen.width() == 2*LINE_WIDTH_SCALE);              break;
+    case ACTION_WIDTH_3:           actionStatus = (_activePen.width() == 3*LINE_WIDTH_SCALE);              break;
+    case ACTION_WIDTH_4:           actionStatus = (_activePen.width() == 4*LINE_WIDTH_SCALE);              break;
+    case ACTION_WIDTH_5:           actionStatus = (_activePen.width() == 5*LINE_WIDTH_SCALE);              break;
+    case ACTION_WIDTH_6:           actionStatus = (_activePen.width() == 6*LINE_WIDTH_SCALE);              break;
+    case ACTION_WIDTH_7:           actionStatus = (_activePen.width() == 7*LINE_WIDTH_SCALE);              break;
+    case ACTION_WIDTH_8:           actionStatus = (_activePen.width() == 8*LINE_WIDTH_SCALE);              break;
+    case ACTION_WIDTH_9:           actionStatus = (_activePen.width() == 9*LINE_WIDTH_SCALE);              break;
     case ACTION_DYNAMIC_WIDTH:     actionStatus = (_dynamicWidth);                        break;
 
     case ACTION_COLOR_RED:         actionStatus = (_activePen.color() == QCOLOR_RED);     break;
@@ -644,7 +644,7 @@ void ZoomWidget::generateToolBar()
   const int toolbarMargin = 20;
   const int rowHeight     = fontMetrics().height() * 3;
   const int buttonPadding = 2;
-  const float spacerWidth  = 0.4; // Percentage from the button width of that row
+  const float spacerWidth = 0.4; // Percentage from the button width of that row
 
   // Get the rows count
   int rows = 0;
@@ -659,7 +659,7 @@ void ZoomWidget::generateToolBar()
                           toolbarMargin,
                           _screenSize.height() - toolbarMargin - rowHeight*rows,
                           _screenSize.width() - toolbarMargin*2,
-                          rowHeight * rows - toolbarMargin
+                          rowHeight * rows
                         );
 
   _toolBar.margin    = toolbarMargin;
@@ -687,7 +687,7 @@ void ZoomWidget::generateToolBar()
     const Button btn = _toolBar.buttons.at(i);
 
     float width = (float)background.width() / buttonsPerLine[btn.row];
-    int height  = rowHeight - (float)toolbarMargin / (float)rows;
+    int height  = rowHeight;
     int x       = background.x() + buttonCount[btn.row] * width;
     int y       = background.y() + btn.row * height;
 
@@ -1122,7 +1122,7 @@ QRect fixQRect(int x, int y, int width, int height)
 void updateFontSize(QPainter *painter)
 {
   QFont font;
-  font.setPointSize(painter->pen().width() * FONT_SIZE_FACTOR);
+  font.setPointSize(painter->pen().width() * FONT_SCALE);
   painter->setFont(font);
 }
 
@@ -1265,8 +1265,8 @@ void ZoomWidget::adjustFontSize(QFont *font, const QString text, const int rectW
 
 void ZoomWidget::drawButton(QPainter *screenPainter, Button button)
 {
-  const int maxFontSize = 4 * FONT_SIZE_FACTOR;
-  const int minFontSize = 3 * FONT_SIZE_FACTOR;
+  const int maxFontSize = 4 * FONT_SCALE;
+  const int minFontSize = 3 * FONT_SCALE;
   const int textMargin  = 2; // Pixels
 
   // Background
@@ -1300,12 +1300,8 @@ void ZoomWidget::drawButton(QPainter *screenPainter, Button button)
 #endif // ENABLE_TOOLBAR_ICONS
   text.append(button.name);
 
-  // Adjust the font size to the width
-  QFont font;
-  font.setPointSize(maxFontSize);
-  adjustFontSize(&font, text, button.rect.width()-textMargin*2, minFontSize);
-  screenPainter->setFont(font);
-
+  // Border
+  changePenWidth(screenPainter, 1);
 #ifdef BUTTON_BORDER_ALWAYS
   screenPainter->drawRoundedRect(button.rect, POPUP_ROUNDNESS, POPUP_ROUNDNESS);
 #endif // BUTTON_BORDER_ALWAYS
@@ -1314,6 +1310,12 @@ void ZoomWidget::drawButton(QPainter *screenPainter, Button button)
       screenPainter->drawRoundedRect(button.rect, POPUP_ROUNDNESS, POPUP_ROUNDNESS);
     }
 #endif // BUTTON_BORDER_ACTIVE
+
+  // Adjust the font size to the width
+  QFont font;
+  font.setPointSize(maxFontSize);
+  adjustFontSize(&font, text, button.rect.width()-textMargin*2, minFontSize);
+  screenPainter->setFont(font);
   screenPainter->drawText(button.rect, Qt::AlignCenter | Qt::TextWrapAnywhere, text);
 }
 
@@ -1416,12 +1418,16 @@ QRect ZoomWidget::getPopupRect(const int listPos)
   const int minimumLines  = 3;
   const int lineHeight    = fontMetrics().height();
   const int newLinesCount = _popupTray.popups.at(listPos).message.split("\n").size();
+  const int borderWidth   = 4*LINE_WIDTH_SCALE;
+
+  const int titleHeight = fontMetrics().height() + borderWidth*4; // title height + margin
+  const int messagePadding = borderWidth*2; // Padding for the pop-up message
+  const int messageHeight = (newLinesCount < minimumLines)
+                            ? (lineHeight * minimumLines)
+                            : (lineHeight * newLinesCount);
+
   // Add the title height + a padding
-  int height = fontMetrics().height() + 4;
-  // Add the text height
-  height += (newLinesCount < minimumLines)
-            ? (lineHeight * minimumLines)
-            : (lineHeight * newLinesCount);
+  const int height = titleHeight + messageHeight + messagePadding*2;
 
   return QRect(
         _popupTray.start.x(),
@@ -1437,12 +1443,13 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
   const qint64 time      = QDateTime::currentMSecsSinceEpoch();
   const int timeConsumed = time - p.timeCreated;
 
-  const int fontSize         = 4 * FONT_SIZE_FACTOR;
-  const int borderWidth      = 4;
-  const int textPadding      = 10;
+  const int fontSize         = 4 * FONT_SCALE;
+  const int borderWidth      = 4 * LINE_WIDTH_SCALE;
 
-  QRect popupRect = getPopupRect(listPos);
-  const int titleHeight = fontMetrics().height() + borderWidth; // title height + a padding
+  QRect popupRect           = getPopupRect(listPos);
+  const int titleHeight     = fontMetrics().height() + borderWidth*4; // title height + a padding
+  const int messagePaddingY = borderWidth*2;
+  const int messagePaddingX = 10;
 
   // This is the intensity of the flashing circle in the progress bar. The bigger
   // the number, the less intense it is (my recommendation: don't touch it)
@@ -1501,10 +1508,10 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
   // MAIN TEXT AND BORDERS
   screenPainter->drawRoundedRect(popupRect, POPUP_ROUNDNESS, POPUP_ROUNDNESS);
   screenPainter->drawText(
-        popupRect.x() + textPadding,
-        popupRect.y() + textPadding + titleHeight,
-        popupRect.width()  - 2*textPadding,
-        popupRect.height() - 2*textPadding - titleHeight,
+        popupRect.x() + messagePaddingX,
+        popupRect.y() + titleHeight + messagePaddingY,
+        popupRect.width()  - 2*messagePaddingX,
+        popupRect.height() - 2*messagePaddingY - titleHeight,
         Qt::AlignCenter | Qt::TextWordWrap,
         p.message
       );
@@ -1533,15 +1540,10 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
     // Progress line and circle
   screenPainter->drawLine(startDivider, endDividerProgress);
   screenPainter->setBrush(screenPainter->pen().color()); // Fill
-  screenPainter->drawEllipse(
-        endDividerProgress.x() - progressCircleRadius,
-        endDividerProgress.y() - progressCircleRadius,
-        2 * progressCircleRadius,
-        2 * progressCircleRadius
-      );
+  screenPainter->drawEllipse(endDividerProgress, progressCircleRadius, progressCircleRadius);
   screenPainter->setBrush(QBrush()); // No fill
     // Static divider Line
-  changePenWidth(screenPainter, borderWidth/4);
+  changePenWidth(screenPainter, borderWidth/LINE_WIDTH_SCALE);
   screenPainter->drawLine(endDividerProgress, endDivider);
 }
 
@@ -1596,7 +1598,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
 
   const int margin      = 20;
   const int padding     = fontMetrics().height()*2.0/3.0;
-  const int borderWidth = 5;
+  const int borderWidth = 5 * LINE_WIDTH_SCALE;
   const int fontSize    = fontInfo().pointSize();
 
   QString text;
@@ -1629,7 +1631,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   if (_dynamicWidth && _drawMode == DRAWMODE_FREEFORM) {
     text.append(DYNAMIC_ICON);
   } else {
-    text.append(QString::number(_activePen.width()));
+    text.append(QString::number(_activePen.width()/LINE_WIDTH_SCALE));
   }
   text.append(")");
 
@@ -1673,8 +1675,27 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   const int x = _screenSize.width() - w - margin;
   const int y = margin;
 
+  const QRect background(
+        x - borderWidth*3/2,
+        y + borderWidth/2,
+        w + borderWidth,
+        h + borderWidth
+      );
+  const QRect textRect(
+        x - borderWidth,
+        y + borderWidth,
+        w,
+        h
+      );
+
   // If the mouse is near the hit box, don't draw it
-  QRect hitBox = QRect(x-margin, y-margin, w+margin*2, h+margin*2);
+  QRect hitBox(
+        background.x() - borderWidth/2 - margin,
+        background.y() - borderWidth/2 - margin,
+        background.width() + borderWidth  + margin*2,
+        background.height() + borderWidth + margin*2
+      );
+
   if (isCursorInsideHitBox( hitBox.x(),
                             hitBox.y(),
                             hitBox.width(),
@@ -1685,8 +1706,6 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
     return;
   }
 
-  const QRect rect = QRect(x, y, w, h);
-
   // Settings
   screenPainter->setPen(_activePen);
   QFont font; font.setPointSize(fontSize); screenPainter->setFont(font);
@@ -1694,7 +1713,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
 
   // Rounded background
   QPainterPath bgPath;
-  bgPath.addRoundedRect(rect, POPUP_ROUNDNESS, POPUP_ROUNDNESS);
+  bgPath.addRoundedRect(background, POPUP_ROUNDNESS, POPUP_ROUNDNESS);
 
   // Background (highlight) to improve contrast
   QColor color = (_activePen.color() == QCOLOR_BLACK) ? QCOLOR_WHITE : QCOLOR_BLACK;
@@ -1707,10 +1726,10 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   screenPainter->fillPath(bgPath, color);
 
   // Border
-  screenPainter->drawRoundedRect(rect, POPUP_ROUNDNESS, POPUP_ROUNDNESS);
+  screenPainter->drawRoundedRect(background, POPUP_ROUNDNESS, POPUP_ROUNDNESS);
 
   // Text
-  screenPainter->drawText(rect, Qt::AlignCenter | Qt::TextWordWrap, text);
+  screenPainter->drawText(textRect, Qt::AlignCenter | Qt::TextWordWrap, text);
 }
 
 ArrowHead ZoomWidget::getFreeFormArrowHead(UserFreeFormData ff)
@@ -1761,8 +1780,8 @@ ArrowHead ZoomWidget::getFreeFormArrowHead(UserFreeFormData ff)
 
 QList<int> ZoomWidget::getFreeFormWidth(UserFreeFormData form)
 {
-  const int minWidth  = 1;
-  const int maxWidth  = 9;
+  const int minWidth  = 1 * LINE_WIDTH_SCALE;
+  const int maxWidth  = 9 * LINE_WIDTH_SCALE;
   QList<int> widths;
 
   // If there's no enough points, return the width of the form.
@@ -2043,7 +2062,7 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
       background.addRoundedRect(x, y, w, h, RECT_ROUNDNESS, RECT_ROUNDNESS);
       painter->fillPath(background, color);
     } else {
-      changePenWidth(painter, 1);
+      changePenWidth(painter, 1*LINE_WIDTH_SCALE);
     }
 
     invertColorPainter(painter);

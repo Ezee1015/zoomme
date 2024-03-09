@@ -34,8 +34,9 @@
 #define QCOLOR_TOOL_BAR_DISABLED QColor( 70, 70, 70)
 
 /// This is the scale factor for the font.
-/// Font size = (1 to 9 -pen's width-) * FONT_SIZE_FACTOR
-#define FONT_SIZE_FACTOR 3
+#define FONT_SCALE 3
+/// This is the scale factor for the line's width
+#define LINE_WIDTH_SCALE 1
 
 /// Default folder where to export the different files
 #define DEFAULT_FOLDER QStandardPaths::DesktopLocation // QStandardPaths::PicturesLocation
