@@ -51,7 +51,7 @@
 #define ZOOM_ICON             "󰍉"
 #define RECORD_STATUS_ICON    "●"
 #define EXIT_STATUS_ICON      "⊗" // ✖
-#define DYNAMIC_ICON          " " //  󰐰  ⟺
+#define DYNAMIC_ICON          "" //  󰐰  ⟺
 
 #define LINE_ICON             "󰕞"
 #define RECT_ICON             "󰗆"
