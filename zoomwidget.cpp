@@ -643,7 +643,7 @@ void ZoomWidget::generateToolBar()
 {
   const int toolbarMargin = 20;
   const int rowHeight     = fontMetrics().height() * 3;
-  const int buttonPadding = 2;
+  const int buttonPadding = 4;
   const float spacerWidth = 0.4; // Percentage from the button width of that row
 
   // Get the rows count
