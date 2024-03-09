@@ -110,7 +110,7 @@ void modeAlreadySelected(QString backupFile, QString img, bool liveMode, bool fr
 int main(int argc, char *argv[])
 {
   QApplication a(argc, argv);
-  QSystemTrayIcon tray = QSystemTrayIcon(QIcon(":/resources/Icon.png"));
+  QSystemTrayIcon tray = QSystemTrayIcon(QIcon(":/resources/icon/Icon.png"));
   tray.setVisible(true);
   tray.show();
 

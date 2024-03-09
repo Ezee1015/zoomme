@@ -1,10 +1,11 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
     <qresource>
-        <file>./resources/color-picker-16.png</file>
-        <file>./resources/color-picker-32.png</file>
-        <file>./resources/Icon.png</file>
+        <file>./resources/icon/Icon.png</file>
+        <file>./resources/color-picker/16.png</file>
+        <!-- <file>./resources/color-picker/32.png</file> -->
 
+        <!-- Font -->
         <file>./resources/Hack Nerd Font/HackNerdFont-Regular.ttf</file>
         <file>./resources/Hack Nerd Font/HackNerdFont-Bold.ttf</file>
         <file>./resources/Hack Nerd Font/HackNerdFont-Italic.ttf</file>

@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./resources/Icon.png" height="100" />
+  <img src="./resources/icon/Icon.png" height="100" />
   <h1>ZoomMe</h1>
 </div>
 

@@ -2582,7 +2582,7 @@ void ZoomWidget::updateCursorShape()
   QCursor cursorDefault = QCursor(Qt::CrossCursor);
 
   // Pick color
-  QPixmap pickColorPixmap(":/resources/color-picker-16.png");
+  QPixmap pickColorPixmap(":/resources/color-picker/16.png");
   if (pickColorPixmap.isNull()) {
     logUser(LOG_ERROR, "", "Failed to load pixmap for the color-picker cursor");
   }
