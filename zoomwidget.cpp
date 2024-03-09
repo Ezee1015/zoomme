@@ -3396,7 +3396,8 @@ void ZoomWidget::logUser(Log_Urgency type, QString popupMsg, const char *fmt, ..
 {
   FILE *output;
   bool exitApp = false;
-  char msg[1000] = {0};
+  const int msg_size = 1000;
+  char msg[msg_size] = {0};
 
   switch (type) {
     case LOG_TEXT:
@@ -3416,7 +3417,7 @@ void ZoomWidget::logUser(Log_Urgency type, QString popupMsg, const char *fmt, ..
 
   va_list args;
   va_start(args, fmt);
-  vsnprintf(msg, 1000, fmt, args);
+  vsnprintf(msg, msg_size, fmt, args);
   va_end(args);
 
   fprintf(output, "%s\n", msg);
