@@ -1417,8 +1417,18 @@ QRect ZoomWidget::getPopupRect(const int listPos)
   // Pop-up height
   const int minimumLines  = 3;
   const int lineHeight    = fontMetrics().height();
-  const int newLinesCount = _popupTray.popups.at(listPos).message.split("\n").size();
   const int borderWidth   = 4*LINE_WIDTH_SCALE;
+
+  QList<QString> lines = _popupTray.popups.at(listPos).message.split("\n");
+  int newLinesCount = lines.size();
+  // If the line exceeds the width, make new lines
+  for (int i=0; i<lines.size(); i++) {
+    const QString line = lines.at(i);
+    const float lineUsed = (float)fontMetrics().horizontalAdvance(line) / (float)POPUP_WIDTH;
+    if (lineUsed > 1.0) {
+      newLinesCount += ceil(lineUsed-1);
+    }
+  }
 
   const int titleHeight = fontMetrics().height() + borderWidth*4; // title height + margin
   const int messagePadding = borderWidth*2; // Padding for the pop-up message
