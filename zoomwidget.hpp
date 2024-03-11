@@ -141,7 +141,7 @@
 // #define DISABLE_MOUSE_TRACKING
 
 /// Pop-ups settings
-#define POPUP_WIDTH     300  // pixels
+#define POPUP_WIDTH     (_screenSize.width() / 4) // pixels
 #define POPUP_ERROR     8000 // msec
 #define POPUP_INFO      6000 // msec
 #define POPUP_SUCCESS   3000 // msec
