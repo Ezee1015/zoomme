@@ -1425,7 +1425,7 @@ QRect ZoomWidget::getPopupRect(const int listPos)
   // fit when wrapping it
   for (int i=0; i<lines.size(); i++) {
     const QString line = lines.at(i);
-    const float lineUsed = (float)fontMetrics().horizontalAdvance(line) / (float)POPUP_WIDTH;
+    const float lineUsed = (float)fontMetrics().horizontalAdvance(line) / POPUP_WIDTH;
     if (lineUsed > 1.0) {
       newLinesCount += ceil(lineUsed-1);
     }
