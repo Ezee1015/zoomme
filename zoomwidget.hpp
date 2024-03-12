@@ -32,6 +32,7 @@
 #define QCOLOR_BLACKBOARD        QColor( 33,  37,  41)
 #define QCOLOR_TOOL_BAR          QCOLOR_BLUE
 #define QCOLOR_TOOL_BAR_DISABLED QColor( 70, 70, 70)
+#define QCOLOR_NODE              QCOLOR_BLUE
 
 /// This is the scale factor for the font.
 #define FONT_SCALE 3
@@ -68,6 +69,7 @@
 #define BLACKBOARD_ICON       "󰃥"
 #define PICK_COLOR_ICON       ""
 #define SCREEN_OPTS_ICON      ""
+#define RESIZE_ICON           "󰆾"
 #define CLEAR_ICON            "󱘕"
 #define DELETE_ICON           "󰷭" // 󰷮
 #define UNDO_ICON             "󰕍" // 
@@ -118,6 +120,9 @@
 
 /// This is the transparency of the highlight for the forms
 #define HIGHLIGHT_ALPHA 75 // 0-255
+
+// This is the radius of the node when resizing a form
+#define NODE_RADIUS 5
 
 /// Roundness for the rectangles
 #define POPUP_ROUNDNESS 12.0f // Status bar, pop-ups, tool bar and its buttons
@@ -278,6 +283,7 @@ enum ZoomWidgetState {
   STATE_DRAWING,
   STATE_TYPING,
   STATE_DELETING,
+  STATE_RESIZE,
   STATE_COLOR_PICKER,
   STATE_TO_TRIM,  // State before trimming
   STATE_TRIMMING,
@@ -308,6 +314,7 @@ enum ZoomWidgetAction {
   ACTION_UNDO,
   ACTION_REDO,
   ACTION_DELETE,
+  ACTION_RESIZE,
   ACTION_CLEAR,
   ACTION_SAVE_TO_FILE,
   ACTION_SAVE_TRIMMED_TO_IMAGE,
@@ -394,6 +401,14 @@ struct PopupTray {
   int margin;
   QPoint start;
   QTimer *updateTimer;
+};
+
+struct ResizeState {
+  // If it's active:
+  //    - The vector is the current draw mode
+  //    - The form selected is the last one of the vector
+  bool active;     // If it's resizing
+  bool startPoint; // If true, it's the start point of the form. If false, it's the end point
 };
 
 template<typename T>
@@ -540,6 +555,8 @@ class ZoomWidget : public QWidget
     ToolBar _toolBar;
     PopupTray _popupTray;
 
+    ResizeState _resize;
+
     // Modes
     bool _boardMode;
     bool _liveMode;
@@ -599,6 +616,15 @@ class ZoomWidget : public QWidget
     void updateForPopups(); // Timer function
 
     void saveImage(QPixmap pixmap, bool toImage);
+
+    // Resizing nodes
+    void resizeForm(QPoint cursorPos);
+    void drawNode(QPainter *painter, const QPoint point);
+    void drawAllNodes(QPainter *screenPainter);
+    bool isCursorOverNode(const QPoint cursorPos, const QPoint point);
+    // Moves the form behind the cursor to the top of the list and populates the
+    // _resize variable
+    bool selectNodeBehindCursor(const QPoint cursorPos);
 
     // Tool bar
     void loadButtons();

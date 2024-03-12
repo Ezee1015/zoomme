@@ -58,6 +58,8 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _flashlightRadius      = 80;
   _popupTray.margin      = 20;
   _toolBar.show          = false;
+  _resize.active         = false;
+  _resize.startPoint     = false;
 
   _lastMousePos          = GET_CURSOR_POS();
   _clipboard             = QApplication::clipboard();
@@ -99,6 +101,7 @@ bool ZoomWidget::isToolBarVisible()
         _state == STATE_TO_TRIM      ||
         _state == STATE_DELETING     ||
         _state == STATE_COLOR_PICKER ||
+        (_state == STATE_RESIZE && !_resize.active) ||
         // Normal state
         _state == STATE_MOVING
       );
@@ -123,6 +126,18 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
     case ACTION_BLACKBOARD:    _boardMode = !_boardMode;           break;
     case ACTION_ARROW:         _arrow = !_arrow;                   break;
     case ACTION_DYNAMIC_WIDTH: _dynamicWidth = !_dynamicWidth;     break;
+
+    case ACTION_RESIZE:
+       // Disable this modes to enable to select all the drawings
+       _arrow = false;
+       _highlight = false;
+
+       if (_state == STATE_MOVING) {
+         _state = STATE_RESIZE;
+       } else if (_state == STATE_RESIZE) {
+         _state = STATE_MOVING;
+       }
+       break;
 
     case ACTION_DELETE:
        if (_state == STATE_MOVING) {
@@ -275,6 +290,9 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
       if (_state == STATE_COLOR_PICKER) {
         toggleAction(ACTION_PICK_COLOR);
 
+      } else if (_state == STATE_RESIZE) {
+        toggleAction(ACTION_RESIZE);
+
       } else if (_state == STATE_DELETING) {
         toggleAction(ACTION_DELETE);
 
@@ -370,6 +388,7 @@ void ZoomWidget::loadButtons()
   _toolBar.buttons.append(Button{ACTION_FLASHLIGHT,        FLASHLIGHT_ICON,  "Flashlight",    2, nullRect});
   _toolBar.buttons.append(Button{ACTION_BLACKBOARD,        BLACKBOARD_ICON,  "Blackboard",    2, nullRect});
   _toolBar.buttons.append(Button{ACTION_PICK_COLOR,        PICK_COLOR_ICON,  "Pick color",    2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_RESIZE,            RESIZE_ICON,      "Resize",        2, nullRect});
   _toolBar.buttons.append(Button{ACTION_SCREEN_OPTS,       SCREEN_OPTS_ICON, "Hide elements", 2, nullRect});
   _toolBar.buttons.append(Button{ACTION_CLEAR,             CLEAR_ICON,       "Clear",         2, nullRect});
   _toolBar.buttons.append(Button{ACTION_DELETE,            DELETE_ICON,      "Delete",        2, nullRect});
@@ -475,7 +494,28 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
       if (_state == STATE_DRAWING) {
         return true;
       }
+      if (_state == STATE_RESIZE) {
+        return true;
+      }
       return false;
+
+    case ACTION_RESIZE:
+      if (_screenOpts == SCREENOPTS_HIDE_ALL) {
+        return true;
+      }
+      if (_state != STATE_MOVING && _state != STATE_RESIZE) {
+        return true;
+      }
+      if (_drawMode == DRAWMODE_FREEFORM) {
+        return true;
+      }
+      switch (_drawMode) {
+        case DRAWMODE_LINE:     return _lines.isEmpty();
+        case DRAWMODE_RECT:     return _rects.isEmpty();
+        case DRAWMODE_ELLIPSE:  return _ellipses.isEmpty();
+        case DRAWMODE_TEXT:     return _texts.isEmpty();
+        case DRAWMODE_FREEFORM: return _freeForms.isEmpty();
+      }
 
     case ACTION_SCREEN_OPTS:
        if (_state != STATE_MOVING) return true;
@@ -609,6 +649,7 @@ ButtonStatus ZoomWidget::isButtonActive(Button button)
     case ACTION_ARROW:             actionStatus = (_arrow);                               break;
     case ACTION_PICK_COLOR:        actionStatus = (_state == STATE_COLOR_PICKER);         break;
     case ACTION_DELETE:            actionStatus = (_state == STATE_DELETING);             break;
+    case ACTION_RESIZE:            actionStatus = (_state == STATE_RESIZE);               break;
     case ACTION_SCREEN_OPTS:       actionStatus = (_screenOpts != SCREENOPTS_SHOW_ALL);   break;
     case ACTION_UNDO:              return BUTTON_NO_STATUS;
     case ACTION_REDO:              return BUTTON_NO_STATUS;
@@ -1653,6 +1694,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
     case STATE_TYPING:       text.append("\n-- TYPING --");     break;
     case STATE_DELETING:     text.append("\n-- DELETING --");   break;
     case STATE_COLOR_PICKER: text.append("\n-- PICK COLOR --"); break;
+    case STATE_RESIZE:       text.append("\n-- RESIZING --");   break;
     case STATE_TO_TRIM:
     case STATE_TRIMMING:     text.append("\n-- TRIMMING --");   break;
   };
@@ -2218,6 +2260,58 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
   }
 }
 
+void ZoomWidget::drawNode(QPainter *painter, const QPoint point)
+{
+  const int radius = NODE_RADIUS * _canvas.scale;
+
+  // Pen configuration
+  QPen pen = QCOLOR_NODE;
+  if (isCursorOverNode(GET_CURSOR_POS(), point)) {
+    pen = invertColor(pen.color());
+  }
+  pen.setWidth(radius * LINE_WIDTH_SCALE);
+  painter->setPen(pen);
+
+  painter->drawEllipse(point, radius, radius);
+}
+
+void ZoomWidget::drawAllNodes(QPainter *screenPainter)
+{
+  if (_resize.active) {
+    return;
+  }
+
+  switch (_drawMode) {
+    case DRAWMODE_LINE:
+      for (int i=0; i<_lines.size(); i++) {
+        drawNode(screenPainter, pixmapPointToScreenPos(_lines.at(i).startPoint));
+        drawNode(screenPainter, pixmapPointToScreenPos(_lines.at(i).endPoint)  );
+      }
+      break;
+    case DRAWMODE_RECT:
+      for (int i=0; i<_rects.size(); i++) {
+        drawNode(screenPainter, pixmapPointToScreenPos(_rects.at(i).startPoint));
+        drawNode(screenPainter, pixmapPointToScreenPos(_rects.at(i).endPoint)  );
+      }
+      break;
+    case DRAWMODE_ELLIPSE:
+      for (int i=0; i<_ellipses.size(); i++) {
+        drawNode(screenPainter, pixmapPointToScreenPos(_ellipses.at(i).startPoint));
+        drawNode(screenPainter, pixmapPointToScreenPos(_ellipses.at(i).endPoint)  );
+      }
+      break;
+    case DRAWMODE_TEXT:
+      for (int i=0; i<_texts.size(); i++) {
+        drawNode(screenPainter, pixmapPointToScreenPos(_texts.at(i).data.startPoint));
+        drawNode(screenPainter, pixmapPointToScreenPos(_texts.at(i).data.endPoint)  );
+      }
+      break;
+    case DRAWMODE_FREEFORM:
+      logUser(LOG_ERROR_AND_EXIT, "", "Can't draw the resize node for the free forms. Not implemented...");
+      break;
+  }
+}
+
 void ZoomWidget::paintEvent(QPaintEvent *event)
 {
   (void) event;
@@ -2266,6 +2360,10 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     drawDrawnPixmap(&screen);
   }
 
+  if (_state == STATE_RESIZE) {
+    drawAllNodes(&screen);
+  }
+
   drawStatus(&screen);
   drawPopupTray(&screen);
   if (isToolBarVisible()) {
@@ -2311,6 +2409,163 @@ void ZoomWidget::removeFormBehindCursor(QPoint cursorPos)
   update();
 }
 
+bool ZoomWidget::isCursorOverNode(const QPoint cursorPos, const QPoint point)
+{
+  const int radius = NODE_RADIUS * _canvas.scale;
+
+  return isCursorInsideHitBox(
+        point.x() - radius,
+        point.y() - radius,
+        radius * 2,
+        radius * 2,
+        cursorPos,
+        true
+      );
+}
+
+bool ZoomWidget::selectNodeBehindCursor(const QPoint cursorPos)
+{
+  switch (_drawMode) {
+    case DRAWMODE_LINE:
+      for (int i=0; i<_lines.size(); i++) {
+        const UserObjectData data = _lines.at(i);
+        const QPoint startPoint = pixmapPointToScreenPos(data.startPoint);
+        const QPoint endPoint   = pixmapPointToScreenPos(data.endPoint);
+
+        const bool start = isCursorOverNode(cursorPos, startPoint);
+        const bool end = isCursorOverNode(cursorPos, endPoint);
+
+        if (start || end) {
+          _lines.moveToTop(i);
+          _resize.active     = true;
+          _resize.startPoint = start;
+          return true;
+        }
+      }
+      break;
+    case DRAWMODE_RECT:
+      for (int i=0; i<_rects.size(); i++) {
+        const UserObjectData data = _rects.at(i);
+        const QPoint startPoint = pixmapPointToScreenPos(data.startPoint);
+        const QPoint endPoint   = pixmapPointToScreenPos(data.endPoint);
+
+        const bool start = isCursorOverNode(cursorPos, startPoint);
+        const bool end = isCursorOverNode(cursorPos, endPoint);
+
+        if (start || end) {
+          _rects.moveToTop(i);
+          _resize.active     = true;
+          _resize.startPoint = start;
+          return true;
+        }
+      }
+      break;
+    case DRAWMODE_ELLIPSE:
+      for (int i=0; i<_ellipses.size(); i++) {
+        const UserObjectData data = _ellipses.at(i);
+        const QPoint startPoint = pixmapPointToScreenPos(data.startPoint);
+        const QPoint endPoint   = pixmapPointToScreenPos(data.endPoint);
+
+        const bool start = isCursorOverNode(cursorPos, startPoint);
+        const bool end = isCursorOverNode(cursorPos, endPoint);
+
+        if (start || end) {
+          _ellipses.moveToTop(i);
+          _resize.active     = true;
+          _resize.startPoint = start;
+          return true;
+        }
+      }
+      break;
+    case DRAWMODE_TEXT:
+      for (int i=0; i<_texts.size(); i++) {
+        const UserObjectData data = _texts.at(i).data;
+        const QPoint startPoint = pixmapPointToScreenPos(data.startPoint);
+        const QPoint endPoint   = pixmapPointToScreenPos(data.endPoint);
+
+        const bool start = isCursorOverNode(cursorPos, startPoint);
+        const bool end = isCursorOverNode(cursorPos, endPoint);
+
+        if (start || end) {
+          _texts.moveToTop(i);
+          _resize.active     = true;
+          _resize.startPoint = start;
+          return true;
+        }
+      }
+      break;
+    case DRAWMODE_FREEFORM:
+      logUser(LOG_ERROR_AND_EXIT, "", "Can't select a free form. Not implemented...");
+      break;
+  }
+
+  return false;
+}
+
+// The mouse pos shouldn't be fixed to the hdpi scaling
+void ZoomWidget::resizeForm(QPoint cursorPos)
+{
+  cursorPos = screenPointToPixmapPos(cursorPos);
+
+  switch (_drawMode) {
+    case DRAWMODE_LINE: {
+        UserObjectData line = _lines.last();
+        _lines.destroyLast();
+
+        if (_resize.startPoint) {
+          line.startPoint = cursorPos;
+        } else {
+          line.endPoint = cursorPos;
+        }
+
+        _lines.add(line);
+      }
+      break;
+    case DRAWMODE_RECT: {
+        UserObjectData rect = _rects.last();
+        _rects.destroyLast();
+
+        if (_resize.startPoint) {
+          rect.startPoint = cursorPos;
+        } else {
+          rect.endPoint = cursorPos;
+        }
+
+        _rects.add(rect);
+      }
+      break;
+    case DRAWMODE_ELLIPSE: {
+        UserObjectData ellipse = _ellipses.last();
+        _ellipses.destroyLast();
+
+        if (_resize.startPoint) {
+          ellipse.startPoint = cursorPos;
+        } else {
+          ellipse.endPoint = cursorPos;
+        }
+
+        _ellipses.add(ellipse);
+      }
+      break;
+    case DRAWMODE_TEXT: {
+        UserTextData text = _texts.last();
+        _texts.destroyLast();
+
+        if (_resize.startPoint) {
+          text.data.startPoint = cursorPos;
+        } else {
+          text.data.endPoint = cursorPos;
+        }
+
+        _texts.add(text);
+      }
+      break;
+    case DRAWMODE_FREEFORM:
+      logUser(LOG_ERROR_AND_EXIT, "", "Can't resize the free form. Not implemented...");
+      break;
+  }
+}
+
 void ZoomWidget::mousePressEvent(QMouseEvent *event)
 {
   // The cursor pos is relative to the resolution of scaled monitor
@@ -2346,6 +2601,14 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
   }
 
   // Mouse processing
+  if (_state == STATE_RESIZE) {
+    selectNodeBehindCursor(cursorPos);
+
+    updateCursorShape();
+    update();
+    return;
+  }
+
   if (_state == STATE_COLOR_PICKER) {
     _activePen.setColor(GET_COLOR_UNDER_CURSOR());
     _state = STATE_MOVING;
@@ -2540,6 +2803,17 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
     return;
   }
 
+  if (_state == STATE_RESIZE) {
+    if (_resize.active) {
+      resizeForm(cursorPos);
+      _resize.active = false;
+    }
+
+    updateCursorShape();
+    update();
+    return;
+  }
+
   // Mouse processing
   if (_state != STATE_DRAWING) {
     return;
@@ -2634,6 +2908,9 @@ void ZoomWidget::updateCursorShape()
   } else if (_canvas.dragging) {
     setCursor(drag);
 
+  } else if (_resize.active) {
+    setCursor(blank);
+
   } else if (_state == STATE_COLOR_PICKER) {
     setCursor(pickColor);
 
@@ -2664,10 +2941,15 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
   }
 
   updateCursorShape();
-
   updateAtMousePos(cursorPos);
 
   if (_canvas.dragging || _screenOpts == SCREENOPTS_HIDE_ALL || isCursorOverToolBar(cursorPos)) {
+    update();
+    return;
+  }
+
+  if (_state == STATE_RESIZE && _resize.active) {
+    resizeForm(cursorPos);
     update();
     return;
   }
