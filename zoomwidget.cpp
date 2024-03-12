@@ -3208,9 +3208,6 @@ bool ZoomWidget::isCursorOverArrowHead(ArrowHead head, QPoint cursorPos)
 // drawings)
 int ZoomWidget::cursorOverForm(QPoint cursorPos)
 {
-  // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
-  // _tests.clear();
-  /////////////////////////
   int x, y, w, h;
   switch (_drawMode) {
     case DRAWMODE_LINE:
