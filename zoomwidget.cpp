@@ -1434,7 +1434,7 @@ void ZoomWidget::closePopupUnderCursor(const QPoint cursorPos)
 
 bool ZoomWidget::isPressingPopup(const QPoint cursorPos)
 {
-  if (_state != STATE_MOVING) {
+  if (_state == STATE_DRAWING) {
     return false;
   }
 
