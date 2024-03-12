@@ -373,8 +373,8 @@ void ZoomWidget::loadButtons()
   _toolBar.buttons.append(Button{ACTION_SCREEN_OPTS,       SCREEN_OPTS_ICON, "Hide elements", 2, nullRect});
   _toolBar.buttons.append(Button{ACTION_CLEAR,             CLEAR_ICON,       "Clear",         2, nullRect});
   _toolBar.buttons.append(Button{ACTION_DELETE,            DELETE_ICON,      "Delete",        2, nullRect});
-  _toolBar.buttons.append(Button{ACTION_UNDO,              UNDO_ICON,        "Undo",          2, nullRect});
-  _toolBar.buttons.append(Button{ACTION_REDO,              REDO_ICON,        "Redo",          2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_UNDO,              UNDO_ICON,        "Delete last",   2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_REDO,              REDO_ICON,        "Undo delete",   2, nullRect});
 
   _toolBar.buttons.append(Button{ACTION_SPACER,            " ",              "",              2, nullRect});
 
