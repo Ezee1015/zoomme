@@ -2284,7 +2284,9 @@ void ZoomWidget::drawNode(QPainter *painter, const QPoint point)
   pen.setWidth(radius * LINE_WIDTH_SCALE);
   painter->setPen(pen);
 
-  painter->drawEllipse(point, radius, radius);
+  QPainterPath node;
+  node.addEllipse(point, radius, radius);
+  painter->fillPath(node, pen.color());
 }
 
 void ZoomWidget::drawAllNodes(QPainter *screenPainter)
