@@ -534,6 +534,9 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
        if (_screenOpts == SCREENOPTS_HIDE_ALL) {
          return true;
        }
+       if (_state != STATE_MOVING) {
+         return true;
+       }
        switch (_drawMode) {
          case DRAWMODE_LINE:      return _lines.isDeletedEmpty();
          case DRAWMODE_RECT:      return _rects.isDeletedEmpty();
@@ -545,6 +548,9 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
 
     case ACTION_UNDO:
        if (_screenOpts == SCREENOPTS_HIDE_ALL) {
+         return true;
+       }
+       if (_state != STATE_MOVING) {
          return true;
        }
        switch (_drawMode) {
@@ -560,6 +566,9 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
        if (_screenOpts == SCREENOPTS_HIDE_ALL) {
          return true;
        }
+       if (_state != STATE_MOVING) {
+         return true;
+       }
        if (  _lines.isEmpty()     &&
              _rects.isEmpty()     &&
              _ellipses.isEmpty()  &&
@@ -572,6 +581,9 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
 
     case ACTION_DELETE:
        if (_screenOpts == SCREENOPTS_HIDE_ALL) {
+         return true;
+       }
+       if (_state != STATE_MOVING && _state != STATE_DELETING) {
          return true;
        }
        switch (_drawMode) {
