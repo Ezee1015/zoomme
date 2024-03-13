@@ -111,7 +111,7 @@ bool ZoomWidget::isToolBarVisible()
 
 void ZoomWidget::toggleAction(ZoomWidgetAction action)
 {
-  if (isActionDisabled(action)) return;
+  if (!isActionActive(action)) return;
 
   // The guardian clauses for each action should be in isActionDisabled()
   switch (action) {
@@ -412,7 +412,7 @@ void ZoomWidget::loadButtons()
   _toolBar.buttons.append(Button{ACTION_RECORDING,                 RECORD_ICON,           "Record",                      3, nullRect});
 }
 
-bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
+bool ZoomWidget::isActionActive(ZoomWidgetAction action)
 {
   switch (action) {
     case ACTION_WIDTH_1:
@@ -424,10 +424,8 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
     case ACTION_WIDTH_7:
     case ACTION_WIDTH_8:
     case ACTION_WIDTH_9:
-      if (_drawMode == DRAWMODE_FREEFORM && _dynamicWidth) {
-        return true;
-      }
-      return false;
+      // Disable when dynamic width is enabled
+      return !(_drawMode == DRAWMODE_FREEFORM && _dynamicWidth);
 
     case ACTION_COLOR_RED:
     case ACTION_COLOR_GREEN:
@@ -448,195 +446,154 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
 
     case ACTION_ESCAPE:
     case ACTION_ESCAPE_CANCEL:
-      return false;
+      return true;
 
     case ACTION_DYNAMIC_WIDTH:
-      if (_drawMode == DRAWMODE_FREEFORM && !_highlight) {
-        return false;
-      }
-      return true;
+      return (_drawMode == DRAWMODE_FREEFORM && !_highlight);
 
     case ACTION_HIGHLIGHT:
-      if (_arrow || _dynamicWidth) {
-        return true;
-      }
-      return false;
+      // Disable on Arrow or Dynamic width
+      return !(_arrow || _dynamicWidth);
 
     case ACTION_ARROW:
-      if (_highlight) {
-        return true;
-      }
-      if (_drawMode == DRAWMODE_LINE || _drawMode == DRAWMODE_FREEFORM) {
-        return false;
-      }
-      return true;
+      return (_drawMode == DRAWMODE_LINE || _drawMode == DRAWMODE_FREEFORM) && (!_highlight);
 
-    case ACTION_RECTANGLE:
-      if (_arrow) {
-        return true;
-      }
-      // If it's drawing a free form, it's disabled
-      if (!_freeForms.isEmpty() && _freeForms.last().active) {
-        return true;
-      }
-      if (_state == STATE_RESIZE && _rects.isEmpty()) {
-        return true;
-      }
-      return false;
+    case ACTION_RECTANGLE: {
+        // If it's drawing a free form, it's disabled
+        const bool isDrawingAFreeForm = (!_freeForms.isEmpty() && _freeForms.last().active);
+        const bool noRectsToResize    = (_state == STATE_RESIZE && _rects.isEmpty());
 
-    case ACTION_ELLIPSE:
-      if (_arrow) {
-        return true;
+        return (!noRectsToResize) && (!isDrawingAFreeForm) && (!_arrow);
       }
-      // If it's drawing a free form, it's disabled
-      if (!_freeForms.isEmpty() && _freeForms.last().active) {
-        return true;
-      }
-      if (_state == STATE_RESIZE && _ellipses.isEmpty()) {
-        return true;
-      }
-      return false;
 
-    case ACTION_TEXT:
-      if (_arrow) {
-        return true;
-      }
-      // If it's drawing a free form, it's disabled
-      if (!_freeForms.isEmpty() && _freeForms.last().active) {
-        return true;
-      }
-      if (_state == STATE_RESIZE && _texts.isEmpty()) {
-        return true;
-      }
-      return false;
+    case ACTION_ELLIPSE: {
+        // If it's drawing a free form, it's disabled
+        const bool isDrawingAFreeForm = (!_freeForms.isEmpty() && _freeForms.last().active);
+        const bool noEllipsesToResize = (_state == STATE_RESIZE && _ellipses.isEmpty());
 
-    case ACTION_LINE:
-      // If it's drawing a free form, it's disabled
-      if (!_freeForms.isEmpty() && _freeForms.last().active) {
-        return true;
+        return (!noEllipsesToResize) && (!isDrawingAFreeForm) && (!_arrow);
       }
-      if (_state == STATE_RESIZE && _lines.isEmpty()) {
-        return true;
+
+    case ACTION_TEXT: {
+        // If it's drawing a free form, it's disabled
+        const bool isDrawingAFreeForm = (!_freeForms.isEmpty() && _freeForms.last().active);
+        const bool noTextsToResize = (_state == STATE_RESIZE && _texts.isEmpty());
+
+        return (!noTextsToResize) && (!isDrawingAFreeForm) && (!_arrow);
       }
-      return false;
+
+    case ACTION_LINE: {
+        // If it's drawing a free form, it's disabled
+        const bool isDrawingAFreeForm = (!_freeForms.isEmpty() && _freeForms.last().active);
+        const bool noLinesToResize = (_state == STATE_RESIZE && _lines.isEmpty());
+
+        return (!noLinesToResize) && (!isDrawingAFreeForm);
+      }
 
     case ACTION_FREEFORM:
-      if (_state == STATE_DRAWING || _state == STATE_RESIZE) {
-        return true;
-      }
-      return false;
+      return (_state != STATE_DRAWING && _state != STATE_RESIZE);
 
-    case ACTION_RESIZE:
-      if (_screenOpts == SCREENOPTS_HIDE_ALL) {
-        return true;
-      }
-      if (_state != STATE_MOVING && _state != STATE_RESIZE) {
-        return true;
-      }
-      if (_drawMode == DRAWMODE_FREEFORM) {
-        return true;
-      }
-      switch (_drawMode) {
-        case DRAWMODE_LINE:     return _lines.isEmpty();
-        case DRAWMODE_RECT:     return _rects.isEmpty();
-        case DRAWMODE_ELLIPSE:  return _ellipses.isEmpty();
-        case DRAWMODE_TEXT:     return _texts.isEmpty();
-        case DRAWMODE_FREEFORM: return _freeForms.isEmpty();
+    case ACTION_RESIZE: {
+        const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
+        const bool enabledModes = (_state == STATE_MOVING || _state == STATE_RESIZE);
+        const bool noFreeForm   = (_drawMode != DRAWMODE_FREEFORM);
+
+        bool isFormListEmpty;
+        switch (_drawMode) {
+          case DRAWMODE_LINE:     isFormListEmpty = _lines.isEmpty();     break;
+          case DRAWMODE_RECT:     isFormListEmpty = _rects.isEmpty();     break;
+          case DRAWMODE_ELLIPSE:  isFormListEmpty = _ellipses.isEmpty();  break;
+          case DRAWMODE_TEXT:     isFormListEmpty = _texts.isEmpty();     break;
+          case DRAWMODE_FREEFORM: isFormListEmpty = _freeForms.isEmpty(); break;
+        }
+
+        return (!hideAll) && (enabledModes) && (noFreeForm) && (!isFormListEmpty);
       }
 
     case ACTION_SCREEN_OPTS:
-       if (_state != STATE_MOVING) return true;
-       return false;
+       return (_state == STATE_MOVING);
 
-    case ACTION_PICK_COLOR:
-       if (_state != STATE_MOVING && _state != STATE_COLOR_PICKER) {
-         return true;
-       }
-       if (_screenOpts == SCREENOPTS_HIDE_ALL) {
-         return true;
-       }
-       return false;
+    case ACTION_PICK_COLOR: {
+        const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
+        const bool enabledModes = (_state == STATE_MOVING || _state == STATE_COLOR_PICKER);
 
-    case ACTION_REDO:
-       if (_screenOpts == SCREENOPTS_HIDE_ALL) {
-         return true;
-       }
-       if (_state != STATE_MOVING) {
-         return true;
-       }
-       switch (_drawMode) {
-         case DRAWMODE_LINE:      return _lines.isDeletedEmpty();
-         case DRAWMODE_RECT:      return _rects.isDeletedEmpty();
-         case DRAWMODE_ELLIPSE:   return _ellipses.isDeletedEmpty();
-         case DRAWMODE_TEXT:      return _texts.isDeletedEmpty();
-         case DRAWMODE_FREEFORM:  return _freeForms.isDeletedEmpty();
-       }
-       logUser(LOG_ERROR_AND_EXIT, "", "A drawing mode is not contemplated in the switch statement (%s:%d)", __FILE__, __LINE__);
+        return (!hideAll) && (enabledModes);
+      }
 
-    case ACTION_UNDO:
-       if (_screenOpts == SCREENOPTS_HIDE_ALL) {
-         return true;
-       }
-       if (_state != STATE_MOVING) {
-         return true;
-       }
-       switch (_drawMode) {
-         case DRAWMODE_LINE:     return _lines.isEmpty();
-         case DRAWMODE_RECT:     return _rects.isEmpty();
-         case DRAWMODE_ELLIPSE:  return _ellipses.isEmpty();
-         case DRAWMODE_TEXT:     return _texts.isEmpty();
-         case DRAWMODE_FREEFORM: return _freeForms.isEmpty();
-       }
-       logUser(LOG_ERROR_AND_EXIT, "", "A drawing mode is not contemplated in the switch statement (%s:%d)", __FILE__, __LINE__);
+    case ACTION_REDO: {
+        const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
+        const bool enabledModes = (_state == STATE_MOVING);
 
-    case ACTION_CLEAR:
-       if (_screenOpts == SCREENOPTS_HIDE_ALL) {
-         return true;
-       }
-       if (_state != STATE_MOVING) {
-         return true;
-       }
-       if (  _lines.isEmpty()     &&
-             _rects.isEmpty()     &&
-             _ellipses.isEmpty()  &&
-             _texts.isEmpty()     &&
-             _freeForms.isEmpty()
-          ) {
-         return true;
-       }
-       return false;
+        bool isDeletedListEmpty;
+        switch (_drawMode) {
+          case DRAWMODE_LINE:     isDeletedListEmpty = _lines.isDeletedEmpty();     break;
+          case DRAWMODE_RECT:     isDeletedListEmpty = _rects.isDeletedEmpty();     break;
+          case DRAWMODE_ELLIPSE:  isDeletedListEmpty = _ellipses.isDeletedEmpty();  break;
+          case DRAWMODE_TEXT:     isDeletedListEmpty = _texts.isDeletedEmpty();     break;
+          case DRAWMODE_FREEFORM: isDeletedListEmpty = _freeForms.isDeletedEmpty(); break;
+        }
 
-    case ACTION_DELETE:
-       if (_screenOpts == SCREENOPTS_HIDE_ALL) {
-         return true;
-       }
-       if (_state != STATE_MOVING && _state != STATE_DELETING) {
-         return true;
-       }
-       switch (_drawMode) {
-         case DRAWMODE_LINE:     return _lines.isEmpty();
-         case DRAWMODE_RECT:     return _rects.isEmpty();
-         case DRAWMODE_ELLIPSE:  return _ellipses.isEmpty();
-         case DRAWMODE_TEXT:     return _texts.isEmpty();
-         case DRAWMODE_FREEFORM: return _freeForms.isEmpty();
-       }
-       logUser(LOG_ERROR_AND_EXIT, "", "A drawing mode is not contemplated in the switch statement (%s:%d)", __FILE__, __LINE__);
+        return (!hideAll) && (enabledModes) && (!isDeletedListEmpty);
+      }
+
+    case ACTION_UNDO: {
+        const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
+        const bool enabledModes = (_state == STATE_MOVING);
+
+        bool isFormListEmpty;
+        switch (_drawMode) {
+          case DRAWMODE_LINE:     isFormListEmpty = _lines.isEmpty();     break;
+          case DRAWMODE_RECT:     isFormListEmpty = _rects.isEmpty();     break;
+          case DRAWMODE_ELLIPSE:  isFormListEmpty = _ellipses.isEmpty();  break;
+          case DRAWMODE_TEXT:     isFormListEmpty = _texts.isEmpty();     break;
+          case DRAWMODE_FREEFORM: isFormListEmpty = _freeForms.isEmpty(); break;
+        }
+
+        return (!hideAll) && (enabledModes) && (!isFormListEmpty);
+      }
+
+    case ACTION_CLEAR: {
+        const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
+        const bool enabledModes = (_state == STATE_MOVING);
+
+        bool existAnyForm = (
+              !_lines.isEmpty()     ||
+              !_rects.isEmpty()     ||
+              !_ellipses.isEmpty()  ||
+              !_texts.isEmpty()     ||
+              !_freeForms.isEmpty()
+            );
+
+        return (!hideAll) && (enabledModes) && (existAnyForm);
+      }
+
+    case ACTION_DELETE: {
+        const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
+        const bool enabledModes = (_state == STATE_MOVING || _state == STATE_DELETING);
+
+        bool isFormListEmpty;
+        switch (_drawMode) {
+          case DRAWMODE_LINE:     isFormListEmpty = _lines.isEmpty();     break;
+          case DRAWMODE_RECT:     isFormListEmpty = _rects.isEmpty();     break;
+          case DRAWMODE_ELLIPSE:  isFormListEmpty = _ellipses.isEmpty();  break;
+          case DRAWMODE_TEXT:     isFormListEmpty = _texts.isEmpty();     break;
+          case DRAWMODE_FREEFORM: isFormListEmpty = _freeForms.isEmpty(); break;
+        }
+
+        return (!hideAll) && (enabledModes) && (!isFormListEmpty);
+      }
 
     case ACTION_RECORDING:
        // In theory, ffmpeg blocks the thread, so it shouldn't be possible to toggle
        // the recording while ffmpeg is running. But, just in case, we check it
-       if (IS_FFMPEG_RUNNING) return true;
-       return false;
+       return !(IS_FFMPEG_RUNNING);
 
-    case ACTION_SAVE_TRIMMED_TO_IMAGE:
-    case ACTION_SAVE_TRIMMED_TO_CLIPBOARD:
-      if (_state != STATE_MOVING && _state != STATE_TRIMMING && _state != STATE_TO_TRIM) {
-        return true;
+    case ACTION_SAVE_TRIMMED_TO_IMAGE: case ACTION_SAVE_TRIMMED_TO_CLIPBOARD: {
+        const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
+        const bool enabledModes = (_state == STATE_MOVING || _state == STATE_TRIMMING || _state == STATE_TO_TRIM);
+
+        return (!hideAll) && (enabledModes);
       }
-      if (_screenOpts == SCREENOPTS_HIDE_ALL) {
-        return true;
-      }
-      return false;
 
     case ACTION_SPACER:
       logUser(LOG_ERROR, "", "You shouldn't check if a 'spacer' is disabled");
@@ -644,12 +601,12 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
   }
 
   logUser(LOG_ERROR_AND_EXIT, "", "An action is not contemplated in the switch statement (%s:%d)", __FILE__, __LINE__);
-  return true;
+  return false;
 }
 
 ButtonStatus ZoomWidget::isButtonActive(Button button)
 {
-  if (isActionDisabled(button.action)) {
+  if (!isActionActive(button.action)) {
     return BUTTON_DISABLED;
   }
 
@@ -2940,7 +2897,7 @@ void ZoomWidget::updateCursorShape()
 
   } else if (isCursorOverButton(cursorPos)) {
     const Button button = _toolBar.buttons.at(buttonBehindCursor(cursorPos));
-    if (isActionDisabled(button.action)) {
+    if (!isActionActive(button.action)) {
       setCursor(denied);
     } else {
       setCursor(pointHand);
