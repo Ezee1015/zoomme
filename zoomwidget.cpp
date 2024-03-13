@@ -495,17 +495,16 @@ bool ZoomWidget::isActionActive(ZoomWidgetAction action)
       }
 
     case ACTION_FREEFORM: {
-        const bool noFreeFormsToDelete = (_state == STATE_DELETING && _freeForms.isEmpty());
         const bool isDrawing           = (_state == STATE_DRAWING);
-        const bool resizeMode          = (_state == STATE_RESIZE);
+        const bool noFreeFormsToResize = (_state == STATE_RESIZE && _freeForms.isEmpty());
+        const bool noFreeFormsToDelete = (_state == STATE_DELETING && _freeForms.isEmpty());
 
-        return (!noFreeFormsToDelete) && (!isDrawing) && (!resizeMode);
+        return (!noFreeFormsToDelete) && (!noFreeFormsToResize) && (!isDrawing);
       }
 
     case ACTION_RESIZE: {
         const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
         const bool enabledModes = (_state == STATE_MOVING || _state == STATE_RESIZE);
-        const bool noFreeForm   = (_drawMode != DRAWMODE_FREEFORM);
 
         bool isFormListEmpty;
         switch (_drawMode) {
@@ -516,7 +515,7 @@ bool ZoomWidget::isActionActive(ZoomWidgetAction action)
           case DRAWMODE_FREEFORM: isFormListEmpty = _freeForms.isEmpty(); break;
         }
 
-        return (!hideAll) && (enabledModes) && (noFreeForm) && (!isFormListEmpty);
+        return (!hideAll) && (enabledModes) && (!isFormListEmpty);
       }
 
     case ACTION_SCREEN_OPTS:
@@ -2314,7 +2313,11 @@ void ZoomWidget::drawAllNodes(QPainter *screenPainter)
       }
       break;
     case DRAWMODE_FREEFORM:
-      logUser(LOG_ERROR_AND_EXIT, "", "Can't draw the resize node for the free forms. Not implemented...");
+      for (int i=0; i<_freeForms.size(); i++) {
+        for (int z=0; z<_freeForms.at(i).points.size(); z++) {
+          drawNode(screenPainter, pixmapPointToScreenPos(_freeForms.at(i).points.at(z)));
+        }
+      }
       break;
   }
 }
@@ -2502,7 +2505,17 @@ bool ZoomWidget::selectNodeBehindCursor(const QPoint cursorPos)
       }
       break;
     case DRAWMODE_FREEFORM:
-      logUser(LOG_ERROR_AND_EXIT, "", "Can't select a free form. Not implemented...");
+      for (int i=0; i<_freeForms.size(); i++) {
+        const QList points = _freeForms.at(i).points;
+        for (int z=0; z<points.size(); z++) {
+          const QPoint p = pixmapPointToScreenPos(points.at(z));
+
+          if (isCursorOverNode(cursorPos, p)) {
+            logUser(LOG_ERROR, "", "You can't resize a free form. It is not implemented");
+            return false;
+          }
+        }
+      }
       break;
   }
 
@@ -2568,7 +2581,7 @@ void ZoomWidget::resizeForm(QPoint cursorPos)
       }
       break;
     case DRAWMODE_FREEFORM:
-      logUser(LOG_ERROR_AND_EXIT, "", "Can't resize the free form. Not implemented...");
+      // Can't resize the free form. Not implemented...
       break;
   }
 }
