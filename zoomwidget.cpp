@@ -462,36 +462,45 @@ bool ZoomWidget::isActionActive(ZoomWidgetAction action)
         // If it's drawing a free form, it's disabled
         const bool isDrawingAFreeForm = (!_freeForms.isEmpty() && _freeForms.last().active);
         const bool noRectsToResize    = (_state == STATE_RESIZE && _rects.isEmpty());
+        const bool noRectsToDelete    = (_state == STATE_DELETING && _rects.isEmpty());
 
-        return (!noRectsToResize) && (!isDrawingAFreeForm) && (!_arrow);
+        return (!noRectsToResize) && (!noRectsToDelete) && (!isDrawingAFreeForm) && (!_arrow);
       }
 
     case ACTION_ELLIPSE: {
         // If it's drawing a free form, it's disabled
         const bool isDrawingAFreeForm = (!_freeForms.isEmpty() && _freeForms.last().active);
         const bool noEllipsesToResize = (_state == STATE_RESIZE && _ellipses.isEmpty());
+        const bool noEllipsesToDelete = (_state == STATE_DELETING && _ellipses.isEmpty());
 
-        return (!noEllipsesToResize) && (!isDrawingAFreeForm) && (!_arrow);
+        return (!noEllipsesToResize) && (!noEllipsesToDelete) && (!isDrawingAFreeForm) && (!_arrow);
       }
 
     case ACTION_TEXT: {
         // If it's drawing a free form, it's disabled
         const bool isDrawingAFreeForm = (!_freeForms.isEmpty() && _freeForms.last().active);
-        const bool noTextsToResize = (_state == STATE_RESIZE && _texts.isEmpty());
+        const bool noTextsToResize    = (_state == STATE_RESIZE && _texts.isEmpty());
+        const bool noTextsToDelete    = (_state == STATE_DELETING && _texts.isEmpty());
 
-        return (!noTextsToResize) && (!isDrawingAFreeForm) && (!_arrow);
+        return (!noTextsToResize) && (!noTextsToDelete) && (!isDrawingAFreeForm) && (!_arrow);
       }
 
     case ACTION_LINE: {
         // If it's drawing a free form, it's disabled
         const bool isDrawingAFreeForm = (!_freeForms.isEmpty() && _freeForms.last().active);
-        const bool noLinesToResize = (_state == STATE_RESIZE && _lines.isEmpty());
+        const bool noLinesToResize    = (_state == STATE_RESIZE && _lines.isEmpty());
+        const bool noLinesToDelete    = (_state == STATE_DELETING && _lines.isEmpty());
 
-        return (!noLinesToResize) && (!isDrawingAFreeForm);
+        return (!noLinesToResize) && (!noLinesToDelete) && (!isDrawingAFreeForm);
       }
 
-    case ACTION_FREEFORM:
-      return (_state != STATE_DRAWING && _state != STATE_RESIZE);
+    case ACTION_FREEFORM: {
+        const bool noFreeFormsToDelete = (_state == STATE_DELETING && _freeForms.isEmpty());
+        const bool isDrawing           = (_state == STATE_DRAWING);
+        const bool resizeMode          = (_state == STATE_RESIZE);
+
+        return (!noFreeFormsToDelete) && (!isDrawing) && (!resizeMode);
+      }
 
     case ACTION_RESIZE: {
         const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
