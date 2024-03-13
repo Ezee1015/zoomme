@@ -472,13 +472,40 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
       return true;
 
     case ACTION_RECTANGLE:
+      if (_arrow) {
+        return true;
+      }
+      // If it's drawing a free form, it's disabled
+      if (!_freeForms.isEmpty() && _freeForms.last().active) {
+        return true;
+      }
+      if (_state == STATE_RESIZE && _rects.isEmpty()) {
+        return true;
+      }
+      return false;
+
     case ACTION_ELLIPSE:
+      if (_arrow) {
+        return true;
+      }
+      // If it's drawing a free form, it's disabled
+      if (!_freeForms.isEmpty() && _freeForms.last().active) {
+        return true;
+      }
+      if (_state == STATE_RESIZE && _ellipses.isEmpty()) {
+        return true;
+      }
+      return false;
+
     case ACTION_TEXT:
       if (_arrow) {
         return true;
       }
       // If it's drawing a free form, it's disabled
       if (!_freeForms.isEmpty() && _freeForms.last().active) {
+        return true;
+      }
+      if (_state == STATE_RESIZE && _texts.isEmpty()) {
         return true;
       }
       return false;
@@ -488,13 +515,13 @@ bool ZoomWidget::isActionDisabled(ZoomWidgetAction action)
       if (!_freeForms.isEmpty() && _freeForms.last().active) {
         return true;
       }
+      if (_state == STATE_RESIZE && _lines.isEmpty()) {
+        return true;
+      }
       return false;
 
     case ACTION_FREEFORM:
-      if (_state == STATE_DRAWING) {
-        return true;
-      }
-      if (_state == STATE_RESIZE) {
+      if (_state == STATE_DRAWING || _state == STATE_RESIZE) {
         return true;
       }
       return false;
