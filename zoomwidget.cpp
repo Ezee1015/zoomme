@@ -2045,7 +2045,24 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
     }
 
     QString text = _texts.at(i).text;
-    pixmapPainter->drawText(fixQRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
+    QRect textRect = fixQRect(x, y, w, h);
+    // Don't draw the text over the border (when highlighted)
+    textRect.setX(textRect.x() + pixmapPainter->pen().width()/2);
+    textRect.setY(textRect.y() + pixmapPainter->pen().width()/2);
+    // If the inside border is bigger than the width, don't overflow to negative width
+    if (abs(textRect.width()) > pixmapPainter->pen().width()/2) {
+      textRect.setWidth(textRect.width() - pixmapPainter->pen().width()/2);
+    } else {
+      textRect.setWidth(0);
+    }
+    // If the inside border is bigger than the height, don't overflow to negative height
+    if (abs(textRect.height()) > pixmapPainter->pen().width()/2) {
+      textRect.setHeight(textRect.height() - pixmapPainter->pen().width()/2);
+    } else {
+      textRect.setHeight(0);
+    }
+
+    pixmapPainter->drawText(textRect, Qt::AlignCenter | Qt::TextWordWrap, text);
   }
 }
 
@@ -2125,7 +2142,25 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
     invertColorPainter(painter);
     painter->drawRoundedRect(fixQRect(x, y, w, h), RECT_ROUNDNESS, RECT_ROUNDNESS);
     invertColorPainter(painter);
-    painter->drawText(fixQRect(x, y, w, h), Qt::AlignCenter | Qt::TextWordWrap, text);
+
+    QRect textRect = fixQRect(x, y, w, h);
+    // Don't draw the text over the border (when highlighted)
+    textRect.setX(textRect.x() + painter->pen().width()/2);
+    textRect.setY(textRect.y() + painter->pen().width()/2);
+    // If the inside border is bigger than the width, don't overflow to negative width
+    if (abs(textRect.width()) > painter->pen().width()/2) {
+      textRect.setWidth(textRect.width() - painter->pen().width()/2);
+    } else {
+      textRect.setWidth(0);
+    }
+    // If the inside border is bigger than the height, don't overflow to negative height
+    if (abs(textRect.height()) > painter->pen().width()/2) {
+      textRect.setHeight(textRect.height() - painter->pen().width()/2);
+    } else {
+      textRect.setHeight(0);
+    }
+
+    painter->drawText(textRect, Qt::AlignCenter | Qt::TextWordWrap, text);
   }
 
   // Draw active user object.
@@ -2213,8 +2248,25 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
           invertColorPainter(painter);
           painter->drawRoundedRect(fixQRect(x, y, width, height), RECT_ROUNDNESS, RECT_ROUNDNESS);
 
+          QRect textRect = fixQRect(x, y, width, height);
+          // Don't draw the text over the border (when highlighted)
+          textRect.setX(textRect.x() + painter->pen().width()/2);
+          textRect.setY(textRect.y() + painter->pen().width()/2);
+          // If the inside border is bigger than the width, don't overflow to negative width
+          if (abs(textRect.width()) > painter->pen().width()/2) {
+            textRect.setWidth(textRect.width() - painter->pen().width()/2);
+          } else {
+            textRect.setWidth(0);
+          }
+          // If the inside border is bigger than the height, don't overflow to negative height
+          if (abs(textRect.height()) > painter->pen().width()/2) {
+            textRect.setHeight(textRect.height() - painter->pen().width()/2);
+          } else {
+            textRect.setHeight(0);
+          }
+
           invertColorPainter(painter);
-          painter->drawText(fixQRect(x, y, width, height), Qt::AlignCenter | Qt::TextWordWrap, defaultText);
+          painter->drawText(textRect, Qt::AlignCenter | Qt::TextWordWrap, defaultText);
           break;
         }
       case DRAWMODE_FREEFORM:
