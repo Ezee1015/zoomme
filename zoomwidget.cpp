@@ -59,7 +59,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _popupTray.margin      = 20;
   _toolBar.show          = false;
   _resize.active         = false;
-  _resize.startPoint     = false;
+  _resize.type           = NODE_START;
 
   _lastMousePos          = GET_CURSOR_POS();
   _clipboard             = QApplication::clipboard();
@@ -2316,7 +2316,7 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
   }
 }
 
-void ZoomWidget::drawNode(QPainter *painter, const QPoint point)
+void ZoomWidget::drawNode(QPainter *painter, const QPoint point, NodeType type)
 {
   const int radius = NODE_RADIUS * _canvas.scale;
 
@@ -2325,12 +2325,41 @@ void ZoomWidget::drawNode(QPainter *painter, const QPoint point)
   if (isCursorOverNode(GET_CURSOR_POS(), point)) {
     pen = invertColor(pen.color());
   }
-  pen.setWidth(radius * LINE_WIDTH_SCALE);
   painter->setPen(pen);
 
-  QPainterPath node;
-  node.addEllipse(point, radius, radius);
-  painter->fillPath(node, pen.color());
+  switch (type) {
+    case NODE_START:
+    case NODE_END:
+      {
+        pen.setWidth(radius * LINE_WIDTH_SCALE);
+        painter->setPen(pen);
+
+        QPainterPath node;
+        node.addEllipse(point, radius, radius);
+        painter->fillPath(node, pen.color());
+        break;
+      }
+
+    case NODE_HANDLE:
+      pen.setWidth(radius/2 * LINE_WIDTH_SCALE);
+      painter->setPen(pen);
+
+      // Horizontal
+      painter->drawLine(
+            point.x() - radius + pen.width()/2,
+            point.y(),
+            point.x() + radius - pen.width()/2,
+            point.y()
+          );
+      // Vertical
+      painter->drawLine(
+            point.x(),
+            point.y() - radius + pen.width()/2,
+            point.x(),
+            point.y() + radius - pen.width()/2
+          );
+      break;
+  }
 }
 
 void ZoomWidget::drawAllNodes(QPainter *screenPainter)
@@ -2342,32 +2371,37 @@ void ZoomWidget::drawAllNodes(QPainter *screenPainter)
   switch (_drawMode) {
     case DRAWMODE_LINE:
       for (int i=0; i<_lines.size(); i++) {
-        drawNode(screenPainter, pixmapPointToScreenPos(_lines.at(i).startPoint));
-        drawNode(screenPainter, pixmapPointToScreenPos(_lines.at(i).endPoint)  );
+        drawNode(screenPainter, pixmapPointToScreenPos(_lines.at(i).startPoint)        , NODE_START);
+        drawNode(screenPainter, pixmapPointToScreenPos(_lines.at(i).endPoint)          , NODE_END);
+        drawNode(screenPainter, pixmapPointToScreenPos(getFormHandle(DRAWMODE_LINE, i)), NODE_HANDLE);
       }
       break;
     case DRAWMODE_RECT:
       for (int i=0; i<_rects.size(); i++) {
-        drawNode(screenPainter, pixmapPointToScreenPos(_rects.at(i).startPoint));
-        drawNode(screenPainter, pixmapPointToScreenPos(_rects.at(i).endPoint)  );
+        drawNode(screenPainter, pixmapPointToScreenPos(_rects.at(i).startPoint)        , NODE_START);
+        drawNode(screenPainter, pixmapPointToScreenPos(_rects.at(i).endPoint)          , NODE_END);
+        drawNode(screenPainter, pixmapPointToScreenPos(getFormHandle(DRAWMODE_RECT, i)), NODE_HANDLE);
       }
       break;
     case DRAWMODE_ELLIPSE:
       for (int i=0; i<_ellipses.size(); i++) {
-        drawNode(screenPainter, pixmapPointToScreenPos(_ellipses.at(i).startPoint));
-        drawNode(screenPainter, pixmapPointToScreenPos(_ellipses.at(i).endPoint)  );
+        drawNode(screenPainter, pixmapPointToScreenPos(_ellipses.at(i).startPoint)        , NODE_START);
+        drawNode(screenPainter, pixmapPointToScreenPos(_ellipses.at(i).endPoint)          , NODE_END);
+        drawNode(screenPainter, pixmapPointToScreenPos(getFormHandle(DRAWMODE_ELLIPSE, i)), NODE_HANDLE);
       }
       break;
     case DRAWMODE_TEXT:
       for (int i=0; i<_texts.size(); i++) {
-        drawNode(screenPainter, pixmapPointToScreenPos(_texts.at(i).data.startPoint));
-        drawNode(screenPainter, pixmapPointToScreenPos(_texts.at(i).data.endPoint)  );
+        drawNode(screenPainter, pixmapPointToScreenPos(_texts.at(i).data.startPoint)   , NODE_START);
+        drawNode(screenPainter, pixmapPointToScreenPos(_texts.at(i).data.endPoint)     , NODE_END);
+        drawNode(screenPainter, pixmapPointToScreenPos(getFormHandle(DRAWMODE_TEXT, i)), NODE_HANDLE);
       }
       break;
     case DRAWMODE_FREEFORM:
       for (int i=0; i<_freeForms.size(); i++) {
         for (int z=0; z<_freeForms.at(i).points.size(); z++) {
-          drawNode(screenPainter, pixmapPointToScreenPos(_freeForms.at(i).points.at(z)));
+          drawNode(screenPainter, pixmapPointToScreenPos(_freeForms.at(i).points.at(z))      , NODE_START);
+          drawNode(screenPainter, pixmapPointToScreenPos(getFormHandle(DRAWMODE_FREEFORM, i)), NODE_HANDLE);
         }
       }
       break;
@@ -2485,22 +2519,60 @@ bool ZoomWidget::isCursorOverNode(const QPoint cursorPos, const QPoint point)
       );
 }
 
+QPoint ZoomWidget::getFormHandle(const ZoomWidgetDrawMode drawMode, const int pos)
+{
+  switch (drawMode) {
+    case DRAWMODE_LINE:
+      return (_lines.at(pos).startPoint + _lines.at(pos).endPoint) / 2;
+
+    case DRAWMODE_RECT:
+      return (_rects.at(pos).startPoint + _rects.at(pos).endPoint) / 2;
+
+    case DRAWMODE_ELLIPSE:
+      return (_ellipses.at(pos).startPoint + _ellipses.at(pos).endPoint) / 2;
+
+    case DRAWMODE_TEXT:
+      return (_texts.at(pos).data.startPoint + _texts.at(pos).data.endPoint) / 2;
+
+    case DRAWMODE_FREEFORM: {
+        const QList points = _freeForms.at(pos).points;
+        QPoint handle(0,0);
+
+        if (points.size() == 0) {
+          logUser(LOG_ERROR_AND_EXIT, "", "The free form can't be empty");
+        }
+
+        for (int i=0; i<points.size(); i++) handle += points.at(i);
+        handle /= points.size();
+        return handle;
+      }
+  }
+
+  return QPoint(0,0);
+}
+
 bool ZoomWidget::selectNodeBehindCursor(const QPoint cursorPos)
 {
   switch (_drawMode) {
     case DRAWMODE_LINE:
       for (int i=0; i<_lines.size(); i++) {
         const UserObjectData data = _lines.at(i);
-        const QPoint startPoint = pixmapPointToScreenPos(data.startPoint);
-        const QPoint endPoint   = pixmapPointToScreenPos(data.endPoint);
+        const QPoint startPoint  = pixmapPointToScreenPos(data.startPoint);
+        const QPoint endPoint    = pixmapPointToScreenPos(data.endPoint);
+        const QPoint handlePoint = pixmapPointToScreenPos(getFormHandle(_drawMode, i));
 
-        const bool start = isCursorOverNode(cursorPos, startPoint);
-        const bool end = isCursorOverNode(cursorPos, endPoint);
+        const bool start  = isCursorOverNode(cursorPos, startPoint);
+        const bool end    = isCursorOverNode(cursorPos, endPoint);
+        const bool handle = isCursorOverNode(cursorPos, handlePoint);
 
-        if (start || end) {
+        if (start || end || handle) {
           _lines.moveToTop(i);
-          _resize.active     = true;
-          _resize.startPoint = start;
+          _resize.active = true;
+
+          if (start)       _resize.type = NODE_START;
+          else if (end)    _resize.type = NODE_END;
+          else if (handle) _resize.type = NODE_HANDLE;
+
           return true;
         }
       }
@@ -2508,16 +2580,22 @@ bool ZoomWidget::selectNodeBehindCursor(const QPoint cursorPos)
     case DRAWMODE_RECT:
       for (int i=0; i<_rects.size(); i++) {
         const UserObjectData data = _rects.at(i);
-        const QPoint startPoint = pixmapPointToScreenPos(data.startPoint);
-        const QPoint endPoint   = pixmapPointToScreenPos(data.endPoint);
+        const QPoint startPoint  = pixmapPointToScreenPos(data.startPoint);
+        const QPoint endPoint    = pixmapPointToScreenPos(data.endPoint);
+        const QPoint handlePoint = pixmapPointToScreenPos(getFormHandle(_drawMode, i));
 
-        const bool start = isCursorOverNode(cursorPos, startPoint);
-        const bool end = isCursorOverNode(cursorPos, endPoint);
+        const bool start  = isCursorOverNode(cursorPos, startPoint);
+        const bool end    = isCursorOverNode(cursorPos, endPoint);
+        const bool handle = isCursorOverNode(cursorPos, handlePoint);
 
-        if (start || end) {
+        if (start || end || handle) {
           _rects.moveToTop(i);
-          _resize.active     = true;
-          _resize.startPoint = start;
+          _resize.active = true;
+
+          if (start)       _resize.type = NODE_START;
+          else if (end)    _resize.type = NODE_END;
+          else if (handle) _resize.type = NODE_HANDLE;
+
           return true;
         }
       }
@@ -2525,16 +2603,22 @@ bool ZoomWidget::selectNodeBehindCursor(const QPoint cursorPos)
     case DRAWMODE_ELLIPSE:
       for (int i=0; i<_ellipses.size(); i++) {
         const UserObjectData data = _ellipses.at(i);
-        const QPoint startPoint = pixmapPointToScreenPos(data.startPoint);
-        const QPoint endPoint   = pixmapPointToScreenPos(data.endPoint);
+        const QPoint startPoint  = pixmapPointToScreenPos(data.startPoint);
+        const QPoint endPoint    = pixmapPointToScreenPos(data.endPoint);
+        const QPoint handlePoint = pixmapPointToScreenPos(getFormHandle(_drawMode, i));
 
-        const bool start = isCursorOverNode(cursorPos, startPoint);
-        const bool end = isCursorOverNode(cursorPos, endPoint);
+        const bool start  = isCursorOverNode(cursorPos, startPoint);
+        const bool end    = isCursorOverNode(cursorPos, endPoint);
+        const bool handle = isCursorOverNode(cursorPos, handlePoint);
 
-        if (start || end) {
+        if (start || end || handle) {
           _ellipses.moveToTop(i);
-          _resize.active     = true;
-          _resize.startPoint = start;
+          _resize.active = true;
+
+          if (start)       _resize.type = NODE_START;
+          else if (end)    _resize.type = NODE_END;
+          else if (handle) _resize.type = NODE_HANDLE;
+
           return true;
         }
       }
@@ -2542,22 +2626,36 @@ bool ZoomWidget::selectNodeBehindCursor(const QPoint cursorPos)
     case DRAWMODE_TEXT:
       for (int i=0; i<_texts.size(); i++) {
         const UserObjectData data = _texts.at(i).data;
-        const QPoint startPoint = pixmapPointToScreenPos(data.startPoint);
-        const QPoint endPoint   = pixmapPointToScreenPos(data.endPoint);
+        const QPoint startPoint  = pixmapPointToScreenPos(data.startPoint);
+        const QPoint endPoint    = pixmapPointToScreenPos(data.endPoint);
+        const QPoint handlePoint = pixmapPointToScreenPos(getFormHandle(_drawMode, i));
 
-        const bool start = isCursorOverNode(cursorPos, startPoint);
-        const bool end = isCursorOverNode(cursorPos, endPoint);
+        const bool start  = isCursorOverNode(cursorPos, startPoint);
+        const bool end    = isCursorOverNode(cursorPos, endPoint);
+        const bool handle = isCursorOverNode(cursorPos, handlePoint);
 
-        if (start || end) {
+        if (start || end || handle) {
           _texts.moveToTop(i);
-          _resize.active     = true;
-          _resize.startPoint = start;
+          _resize.active = true;
+
+          if (start)       _resize.type = NODE_START;
+          else if (end)    _resize.type = NODE_END;
+          else if (handle) _resize.type = NODE_HANDLE;
+
           return true;
         }
       }
       break;
     case DRAWMODE_FREEFORM:
       for (int i=0; i<_freeForms.size(); i++) {
+        // Is the cursor over the handle
+        const QPoint handle = pixmapPointToScreenPos(getFormHandle(DRAWMODE_FREEFORM, i));
+        if (isCursorOverNode(cursorPos, handle)) {
+          logUser(LOG_ERROR, "", "You can't move a free form. It is not implemented");
+          return false;
+        }
+
+        // Is the cursor over a point
         const QList points = _freeForms.at(i).points;
         for (int z=0; z<points.size(); z++) {
           const QPoint p = pixmapPointToScreenPos(points.at(z));
@@ -2582,53 +2680,89 @@ void ZoomWidget::resizeForm(QPoint cursorPos)
   switch (_drawMode) {
     case DRAWMODE_LINE: {
         UserObjectData line = _lines.last();
-        _lines.destroyLast();
 
-        if (_resize.startPoint) {
-          line.startPoint = cursorPos;
-        } else {
-          line.endPoint = cursorPos;
+        switch (_resize.type) {
+          case NODE_START:
+            line.startPoint = cursorPos;
+            break;
+          case NODE_END:
+            line.endPoint = cursorPos;
+            break;
+          case NODE_HANDLE: {
+              const QPoint handle = getFormHandle(DRAWMODE_LINE, _lines.size()-1);
+              line.startPoint = cursorPos + (line.startPoint - handle);
+              line.endPoint = cursorPos + (line.endPoint - handle);
+              break;
+            }
         }
 
+        _lines.destroyLast();
         _lines.add(line);
       }
       break;
     case DRAWMODE_RECT: {
         UserObjectData rect = _rects.last();
-        _rects.destroyLast();
 
-        if (_resize.startPoint) {
-          rect.startPoint = cursorPos;
-        } else {
-          rect.endPoint = cursorPos;
+        switch (_resize.type) {
+          case NODE_START:
+            rect.startPoint = cursorPos;
+            break;
+          case NODE_END:
+            rect.endPoint = cursorPos;
+            break;
+          case NODE_HANDLE: {
+              const QPoint handle = getFormHandle(DRAWMODE_RECT, _rects.size()-1);
+              rect.startPoint = cursorPos + (rect.startPoint - handle);
+              rect.endPoint = cursorPos + (rect.endPoint - handle);
+              break;
+            }
         }
 
+        _rects.destroyLast();
         _rects.add(rect);
       }
       break;
     case DRAWMODE_ELLIPSE: {
         UserObjectData ellipse = _ellipses.last();
-        _ellipses.destroyLast();
 
-        if (_resize.startPoint) {
-          ellipse.startPoint = cursorPos;
-        } else {
-          ellipse.endPoint = cursorPos;
+        switch (_resize.type) {
+          case NODE_START:
+            ellipse.startPoint = cursorPos;
+            break;
+          case NODE_END:
+            ellipse.endPoint = cursorPos;
+            break;
+          case NODE_HANDLE: {
+              const QPoint handle = getFormHandle(DRAWMODE_ELLIPSE, _ellipses.size()-1);
+              ellipse.startPoint = cursorPos + (ellipse.startPoint - handle);
+              ellipse.endPoint = cursorPos + (ellipse.endPoint - handle);
+              break;
+            }
         }
 
+        _ellipses.destroyLast();
         _ellipses.add(ellipse);
       }
       break;
     case DRAWMODE_TEXT: {
         UserTextData text = _texts.last();
-        _texts.destroyLast();
 
-        if (_resize.startPoint) {
-          text.data.startPoint = cursorPos;
-        } else {
-          text.data.endPoint = cursorPos;
+        switch (_resize.type) {
+          case NODE_START:
+            text.data.startPoint = cursorPos;
+            break;
+          case NODE_END:
+            text.data.endPoint = cursorPos;
+            break;
+          case NODE_HANDLE: {
+              const QPoint handle = getFormHandle(DRAWMODE_TEXT, _texts.size()-1);
+              text.data.startPoint = cursorPos + (text.data.startPoint - handle);
+              text.data.endPoint = cursorPos + (text.data.endPoint - handle);
+              break;
+            }
         }
 
+        _texts.destroyLast();
         _texts.add(text);
       }
       break;
@@ -3012,24 +3146,23 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
     QWidget::activateWindow();
   }
 
+  // Pre mouse processing
   updateCursorShape();
   updateAtMousePos(cursorPos);
 
+  // Mouse processing
   if (_canvas.dragging || _screenOpts == SCREENOPTS_HIDE_ALL || isCursorOverToolBar(cursorPos)) {
-    update();
-    return;
+    goto exit;
   }
 
   if (_state == STATE_RESIZE && _resize.active) {
     resizeForm(cursorPos);
-    update();
-    return;
+    goto exit;
   }
 
   if (_state == STATE_COLOR_PICKER) {
     _activePen.setColor(GET_COLOR_UNDER_CURSOR());
-    update();
-    return;
+    goto exit;
   }
 
   // Register the position of the cursor for the FreeForm
@@ -3047,8 +3180,12 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
       data.points.append(cursorInPixmap);
       _freeForms.add(data);
     }
+
+    goto exit;
   }
 
+exit:
+  _lastMousePos = cursorPos;
   update();
 }
 
@@ -3068,8 +3205,6 @@ void ZoomWidget::updateAtMousePos(QPoint mousePos)
   }
 
   checkPixmapPos();
-
-  _lastMousePos = mousePos;
 
   if (_state == STATE_DRAWING || _state == STATE_TRIMMING) {
     _endDrawPoint = screenPointToPixmapPos(mousePos);

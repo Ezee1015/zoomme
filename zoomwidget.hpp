@@ -403,12 +403,18 @@ struct PopupTray {
   QTimer *updateTimer;
 };
 
+enum NodeType {
+  NODE_START,  // Start of the form
+  NODE_END,    // End of the form
+  NODE_HANDLE  // The form itself (all the nodes)
+};
+
 struct ResizeState {
   // If it's active:
   //    - The vector is the current draw mode
   //    - The form selected is the last one of the vector
-  bool active;     // If it's resizing
-  bool startPoint; // If true, it's the start point of the form. If false, it's the end point
+  bool active;   // If it's resizing
+  NodeType type;
 };
 
 template<typename T>
@@ -619,9 +625,10 @@ class ZoomWidget : public QWidget
 
     // Resizing nodes
     void resizeForm(QPoint cursorPos);
-    void drawNode(QPainter *painter, const QPoint point);
+    void drawNode(QPainter *painter, const QPoint point, NodeType type);
     void drawAllNodes(QPainter *screenPainter);
     bool isCursorOverNode(const QPoint cursorPos, const QPoint point);
+    QPoint getFormHandle(const ZoomWidgetDrawMode drawMode, const int pos);
     // Moves the form behind the cursor to the top of the list and populates the
     // _resize variable
     bool selectNodeBehindCursor(const QPoint cursorPos);
