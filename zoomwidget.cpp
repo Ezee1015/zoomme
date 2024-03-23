@@ -2651,8 +2651,10 @@ bool ZoomWidget::selectNodeBehindCursor(const QPoint cursorPos)
         // Is the cursor over the handle
         const QPoint handle = pixmapPointToScreenPos(getFormHandle(DRAWMODE_FREEFORM, i));
         if (isCursorOverNode(cursorPos, handle)) {
-          logUser(LOG_ERROR, "", "You can't move a free form. It is not implemented");
-          return false;
+          _freeForms.moveToTop(i);
+          _resize.active = true;
+          _resize.type = NODE_HANDLE;
+          return true;
         }
 
         // Is the cursor over a point
@@ -2766,9 +2768,31 @@ void ZoomWidget::resizeForm(QPoint cursorPos)
         _texts.add(text);
       }
       break;
-    case DRAWMODE_FREEFORM:
-      // Can't resize the free form. Not implemented...
-      break;
+    case DRAWMODE_FREEFORM: {
+        UserFreeFormData freeForm = _freeForms.last();
+
+        // Can't resize the free form. Not implemented...
+        // Only move it around (with the handle)
+        switch (_resize.type) {
+          case NODE_START:
+          case NODE_END:
+            // There's no start/end in a free form. Only a list of points
+            break;
+
+          case NODE_HANDLE: {
+              const QPoint handle = getFormHandle(DRAWMODE_FREEFORM, _freeForms.size()-1);
+              for (int i=0; i<freeForm.points.size(); i++) {
+                const QPoint newPoint = cursorPos + (freeForm.points.at(i) - handle);
+                freeForm.points.replace(i, newPoint);
+              }
+              break;
+            }
+        }
+
+        _freeForms.destroyLast();
+        _freeForms.add(freeForm);
+        break;
+      }
   }
 }
 
