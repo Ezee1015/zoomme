@@ -3663,6 +3663,8 @@ void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
     // Don't shift the pixmap/canvas when releasing the control key in order to
     // give "time" to the user to press the shift key for disabling the mouse
     // tracking
+    //
+    // updateAtMousePos(GET_CURSOR_POS());
   }
 
   updateCursorShape();
