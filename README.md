@@ -310,6 +310,12 @@ This will override the [file name, video extension and image extension configura
 </p></details>
 <!-- End 11 -->
 
+### To do
+- [ ] Make ffmpeg processing in a separate thread
+    - Notify the user that ffmpeg is running in the background
+    - Prevent the user from recording again untill ffmpeg finished (although they can use other parts of the app normally)
+- [ ] Rewrite and reorganize the header file (it's currently quite messy)
+
 ## :suspect: Secret :suspect:
 > Shhh! Don't tell anybody... :zipper_mouth_face:
 >
