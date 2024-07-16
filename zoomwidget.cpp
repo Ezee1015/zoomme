@@ -2761,7 +2761,8 @@ void ZoomWidget::updateCursorShape()
   QCursor waiting       = QCursor(Qt::WaitCursor);
   QCursor denied        = QCursor(Qt::ForbiddenCursor);
   QCursor drag          = QCursor(Qt::ClosedHandCursor);
-  QCursor cursorDefault = QCursor(Qt::CrossCursor);
+  QCursor appDefault    = QCursor(Qt::CrossCursor);
+  QCursor normal        = QCursor(Qt::ArrowCursor);
 
   // Pick color
   QPixmap pickColorPixmap(":/resources/color-picker/16.png");
@@ -2775,13 +2776,16 @@ void ZoomWidget::updateCursorShape()
   if (IS_FFMPEG_RUNNING) {
     setCursor(waiting);
 
-  } else if (isCursorOverButton(cursorPos)) {
-    const Button button = _toolBar.buttons.at(buttonBehindCursor(cursorPos));
-    if (!isActionActive(button.action)) {
-      setCursor(denied);
-    } else {
-      setCursor(pointHand);
+  } else if (isCursorOverToolBar(cursorPos)) {
+    QCursor c = normal;
+    if (isCursorOverButton(cursorPos)) {
+      const Button button = _toolBar.buttons.at(buttonBehindCursor(cursorPos));
+
+      c = isActionActive(button.action)
+          ? pointHand
+          : denied;
     }
+    setCursor(c);
 
   } else if (_canvas.dragging) {
     setCursor(drag);
@@ -2802,7 +2806,7 @@ void ZoomWidget::updateCursorShape()
     setCursor(blank);
 
   } else {
-    setCursor(cursorDefault);
+    setCursor(appDefault);
 
   }
 }
