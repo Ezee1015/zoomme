@@ -486,8 +486,6 @@ bool ZoomWidget::isActionActive(ZoomWidgetAction action)
         // If it's drawing a free form, it's disabled
         const bool isDrawingAFreeForm = (!_forms.isEmpty() && _forms.last().active && _forms.last().type == FREEFORM);
         const bool disabledModes = (_state==STATE_TYPING       ||
-                                    _state==STATE_DELETING     ||
-                                    _state==STATE_RESIZE       ||
                                     _state==STATE_COLOR_PICKER ||
                                     _state==STATE_TO_TRIM      ||
                                     _state==STATE_TRIMMING);
@@ -498,8 +496,6 @@ bool ZoomWidget::isActionActive(ZoomWidgetAction action)
     case ACTION_FREEFORM: {
         const bool disabledModes = (_state==STATE_TYPING       ||
                                     _state==STATE_DRAWING      ||
-                                    _state==STATE_DELETING     ||
-                                    _state==STATE_RESIZE       ||
                                     _state==STATE_COLOR_PICKER ||
                                     _state==STATE_TO_TRIM      ||
                                     _state==STATE_TRIMMING);
@@ -513,10 +509,10 @@ bool ZoomWidget::isActionActive(ZoomWidgetAction action)
 
         bool isFormListEmpty = true;
         int i=0;
-        while (i<_forms.size() && _forms.at(i).deleted) i++;
+        while (i<_forms.size() && (_forms.at(i).deleted || _forms.at(i).type!=_drawMode)) i++;
         if (i!=_forms.size()) isFormListEmpty = false;
 
-        return (!hideAll) && (enabledModes) && (!isFormListEmpty);
+        return (!hideAll) && (enabledModes) && (!isFormListEmpty || _state == STATE_RESIZE);
       }
 
     case ACTION_SCREEN_OPTS:
@@ -571,10 +567,10 @@ bool ZoomWidget::isActionActive(ZoomWidgetAction action)
 
         bool isFormListEmpty = true;
         int i=0;
-        while (i<_forms.size() && _forms.at(i).deleted) i++;
+        while (i<_forms.size() && (_forms.at(i).deleted || _forms.at(i).type!=_drawMode)) i++;
         if (i!=_forms.size()) isFormListEmpty = false;
 
-        return (!hideAll) && (enabledModes) && (!isFormListEmpty);
+        return (!hideAll) && (enabledModes) && (!isFormListEmpty || _state == STATE_DELETING);
       }
 
     case ACTION_RECORDING:
@@ -2241,7 +2237,7 @@ void ZoomWidget::drawAllNodes(QPainter *screenPainter)
   }
 
   for (int i=0; i<_forms.size(); i++) {
-    if (!_forms.at(i).deleted) {
+    if (!_forms.at(i).deleted && _forms.at(i).type==_drawMode) {
       QList<QPoint> p = _forms.at(i).points;
       QPoint handle;
 
@@ -2369,7 +2365,7 @@ bool ZoomWidget::selectNodeToResize(const QPoint cursorPos)
     const Form f = _forms.at(i);
     QPoint handle;
 
-    if (!f.deleted) {
+    if (!f.deleted && f.type==_drawMode) {
       for (int x=0; x<f.points.size(); x++) {
         const QPoint p = pixmapPointToScreenPos(f.points.at(x));
         handle += p;
@@ -3090,7 +3086,7 @@ int ZoomWidget::cursorOverForm(QPoint cursorPos)
   for (int i=0; i<_forms.size(); i++) {
     Form f = _forms.at(i);
 
-    if (!f.deleted) {
+    if (!f.deleted && f.type==_drawMode) {
       switch (f.type) {
         case LINE:
           getSimpleFormPosition(f, &x, &y, &w, &h, true);
