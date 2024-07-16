@@ -158,7 +158,11 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        break;
 
     case ACTION_CLEAR:
-       _forms.clear();
+       for (int i=0; i<_forms.size(); i++) {
+         Form f = _forms.takeAt(i);
+         f.deleted = true;
+         _forms.insert(i, f);
+       }
        _state = STATE_MOVING;
        break;
 
