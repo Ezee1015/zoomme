@@ -557,7 +557,12 @@ bool ZoomWidget::isActionActive(ZoomWidgetAction action)
         const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
         const bool enabledModes = (_state == STATE_MOVING);
 
-        return (!hideAll) && (enabledModes) && (!_forms.isEmpty());
+        bool isFormListEmpty = true;
+        int i=0;
+        while (i<_forms.size() && _forms.at(i).deleted) i++;
+        if (i!=_forms.size()) isFormListEmpty = false;
+
+        return (!hideAll) && (enabledModes) && (!isFormListEmpty);
       }
 
     case ACTION_DELETE: {
