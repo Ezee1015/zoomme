@@ -74,6 +74,7 @@
 #define DELETE_ICON           "󰷭" // 󰷮
 #define UNDO_ICON             "󰕍" // 
 #define REDO_ICON             "󰑏"
+#define FULLSCREEN_ICON       "󰊓"
 #define EXIT_ICON             "󰩈" // 
 #define ESCAPE_ICON           "󰿅"
 #define CANCEL_ICON           "󰜺"
@@ -146,7 +147,7 @@
 // #define DISABLE_MOUSE_TRACKING
 
 /// Pop-ups settings
-#define POPUP_WIDTH     (_screenSize.width() / 4.0) // pixels
+#define POPUP_WIDTH     (_windowSize.width() / 4.0) // pixels
 #define POPUP_ERROR     8000 // msec
 #define POPUP_INFO      6000 // msec
 #define POPUP_SUCCESS   3000 // msec
@@ -318,6 +319,7 @@ enum ZoomWidgetAction {
   ACTION_SAVE_PROJECT,
   ACTION_SCREEN_OPTS,
   ACTION_RECORDING,
+  ACTION_FULLSCREEN,
 
   // COLORS
   ACTION_COLOR_RED,
@@ -469,7 +471,7 @@ class ZoomWidget : public QWidget
 
     QScreen *_desktopScreen;
     // Resolution of the scaled monitor
-    QSize _screenSize;
+    QSize _windowSize;
 
     // For exporting files
     UserFileConfig _fileConfig;
@@ -576,7 +578,7 @@ class ZoomWidget : public QWidget
     void dragPixmap(QPoint delta);
     void shiftPixmap(const QPoint cursorPos);
     void scalePixmapAt(const QPointF pos);
-    void checkPixmapPos();
+    QPoint centerCanvas();
 
     // From a point in the screen (like the mouse cursor, because its position
     // is relative to the screen, not the pixmap), it returns the position in the

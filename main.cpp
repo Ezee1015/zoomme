@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
   }
 
   ZoomWidget w;
-  w.setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::BypassWindowManagerHint);
+  // w.setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::BypassWindowManagerHint);
   w.resize(QApplication::screenAt(QCursor::pos())->geometry().size());
   w.move(QApplication::screenAt(QCursor::pos())->geometry().topLeft());
   w.setCursor(QCursor(Qt::CrossCursor));

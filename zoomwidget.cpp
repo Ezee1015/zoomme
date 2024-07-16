@@ -38,7 +38,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   setFont(QFont("Hack Nerd Font", 4*FONT_SCALE));
 
   _desktopScreen         = QGuiApplication::screenAt(QCursor::pos());
-  _screenSize            = _desktopScreen->geometry().size();
+  _windowSize            = _desktopScreen->geometry().size();
   _canvas.pos            = QPoint(0, 0);
   _canvas.size           = QApplication::screenAt(QCursor::pos())->geometry().size();
   _canvas.originalSize   = _canvas.size;
@@ -220,6 +220,10 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        QApplication::beep();
        break;
     }
+    case ACTION_FULLSCREEN:
+      if (isFullScreen()) showNormal();
+      else showFullScreen();
+      break;
 
     case ACTION_PICK_COLOR:
        if (_state == STATE_COLOR_PICKER) {
@@ -328,7 +332,10 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
       } else if (_canvas.size != _canvas.originalSize) {
         _canvas.scale = 1.0f;
         scalePixmapAt(QPoint(0,0));
-        checkPixmapPos();
+        _canvas.pos = centerCanvas();
+
+      } else if (isDisabledMouseTracking() && _canvas.pos != centerCanvas()) {
+        _canvas.pos = centerCanvas();
 
       } else if (IS_RECORDING) {
         toggleAction(ACTION_RECORDING);
@@ -417,6 +424,7 @@ void ZoomWidget::loadButtons()
 
   _toolBar.buttons.append(Button{ACTION_SPACER,            " ",              "",              2, nullRect});
 
+  _toolBar.buttons.append(Button{ACTION_FULLSCREEN,        FULLSCREEN_ICON,  "Fullscreen",    2, nullRect});
   if (_exitTimer->isActive()) {
     _toolBar.buttons.append(Button{ACTION_ESCAPE,            EXIT_ICON,      "Confirm Exit",  2, nullRect});
     _toolBar.buttons.append(Button{ACTION_ESCAPE_CANCEL,     CANCEL_ICON,    "Cancel Exit",   2, nullRect});
@@ -464,6 +472,7 @@ bool ZoomWidget::isActionActive(ZoomWidgetAction action)
     case ACTION_SAVE_TO_CLIPBOARD:
     case ACTION_SAVE_PROJECT:
 
+    case ACTION_FULLSCREEN:
     case ACTION_ESCAPE:
     case ACTION_ESCAPE_CANCEL:
       return true;
@@ -637,6 +646,7 @@ ButtonStatus ZoomWidget::isButtonActive(Button button)
     case ACTION_DELETE:            actionStatus = (_state == STATE_DELETING);             break;
     case ACTION_RESIZE:            actionStatus = (_state == STATE_RESIZE);               break;
     case ACTION_SCREEN_OPTS:       actionStatus = (_screenOpts != SCREENOPTS_SHOW_ALL);   break;
+    case ACTION_FULLSCREEN:        actionStatus = isFullScreen();                         break;
     case ACTION_DELETE_LAST:       return BUTTON_NO_STATUS;
     case ACTION_UNDO_DELETE:       return BUTTON_NO_STATUS;
     case ACTION_CLEAR:             return BUTTON_NO_STATUS;
@@ -684,8 +694,8 @@ void ZoomWidget::generateToolBar()
 
   const QRect background(
                           toolbarMargin,
-                          _screenSize.height() - toolbarMargin - rowHeight*rows,
-                          _screenSize.width() - toolbarMargin*2,
+                          _windowSize.height() - toolbarMargin - rowHeight*rows,
+                          _windowSize.width() - toolbarMargin*2,
                           rowHeight * rows
                         );
 
@@ -826,7 +836,7 @@ void ZoomWidget::saveStateToFile()
 
   QDataStream out(&file);
   // There should be the same arguments that the restoreStateToFile()
-  out << _screenSize
+  out << _windowSize
       << _sourcePixmap
       << _canvas.originalSize
 
@@ -884,7 +894,7 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
   float scaleFactorX = 1.0, scaleFactorY = 1.0;
   int marginTop = 0, marginLeft = 0;
 
-  if (savedScreenSize == _screenSize) {
+  if (savedScreenSize == _windowSize) {
     _canvas.originalSize = savedPixmapSize;
     _canvas.size = savedPixmapSize;
     _sourcePixmap = savedPixmap;
@@ -895,14 +905,14 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
 
     QImage scaledPixmap = savedPixmap.toImage();
     if (config == FIT_TO_WIDTH) {
-      scaledPixmap = scaledPixmap.scaledToWidth(_screenSize.width());
+      scaledPixmap = scaledPixmap.scaledToWidth(_windowSize.width());
     } else {
-      scaledPixmap = scaledPixmap.scaledToHeight(_screenSize.height());
+      scaledPixmap = scaledPixmap.scaledToHeight(_windowSize.height());
     }
 
     logUser(LOG_INFO, "The ZoomMe recovery file was scaled! This may cause loss of quality...", "Scaling ZoomMe recover file...");
     logUser(LOG_TEXT, "", "  - Recovered screen size: %dx%d", savedScreenSize.width(), savedScreenSize.height());
-    logUser(LOG_TEXT, "", "  - Actual screen size: %dx%d", _screenSize.width(), _screenSize.height());
+    logUser(LOG_TEXT, "", "  - Actual screen size: %dx%d", _windowSize.width(), _windowSize.height());
     logUser(LOG_TEXT, "", "  - Recovered image size: %dx%d", savedPixmapSize.width(), savedPixmapSize.height());
     logUser(LOG_TEXT, "", "  - Scaled (actual) image size: %dx%d", scaledPixmap.width(), scaledPixmap.height());
 
@@ -921,11 +931,11 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
     scaleFactorY = (float)(scaledPixmap.height()) / (float)(savedPixmap.height());
 
     // Adjust the drawings to the margin of the image after scaling
-    if (_screenSize.height() > scaledPixmap.height()) {
-      marginTop = (_screenSize.height() - scaledPixmap.height()) / 2;
+    if (_windowSize.height() > scaledPixmap.height()) {
+      marginTop = (_windowSize.height() - scaledPixmap.height()) / 2;
     }
-    if (_screenSize.width() > scaledPixmap.width()) {
-      marginLeft = (_screenSize.width() - scaledPixmap.width()) / 2;
+    if (_windowSize.width() > scaledPixmap.width()) {
+      marginLeft = (_windowSize.width() - scaledPixmap.width()) / 2;
     }
 
     grabImage(savedPixmap, config);
@@ -1615,7 +1625,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   w+=padding*2;
 
   const int h = fontMetrics().height() * lines.size() + padding*2;
-  const int x = _screenSize.width() - w - margin;
+  const int x = _windowSize.width() - w - margin;
   const int y = margin;
 
   const QRect background(
@@ -2271,6 +2281,12 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     _canvas.pixmap.fill(QCOLOR_BLACKBOARD);
   }
 
+  // When changing between fullscreen and window (and changing its size)
+  if (_windowSize != event->rect().size()) {
+    _windowSize = event->rect().size();
+    generateToolBar();
+  }
+
   QPainter pixmapPainter(&_canvas.pixmap);
   QPainter screen; screen.begin(this);
 
@@ -2883,8 +2899,6 @@ void ZoomWidget::updateAtMousePos(QPoint mousePos)
     dragPixmap(mousePos - _lastMousePos);
   }
 
-  checkPixmapPos();
-
   if (_state == STATE_DRAWING || _state == STATE_TRIMMING) {
     _endDrawPoint = screenPointToPixmapPos(mousePos);
   }
@@ -2918,7 +2932,6 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
   if (_canvas.scale < 1.0f) _canvas.scale = 1.0f;
 
   scalePixmapAt(GET_CURSOR_POS());
-  checkPixmapPos();
 
   update();
 }
@@ -3276,6 +3289,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Comma:  action = ACTION_DELETE;         break;
     case Qt::Key_Minus:  action = ACTION_RECORDING;      break;
     case Qt::Key_P:      action = ACTION_PICK_COLOR;     break;
+    case Qt::Key_F11:    action = ACTION_FULLSCREEN;     break;
 
     case Qt::Key_1: action = ACTION_WIDTH_1;             break;
     case Qt::Key_2: action = ACTION_WIDTH_2;             break;
@@ -3343,14 +3357,14 @@ void ZoomWidget::grabFromClipboard(FitImage config)
 
 void ZoomWidget::createBlackboard(QSize size)
 {
-  if (size.width() < _screenSize.width()) {
+  if (size.width() < _windowSize.width()) {
     logUser(LOG_INFO, "", "The given width is less than the screen's width, so the width is now the screen's width");
-    size.setWidth(_screenSize.width());
+    size.setWidth(_windowSize.width());
   }
 
-  if (size.height() < _screenSize.height()) {
+  if (size.height() < _windowSize.height()) {
     logUser(LOG_INFO, "", "The given height is less than the screen's height, so the height is now the screen's height");
-    size.setHeight(_screenSize.height());
+    size.setHeight(_windowSize.height());
   }
 
   _sourcePixmap = QPixmap(size);
@@ -3370,7 +3384,7 @@ void ZoomWidget::grabDesktop()
   // grabbing
   if (desktop.isNull()) {
     if (_liveMode) {
-      _sourcePixmap = QPixmap(_screenSize);
+      _sourcePixmap = QPixmap(_windowSize);
       _sourcePixmap.fill(Qt::transparent);
       return;
     }
@@ -3408,30 +3422,30 @@ void ZoomWidget::grabImage(QPixmap img, FitImage config)
   // Scale
   int width, height, x = 0, y = 0;
   if (config == FIT_TO_WIDTH) {
-    width = _screenSize.width();
+    width = _windowSize.width();
     img = img.scaledToWidth(width, Qt::SmoothTransformation);
 
     // Take the largest height for the pixmap: the image or the screen height
-    height = (_screenSize.height() > img.height())
-             ? _screenSize.height()
+    height = (_windowSize.height() > img.height())
+             ? _windowSize.height()
              : img.height();
 
     // Center the image in the screen
-    if (_screenSize.height() > img.height()) {
+    if (_windowSize.height() > img.height()) {
       y = (height - img.height()) / 2;
     }
 
   } else { // FIT_TO_HEIGHT
-    height = _screenSize.height();
+    height = _windowSize.height();
     img = img.scaledToHeight(height, Qt::SmoothTransformation);
 
     // Take the largest width: the image or the screen width
-    width = (_screenSize.width() > img.width())
-            ? _screenSize.width()
+    width = (_windowSize.width() > img.width())
+            ? _windowSize.width()
             : img.width();
 
     // Center the image in the screen
-    if (_screenSize.width() > img.width()) {
+    if (_windowSize.width() > img.width()) {
       x = (width - img.width()) / 2;
     }
   }
@@ -3454,17 +3468,34 @@ void ZoomWidget::dragPixmap(QPoint delta)
   _canvas.pos += delta;
 }
 
+QPoint ZoomWidget::centerCanvas() {
+  const QSize availableMargin = _windowSize - _canvas.size;
+
+  return QPoint(
+        availableMargin.width() * 0.5,
+        availableMargin.height() * 0.5
+      );
+}
+
 void ZoomWidget::shiftPixmap(const QPoint cursorPos)
 {
   // This is the maximum value for shifting the pixmap
-  const QSize availableMargin = -1 * (_canvas.size - _screenSize);
+  const QSize availableMargin = _windowSize - _canvas.size;
+
+  // If the canvas is smaller than the screen size, adjust it to the center
+  if (availableMargin.width() > 0 || availableMargin.height() > 0) {
+    _canvas.pos = centerCanvas();
+    return;
+  }
 
   // The percentage of the cursor position relative to the screen size
-  const float percentageX = (float)cursorPos.x() / (float)_screenSize.width();
-  const float percentageY = (float)cursorPos.y() / (float)_screenSize.height();
+  float percentageX = (float)cursorPos.x() / (float)_windowSize.width();
+  float percentageY = (float)cursorPos.y() / (float)_windowSize.height();
 
-  _canvas.pos.setX(availableMargin.width() * percentageX);
-  _canvas.pos.setY(availableMargin.height() * percentageY);
+  _canvas.pos = QPoint(
+        availableMargin.width() * percentageX,
+        availableMargin.height() * percentageY
+      );
 }
 
 void ZoomWidget::scalePixmapAt(const QPointF pos)
@@ -3487,21 +3518,6 @@ void ZoomWidget::scalePixmapAt(const QPointF pos)
 
   _canvas.pos.setX(_canvas.pos.x() + dw*cur_px);
   _canvas.pos.setY(_canvas.pos.y() + dh*cur_py);
-}
-
-void ZoomWidget::checkPixmapPos()
-{
-  if (_canvas.pos.x() > 0) {
-    _canvas.pos.setX(0);
-  } else if ((_canvas.size.width() + _canvas.pos.x()) < width()) {
-    _canvas.pos.setX(width() - _canvas.size.width());
-  }
-
-  if (_canvas.pos.y() > 0) {
-    _canvas.pos.setY(0);
-  } else if ((_canvas.size.height() + _canvas.pos.y()) < height()) {
-    _canvas.pos.setY(height() - _canvas.size.height());
-  }
 }
 
 QPoint ZoomWidget::screenPointToPixmapPos(QPoint qpoint)
