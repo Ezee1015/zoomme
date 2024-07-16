@@ -752,6 +752,7 @@ int ZoomWidget::buttonBehindCursor(QPoint cursor)
   return -1;
 }
 
+// The mouse pos shouldn't be fixed to the hdpi scaling
 bool ZoomWidget::isCursorOverToolBar(QPoint cursorPos)
 {
   if (!isToolBarVisible()) {
@@ -1944,7 +1945,7 @@ void ZoomWidget::drawFlashlightEffect(QPainter *painter, bool drawToScreen)
 
   QRect mouseFlashlightBorder = QRect(c.x()-radius, c.y()-radius, radius*2, radius*2);
   QPainterPath mouseFlashlight;
-  if (!isCursorOverToolBar(c)) {
+  if (!isCursorOverToolBar(GET_CURSOR_POS())) {
     mouseFlashlight.addEllipse( mouseFlashlightBorder );
   }
 
