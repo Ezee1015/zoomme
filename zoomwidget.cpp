@@ -166,7 +166,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
        _state = STATE_MOVING;
        break;
 
-    case ACTION_UNDO: {
+    case ACTION_DELETE_LAST: {
          int i=_forms.size()-1;
 
          while (i>=0 && _forms.at(i).deleted) {
@@ -181,7 +181,7 @@ void ZoomWidget::toggleAction(ZoomWidgetAction action)
          break;
        }
 
-    case ACTION_REDO: {
+    case ACTION_UNDO_DELETE: {
          int i=0;
 
          while (i<_forms.size() && !_forms.at(i).deleted) {
@@ -412,8 +412,8 @@ void ZoomWidget::loadButtons()
   _toolBar.buttons.append(Button{ACTION_SCREEN_OPTS,       SCREEN_OPTS_ICON, "Hide elements", 2, nullRect});
   _toolBar.buttons.append(Button{ACTION_CLEAR,             CLEAR_ICON,       "Clear",         2, nullRect});
   _toolBar.buttons.append(Button{ACTION_DELETE,            DELETE_ICON,      "Delete",        2, nullRect});
-  _toolBar.buttons.append(Button{ACTION_UNDO,              UNDO_ICON,        "Delete last",   2, nullRect});
-  _toolBar.buttons.append(Button{ACTION_REDO,              REDO_ICON,        "Undo delete",   2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_DELETE_LAST,       UNDO_ICON,        "Delete last",   2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_UNDO_DELETE,       REDO_ICON,        "Undo delete",   2, nullRect});
 
   _toolBar.buttons.append(Button{ACTION_SPACER,            " ",              "",              2, nullRect});
 
@@ -529,7 +529,7 @@ bool ZoomWidget::isActionActive(ZoomWidgetAction action)
         return (!hideAll) && (enabledModes);
       }
 
-    case ACTION_REDO: {
+    case ACTION_UNDO_DELETE: {
         const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
         const bool enabledModes = (_state == STATE_MOVING);
 
@@ -541,7 +541,7 @@ bool ZoomWidget::isActionActive(ZoomWidgetAction action)
         return (!hideAll) && (enabledModes) && (!isDeletedListEmpty);
       }
 
-    case ACTION_UNDO: {
+    case ACTION_DELETE_LAST: {
         const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
         const bool enabledModes = (_state == STATE_MOVING);
 
@@ -641,8 +641,8 @@ ButtonStatus ZoomWidget::isButtonActive(Button button)
     case ACTION_DELETE:            actionStatus = (_state == STATE_DELETING);             break;
     case ACTION_RESIZE:            actionStatus = (_state == STATE_RESIZE);               break;
     case ACTION_SCREEN_OPTS:       actionStatus = (_screenOpts != SCREENOPTS_SHOW_ALL);   break;
-    case ACTION_UNDO:              return BUTTON_NO_STATUS;
-    case ACTION_REDO:              return BUTTON_NO_STATUS;
+    case ACTION_DELETE_LAST:       return BUTTON_NO_STATUS;
+    case ACTION_UNDO_DELETE:       return BUTTON_NO_STATUS;
     case ACTION_CLEAR:             return BUTTON_NO_STATUS;
 
     case ACTION_SAVE_TO_FILE:      return BUTTON_NO_STATUS;
@@ -3242,7 +3242,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     case Qt::Key_D: action = ACTION_COLOR_BLACK;   break;
     case Qt::Key_R:
                     if (shiftPressed) {
-                      action = ACTION_REDO;
+                      action = ACTION_UNDO_DELETE;
                     } else {
                       action = ACTION_COLOR_RED;
                     }
@@ -3272,7 +3272,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
                     break;
 
     case Qt::Key_Escape: action = ACTION_ESCAPE;         break;
-    case Qt::Key_U:      action = ACTION_UNDO;           break;
+    case Qt::Key_U:      action = ACTION_DELETE_LAST;    break;
     case Qt::Key_Q:      action = ACTION_CLEAR;          break;
     case Qt::Key_Tab:    action = ACTION_BLACKBOARD;     break;
     case Qt::Key_Space:  action = ACTION_SCREEN_OPTS;    break;
