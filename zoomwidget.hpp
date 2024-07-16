@@ -552,7 +552,7 @@ class ZoomWidget : public QWidget
     bool isCursorOverNode(const QPoint cursorPos, const QPoint point);
     // Moves the form behind the cursor to the top of the list and populates the
     // _resize variable
-    bool selectNodeBehindCursor(const QPoint cursorPos);
+    bool selectNodeToResize(const QPoint cursorPos);
 
     // Tool bar
     void loadButtons();

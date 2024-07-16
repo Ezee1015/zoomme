@@ -2363,7 +2363,7 @@ bool ZoomWidget::isCursorOverNode(const QPoint cursorPos, const QPoint point)
       );
 }
 
-bool ZoomWidget::selectNodeBehindCursor(const QPoint cursorPos)
+bool ZoomWidget::selectNodeToResize(const QPoint cursorPos)
 {
   for (int i=0; i<_forms.size(); i++) {
     const Form f = _forms.at(i);
@@ -2483,7 +2483,7 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
 
   // Mouse processing
   if (_state == STATE_RESIZE) {
-    selectNodeBehindCursor(cursorPos);
+    selectNodeToResize(cursorPos);
 
     updateCursorShape();
     update();
