@@ -189,30 +189,33 @@ namespace Ui {
   class zoomwidget;
 }
 
+enum FormType {
+  LINE,
+  RECTANGLE,
+  ELLIPSE,
+  TEXT,
+  FREEFORM,
+};
+
 // User data structs. Remember to update the save/restore state from file
 // function when modifying this
-struct UserObjectData {
-  QPoint startPoint; // Point in the pixmap
-  QPoint endPoint;   // Point in the pixmap
+struct Form {
+  FormType type;
+
+  QList<QPoint> points; // Points in the pixmap
   QPen pen;
+
   bool highlight;
   bool arrow;
-};
+  bool deleted;
+  bool active; // If it's currently being modified
 
-struct UserTextData {
-  UserObjectData data;
-  int caretPos;
-  QString text;
-};
-
-struct UserFreeFormData {
-  QList<QPoint> points;
-  QPen pen;
+  // Free Forms
   QList<int> penWidths; // The pen width of each point
 
-  bool highlight;
-  bool arrow;
-  bool active;
+  // For text boxes
+  int caretPos;
+  QString text;
 };
 
 struct ArrowHead {
@@ -287,14 +290,6 @@ enum ZoomWidgetState {
   STATE_COLOR_PICKER,
   STATE_TO_TRIM,  // State before trimming
   STATE_TRIMMING,
-};
-
-enum ZoomWidgetDrawMode {
-  DRAWMODE_LINE,
-  DRAWMODE_RECT,
-  DRAWMODE_ELLIPSE,
-  DRAWMODE_TEXT,
-  DRAWMODE_FREEFORM,
 };
 
 enum ZoomWidgetAction {
@@ -404,9 +399,8 @@ struct PopupTray {
 };
 
 enum NodeType {
-  NODE_START,  // Start of the form
-  NODE_END,    // End of the form
-  NODE_HANDLE  // The form itself (all the nodes)
+  NODE,
+  HANDLE  // The form itself (all the nodes)
 };
 
 struct ResizeState {
@@ -415,74 +409,7 @@ struct ResizeState {
   //    - The form selected is the last one of the vector
   bool active;   // If it's resizing
   NodeType type;
-};
-
-template<typename T>
-class Drawing {
-  private:
-    QList<T> forms;
-    QList<T> deleted;
-
-  public:
-    Drawing() {}
-
-    void add(const T item) {
-      forms.append(item);
-    }
-
-    T at(const qsizetype i) {
-      return forms.at(i);
-    }
-
-    T last() {
-      return forms.last();
-    }
-
-    qsizetype size() {
-      return forms.size();
-    }
-
-    bool isEmpty() {
-      return forms.isEmpty();
-    }
-
-    void clear() {
-      deleted.append(forms);
-      forms.clear();
-    }
-
-    void remove(const int itemPos) {
-      if (itemPos >= forms.size()) return;
-      deleted.append(forms.takeAt(itemPos));
-    }
-
-    // Removes the form. It DOESN'T put it in the deleted list.
-    // Useful for editing the last form
-    void destroyLast() {
-      if (forms.isEmpty()) return;
-      forms.removeLast();
-    }
-
-    // Move the form to the top of the list (e.g., for editing texts you edit
-    // the last created -top of the list- text)
-    void moveToTop(const int itemPos) {
-      if (itemPos >= forms.size()) return;
-      forms.append(forms.takeAt(itemPos));
-    }
-
-    void undo() {
-      if (forms.isEmpty()) return;
-      deleted.append(forms.takeLast());
-    }
-
-    void redo() {
-      if (deleted.isEmpty()) return;
-      forms.append(deleted.takeLast());
-    }
-
-    bool isDeletedEmpty() {
-      return deleted.isEmpty();
-    }
+  int nodePosition; // The position of the selected node (point of the form)
 };
 
 class ZoomWidget : public QWidget
@@ -547,12 +474,7 @@ class ZoomWidget : public QWidget
     // For exporting files
     UserFileConfig _fileConfig;
 
-    // User objects.
-    Drawing<UserObjectData>    _rects;
-    Drawing<UserObjectData>    _lines;
-    Drawing<UserObjectData>    _ellipses;
-    Drawing<UserTextData>      _texts;
-    Drawing<UserFreeFormData>  _freeForms;
+    QList<Form> _forms;
 
     // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
     // QList<UserObjectData>    _tests;
@@ -591,7 +513,7 @@ class ZoomWidget : public QWidget
     QPoint _lastMousePos;
 
     // Drawing properties.
-    ZoomWidgetDrawMode _drawMode;
+    FormType _drawMode;
     QPen _activePen;
     // These two points should be fixed to hdpi scaling
     QPoint _startDrawPoint;
@@ -609,7 +531,7 @@ class ZoomWidget : public QWidget
     void drawToolBar(QPainter *screenPainter);
     void drawButton(QPainter *screenPainter, Button button);
     ArrowHead getArrowHead(int x, int y, int width, int height, int lineLength);
-    ArrowHead getFreeFormArrowHead(UserFreeFormData ff);
+    ArrowHead getFreeFormArrowHead(Form freeForm);
     void drawTrimmed(QPainter *pixmapPainter);
     void drawPopupTray(QPainter *screenPainter);
     void drawPopup(QPainter *screenPainter, const int listPos);
@@ -628,7 +550,6 @@ class ZoomWidget : public QWidget
     void drawNode(QPainter *painter, const QPoint point, NodeType type);
     void drawAllNodes(QPainter *screenPainter);
     bool isCursorOverNode(const QPoint cursorPos, const QPoint point);
-    QPoint getFormHandle(const ZoomWidgetDrawMode drawMode, const int pos);
     // Moves the form behind the cursor to the top of the list and populates the
     // _resize variable
     bool selectNodeBehindCursor(const QPoint cursorPos);
@@ -684,12 +605,12 @@ class ZoomWidget : public QWidget
 
     void removeFormBehindCursor(QPoint cursorPos);
     void updateCursorShape();
-    bool isDrawingHovered(ZoomWidgetDrawMode drawMode, int i);
+    bool isDrawingHovered(int i);
     bool isDisabledMouseTracking();
     bool isTextEditable(QPoint cursorPos);
 
-    QList<int> getFreeFormWidth(UserFreeFormData form);
-    UserFreeFormData smoothFreeForm(UserFreeFormData form);
+    QList<int> getFreeFormWidth(Form form);
+    Form smoothFreeForm(Form form);
 
     // The X, Y, W and H arguments must be a point in the SCREEN, not in the pixmap
     // If floating is enabled, the form (the width and height) is not affected by zoom/scaling
@@ -704,7 +625,7 @@ class ZoomWidget : public QWidget
     // If posRelativeToScreen is true, it will return the positon be relative to
     // the screen, if it's false, it will return the position relative to the
     // pixmap
-    void getRealUserObjectPos(const UserObjectData &userObj, int *x, int *y, int *w, int *h, bool posRelativeToScreen);
+    void getSimpleFormPosition(const Form &userObj, int *x, int *y, int *w, int *h, bool posRelativeToScreen);
 
     void saveStateToFile(); // Create a .zoomme file
 
