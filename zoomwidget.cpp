@@ -426,10 +426,10 @@ void ZoomWidget::loadButtons()
 
   _toolBar.buttons.append(Button{ACTION_FULLSCREEN,        FULLSCREEN_ICON,  "Fullscreen",    2, nullRect});
   if (_exitTimer->isActive()) {
-    _toolBar.buttons.append(Button{ACTION_ESCAPE,            EXIT_ICON,      "Confirm Exit",  2, nullRect});
-    _toolBar.buttons.append(Button{ACTION_ESCAPE_CANCEL,     CANCEL_ICON,    "Cancel Exit",   2, nullRect});
+    _toolBar.buttons.append(Button{ACTION_ESCAPE,            EXIT_ICON,        "Confirm Exit",  2, nullRect});
+    _toolBar.buttons.append(Button{ACTION_ESCAPE_CANCEL,     CANCEL_ICON,      "Cancel Exit",   2, nullRect});
   } else {
-    _toolBar.buttons.append(Button{ACTION_ESCAPE,            ESCAPE_ICON,    "Escape",        2, nullRect});
+    _toolBar.buttons.append(Button{ACTION_ESCAPE,            ESCAPE_ICON,      "Escape",        2, nullRect});
   }
 
   _toolBar.buttons.append(Button{ACTION_SAVE_TO_FILE,              EXPORT_IMG_ICON,       "Export image",                3, nullRect});
