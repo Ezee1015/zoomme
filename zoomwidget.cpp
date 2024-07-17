@@ -410,6 +410,8 @@ void ZoomWidget::loadButtons()
   _toolBar.buttons.append(Button{ACTION_SPACER,            "" ,              "",              1, nullRect});
   _toolBar.buttons.append(Button{ACTION_ARROW,             ARROW_ICON,       "Arrow",         1, nullRect});
   _toolBar.buttons.append(Button{ACTION_HIGHLIGHT,         HIGHLIGHT_ICON,   "Highlight",     1, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SPACER,            " ",              "",              1, nullRect});
+  _toolBar.buttons.append(Button{ACTION_FULLSCREEN,        FULLSCREEN_ICON,  "Fullscreen",    1, nullRect});
 
 
   _toolBar.buttons.append(Button{ACTION_FLASHLIGHT,        FLASHLIGHT_ICON,  "Flashlight",    2, nullRect});
@@ -424,7 +426,6 @@ void ZoomWidget::loadButtons()
 
   _toolBar.buttons.append(Button{ACTION_SPACER,            " ",              "",              2, nullRect});
 
-  _toolBar.buttons.append(Button{ACTION_FULLSCREEN,        FULLSCREEN_ICON,  "Fullscreen",    2, nullRect});
   if (_exitTimer->isActive()) {
     _toolBar.buttons.append(Button{ACTION_ESCAPE,            EXIT_ICON,        "Confirm Exit",  2, nullRect});
     _toolBar.buttons.append(Button{ACTION_ESCAPE_CANCEL,     CANCEL_ICON,      "Cancel Exit",   2, nullRect});
