@@ -2216,6 +2216,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
   if (_windowSize != event->rect().size()) {
     _windowSize = event->rect().size();
     generateToolBar();
+    if (!isDisabledMouseTracking()) _canvas.pos = centerCanvas();
   }
 
   _canvas.pixmap = _sourcePixmap;
