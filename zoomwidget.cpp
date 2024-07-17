@@ -860,7 +860,7 @@ void ZoomWidget::saveStateToFile()
   logUser(LOG_SUCCESS, "Project file saved correctly!", "Project saved correctly: %s", QSTRING_TO_STRING(filePath));
 }
 
-void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
+void ZoomWidget::restoreStateFromFile(QString path)
 {
   QFile file(path);
   if (!file.open(QIODevice::ReadOnly)) {
@@ -869,13 +869,12 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
 
   long long formListSize = 0;
 
-  QSize savedScreenSize;
   QPixmap savedPixmap;
   QSize savedPixmapSize;
 
   // There should be the same arguments that the saveStateToFile()
   QDataStream in(&file);
-  in  >> savedScreenSize
+  in  >> _windowSize
       >> savedPixmap
       >> savedPixmapSize
 
@@ -890,74 +889,15 @@ void ZoomWidget::restoreStateFromFile(QString path, FitImage config)
 
       >> formListSize;
 
-  // VARIABLES FOR SCALING THE DRAWINGS
-  float scaleFactorX = 1.0, scaleFactorY = 1.0;
-  int marginTop = 0, marginLeft = 0;
-
-  if (savedScreenSize == _windowSize) {
-    _canvas.originalSize = savedPixmapSize;
-    _canvas.size = savedPixmapSize;
-    _sourcePixmap = savedPixmap;
-  } else {
-    if (config == FIT_AUTO) {
-      config = (savedPixmap.width() > savedPixmap.height()) ? FIT_TO_HEIGHT : FIT_TO_WIDTH;
-    }
-
-    QImage scaledPixmap = savedPixmap.toImage();
-    if (config == FIT_TO_WIDTH) {
-      scaledPixmap = scaledPixmap.scaledToWidth(_windowSize.width());
-    } else {
-      scaledPixmap = scaledPixmap.scaledToHeight(_windowSize.height());
-    }
-
-    logUser(LOG_INFO, "The ZoomMe recovery file was scaled! This may cause loss of quality...", "Scaling ZoomMe recover file...");
-    logUser(LOG_TEXT, "", "  - Recovered screen size: %dx%d", savedScreenSize.width(), savedScreenSize.height());
-    logUser(LOG_TEXT, "", "  - Actual screen size: %dx%d", _windowSize.width(), _windowSize.height());
-    logUser(LOG_TEXT, "", "  - Recovered image size: %dx%d", savedPixmapSize.width(), savedPixmapSize.height());
-    logUser(LOG_TEXT, "", "  - Scaled (actual) image size: %dx%d", scaledPixmap.width(), scaledPixmap.height());
-
-    // With 'The Rule of Three'...
-    // oldPixmapSize --> pointOfDrawing
-    // newPixmapSize   -->     x (new -scaled- point of the drawing)
-    // so...
-    // x = ( newPixmapSize * pointOfDrawing ) / oldPixmapSize
-    // x = pointOfDrawing * ( newPixmapSize / oldPixmapSize )
-    //
-    // Don't use the savedPixmapSize variable as the oldPixmapSize because it
-    // doesn't take in count the REAL monitor resolution when grabbing the
-    // desktop (with hdpi scaling enabled), and the drawings will be misplaced.
-    // Use instead savePixmap.size() that has the REAL monitor resolution
-    scaleFactorX = (float)(scaledPixmap.width() ) / (float)(savedPixmap.width());
-    scaleFactorY = (float)(scaledPixmap.height()) / (float)(savedPixmap.height());
-
-    // Adjust the drawings to the margin of the image after scaling
-    if (_windowSize.height() > scaledPixmap.height()) {
-      marginTop = (_windowSize.height() - scaledPixmap.height()) / 2;
-    }
-    if (_windowSize.width() > scaledPixmap.width()) {
-      marginLeft = (_windowSize.width() - scaledPixmap.width()) / 2;
-    }
-
-    grabImage(savedPixmap, config);
-  }
-
-  if (!_liveMode) showFullScreen();
+  resize(_windowSize);
+  _sourcePixmap = savedPixmap;
+  _canvas.size = savedPixmapSize;
+  _canvas.originalSize = savedPixmapSize;
+  _canvas.pos = centerCanvas();
+  generateToolBar();
 
   // Read the drawings
-  for (int i=0; i<formListSize; i++) {
-    Form f = receiveForm(&in);
-
-    for (int x=0; x<f.points.size(); x++) {
-      QPoint p = f.points.at(x);
-
-      p.setX(marginLeft + p.x() * scaleFactorX);
-      p.setY(marginTop  + p.y() * scaleFactorY);
-
-      f.points.replace(x, p);
-    }
-
-    _forms.append(f);
-  }
+  for (int i=0; i<formListSize; i++) _forms.append(receiveForm(&in));
 
   if (in.atEnd()) {
     logUser(LOG_SUCCESS, "", "Recovery algorithm finished successfully (reached End Of File)");
@@ -2271,6 +2211,12 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     logUser(LOG_ERROR_AND_EXIT, "", "The desktop pixmap is null. Can't paint over a null pixmap");
   }
 
+  // When changing between fullscreen and window (and changing its size)
+  if (_windowSize != event->rect().size()) {
+    _windowSize = event->rect().size();
+    generateToolBar();
+  }
+
   _canvas.pixmap = _sourcePixmap;
 
   if (_liveMode) {
@@ -2279,12 +2225,6 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 
   if (_boardMode) {
     _canvas.pixmap.fill(QCOLOR_BLACKBOARD);
-  }
-
-  // When changing between fullscreen and window (and changing its size)
-  if (_windowSize != event->rect().size()) {
-    _windowSize = event->rect().size();
-    generateToolBar();
   }
 
   QPainter pixmapPainter(&_canvas.pixmap);
@@ -3339,34 +3279,22 @@ void ZoomWidget::setLiveMode(bool liveMode)
   _liveMode = liveMode;
 }
 
-void ZoomWidget::grabFromClipboard(FitImage config)
+void ZoomWidget::grabFromClipboard()
 {
-  QImage image;
-
   if (!_clipboard) {
     logUser(LOG_ERROR_AND_EXIT, "", "The clipboard is uninitialized");
   }
 
-  image = _clipboard->image();
+  QImage image = _clipboard->image();
   if (image.isNull()) {
     logUser(LOG_ERROR_AND_EXIT, "", "The clipboard doesn't contain an image or its format is not supported");
   }
 
-  grabImage(QPixmap::fromImage(image), config);
+  grabImage(QPixmap::fromImage(image));
 }
 
 void ZoomWidget::createBlackboard(QSize size)
 {
-  if (size.width() < _windowSize.width()) {
-    logUser(LOG_INFO, "", "The given width is less than the screen's width, so the width is now the screen's width");
-    size.setWidth(_windowSize.width());
-  }
-
-  if (size.height() < _windowSize.height()) {
-    logUser(LOG_INFO, "", "The given height is less than the screen's height, so the height is now the screen's height");
-    size.setHeight(_windowSize.height());
-  }
-
   _sourcePixmap = QPixmap(size);
   _sourcePixmap.fill(QCOLOR_BLACKBOARD);
   _canvas.size = size;
@@ -3407,58 +3335,16 @@ void ZoomWidget::grabDesktop()
   if (!_liveMode) showFullScreen();
 }
 
-void ZoomWidget::grabImage(QPixmap img, FitImage config)
+void ZoomWidget::grabImage(QPixmap img)
 {
   if (img.isNull()) {
     logUser(LOG_ERROR_AND_EXIT, "", "Couldn't open the image");
   }
 
-  // Auto detect the fit config
-  if (config == FIT_AUTO) {
-    if (img.width() > img.height()) config = FIT_TO_HEIGHT;
-    else config = FIT_TO_WIDTH;
-  }
-
-  // Scale
-  int width, height, x = 0, y = 0;
-  if (config == FIT_TO_WIDTH) {
-    width = _windowSize.width();
-    img = img.scaledToWidth(width, Qt::SmoothTransformation);
-
-    // Take the largest height for the pixmap: the image or the screen height
-    height = (_windowSize.height() > img.height())
-             ? _windowSize.height()
-             : img.height();
-
-    // Center the image in the screen
-    if (_windowSize.height() > img.height()) {
-      y = (height - img.height()) / 2;
-    }
-
-  } else { // FIT_TO_HEIGHT
-    height = _windowSize.height();
-    img = img.scaledToHeight(height, Qt::SmoothTransformation);
-
-    // Take the largest width: the image or the screen width
-    width = (_windowSize.width() > img.width())
-            ? _windowSize.width()
-            : img.width();
-
-    // Center the image in the screen
-    if (_windowSize.width() > img.width()) {
-      x = (width - img.width()) / 2;
-    }
-  }
-
-  // Draw the image into the pixmap
-  _sourcePixmap = QPixmap(width, height);
-  _sourcePixmap.fill(QCOLOR_BLACKBOARD);
-  QPainter painter(&_sourcePixmap);
-  painter.drawPixmap(x, y, img);
-  painter.end();
-
+  _sourcePixmap = img;
   _canvas.size = _sourcePixmap.size();
   _canvas.originalSize = _canvas.size;
+  _canvas.pos = centerCanvas();
 
   if (!_liveMode) showFullScreen();
 }
@@ -3510,8 +3396,8 @@ void ZoomWidget::scalePixmapAt(const QPointF pos)
   int dw = new_w - old_w;
   int dh = new_h - old_h;
 
-  int cur_x = pos.x() + abs(_canvas.pos.x());
-  int cur_y = pos.y() + abs(_canvas.pos.y());
+  float cur_x = pos.x() - _canvas.pos.x();
+  float cur_y = pos.y() - _canvas.pos.y();
 
   float cur_px = -((float)cur_x / old_w);
   float cur_py = -((float)cur_y / old_h);
@@ -3522,7 +3408,7 @@ void ZoomWidget::scalePixmapAt(const QPointF pos)
 
 QPoint ZoomWidget::screenPointToPixmapPos(QPoint qpoint)
 {
-  QPoint returnPoint = (qpoint - _canvas.pos)/_canvas.scale;
+  QPoint returnPoint = (qpoint - _canvas.pos.toPoint())/_canvas.scale;
 
   returnPoint.setX( FIX_X_FOR_HDPI_SCALING(returnPoint.x()) );
   returnPoint.setY( FIX_Y_FOR_HDPI_SCALING(returnPoint.y()) );
@@ -3535,7 +3421,7 @@ QPoint ZoomWidget::pixmapPointToScreenPos(QPoint qpoint)
   qpoint.setX( GET_X_FROM_HDPI_SCALING(qpoint.x()) );
   qpoint.setY( GET_Y_FROM_HDPI_SCALING(qpoint.y()) );
 
-  QPoint point = _canvas.pos + qpoint * _canvas.scale;
+  QPoint point = _canvas.pos.toPoint() + qpoint * _canvas.scale;
 
   return point;
 }

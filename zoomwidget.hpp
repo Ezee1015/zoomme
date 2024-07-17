@@ -238,7 +238,7 @@ struct UserCanvas {
   // blackboard or a transparent background, with the drawings on top.
   QPixmap pixmap;
   // Zoom movement
-  QPoint pos;
+  QPointF pos;
   FreezeCanvas freezePos;
   bool dragging;
   // Pixmap size for zooming (referenced with the resolution of the scaled
@@ -261,12 +261,6 @@ enum FileType {
   FILE_VIDEO,
   FILE_IMAGE,
   FILE_ZOOMME
-};
-
-enum FitImage {
-  FIT_TO_WIDTH,
-  FIT_TO_HEIGHT,
-  FIT_AUTO,
 };
 
 // Where to save the trimmed pixmap (from STATE_TRIMMING)
@@ -424,14 +418,14 @@ class ZoomWidget : public QWidget
 
     void setLiveMode(bool liveMode);
 
-    void restoreStateFromFile(QString path, FitImage config);
+    void restoreStateFromFile(QString path);
 
     // By passing an empty QString, sets the argument to the default
     void initFileConfig(QString path, QString name, QString imgExt, QString vidExt);
 
-    void grabFromClipboard(FitImage config);
+    void grabFromClipboard();
     void grabDesktop();
-    void grabImage(QPixmap img, FitImage config);
+    void grabImage(QPixmap img);
     void createBlackboard(QSize size);
 
   protected:
