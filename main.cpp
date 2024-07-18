@@ -212,7 +212,6 @@ int main(int argc, char *argv[])
   w.setCursor(QCursor(Qt::CrossCursor));
   // Set transparency
   w.setAttribute(Qt::WA_TranslucentBackground, true);
-  w.show();
 
   // Set the path, name and extension for saving the file
   w.initFileConfig(savePath, saveName, saveImgExt, saveVidExt);
@@ -237,5 +236,6 @@ int main(int argc, char *argv[])
   }
 
   QApplication::beep();
+  w.show();
   return a.exec();
 }
