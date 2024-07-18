@@ -3414,7 +3414,8 @@ void ZoomWidget::scalePixmapAt(const QPointF pos)
   int new_h = _canvas.originalSize.height() * _canvas.scale;
   _canvas.size = QSize(new_w, new_h);
 
-  if (_windowSize.width()  < _canvas.size.width()
+  if (isDisabledMouseTracking()
+      || _windowSize.width()  < _canvas.size.width()
       || _windowSize.height() < _canvas.size.height())
   {
     int dw = new_w - old_w;
