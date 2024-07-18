@@ -98,15 +98,16 @@ bool ZoomWidget::isToolBarVisible()
 {
   bool visibleStates = (
         // Show tool bar to escape from the mode
-        _state == STATE_TO_TRIM      ||
-        _state == STATE_DELETING     ||
-        _state == STATE_COLOR_PICKER ||
-        (_state == STATE_RESIZE && !_resize.active) ||
-        // Normal state
-        _state == STATE_MOVING
+        _state == STATE_TO_TRIM
+        || _state == STATE_DELETING
+        || _state == STATE_COLOR_PICKER
+        || (_state == STATE_RESIZE && !_resize.active)
+        || _state == STATE_MOVING // Normal state
       );
 
-  return (_toolBar.show) && (!_canvas.dragging) && (visibleStates);
+  return _toolBar.show
+         && !_canvas.dragging
+         && visibleStates;
 }
 
 void ZoomWidget::toggleAction(ZoomWidgetAction action)
@@ -495,20 +496,20 @@ bool ZoomWidget::isActionActive(ZoomWidgetAction action)
       {
         // If it's drawing a free form, it's disabled
         const bool isDrawingAFreeForm = (!_forms.isEmpty() && _forms.last().active && _forms.last().type == FREEFORM);
-        const bool disabledModes = (_state==STATE_TYPING       ||
-                                    _state==STATE_COLOR_PICKER ||
-                                    _state==STATE_TO_TRIM      ||
-                                    _state==STATE_TRIMMING);
+        const bool disabledModes = (_state==STATE_TYPING
+                                    || _state==STATE_COLOR_PICKER
+                                    || _state==STATE_TO_TRIM
+                                    || _state==STATE_TRIMMING);
 
         return !isDrawingAFreeForm && !disabledModes;
       }
 
     case ACTION_FREEFORM: {
-        const bool disabledModes = (_state==STATE_TYPING       ||
-                                    _state==STATE_DRAWING      ||
-                                    _state==STATE_COLOR_PICKER ||
-                                    _state==STATE_TO_TRIM      ||
-                                    _state==STATE_TRIMMING);
+        const bool disabledModes = (_state==STATE_TYPING
+                                    || _state==STATE_DRAWING
+                                    || _state==STATE_COLOR_PICKER
+                                    || _state==STATE_TO_TRIM
+                                    || _state==STATE_TRIMMING);
 
         return !disabledModes;
       }
@@ -657,13 +658,13 @@ ButtonStatus ZoomWidget::isButtonActive(Button button)
     case ACTION_SAVE_PROJECT:      return BUTTON_NO_STATUS;
     case ACTION_RECORDING:         actionStatus = IS_RECORDING;                           break;
     case ACTION_SAVE_TRIMMED_TO_IMAGE:
-                                   actionStatus = (_state == STATE_TRIMMING || _state == STATE_TO_TRIM) &&
-                                                  (_trimDestination == TRIM_SAVE_TO_IMAGE);
+                                   actionStatus = (_state == STATE_TRIMMING || _state == STATE_TO_TRIM)
+                                                  && (_trimDestination == TRIM_SAVE_TO_IMAGE);
                                    break;
 
     case ACTION_SAVE_TRIMMED_TO_CLIPBOARD:
-                                   actionStatus = (_state == STATE_TRIMMING || _state == STATE_TO_TRIM) &&
-                                                  (_trimDestination == TRIM_SAVE_TO_CLIPBOARD);
+                                   actionStatus = (_state == STATE_TRIMMING || _state == STATE_TO_TRIM)
+                                                  && (_trimDestination == TRIM_SAVE_TO_CLIPBOARD);
                                    break;
 
     case ACTION_ESCAPE:            actionStatus = _exitTimer->isActive();                 break;
@@ -3413,8 +3414,8 @@ void ZoomWidget::scalePixmapAt(const QPointF pos)
   int new_h = _canvas.originalSize.height() * _canvas.scale;
   _canvas.size = QSize(new_w, new_h);
 
-  if (_windowSize.width()  < _canvas.size.width() ||
-      _windowSize.height() < _canvas.size.height())
+  if (_windowSize.width()  < _canvas.size.width()
+      || _windowSize.height() < _canvas.size.height())
   {
     int dw = new_w - old_w;
     int dh = new_h - old_h;
@@ -3478,19 +3479,19 @@ bool ZoomWidget::isDisabledMouseTracking()
 #ifdef DISABLE_MOUSE_TRACKING
   return true;
 #else
-  return (_canvas.freezePos == FREEZE_BY_TEXT)  ||
-         (_canvas.freezePos == FREEZE_BY_SHIFT) ||
-         (_toolBar.show)                        ||
-         (_canvas.dragging);
+  return _canvas.freezePos == FREEZE_BY_TEXT
+         || _canvas.freezePos == FREEZE_BY_SHIFT
+         || _toolBar.show
+         || _canvas.dragging;
 #endif // DISABLE_MOUSE_TRACKING
 }
 
 // The cursor pos shouldn't be fixed to HDPI scaling
 bool ZoomWidget::isTextEditable(QPoint cursorPos)
 {
-  const bool isInEditTextMode = (_state == STATE_MOVING)     &&
-                                (_drawMode == TEXT)          &&
-                                (_screenOpts != SCREENOPTS_HIDE_ALL);
+  const bool isInEditTextMode = _state == STATE_MOVING
+                                && _drawMode == TEXT
+                                && _screenOpts != SCREENOPTS_HIDE_ALL;
 
   int formPos = cursorOverForm(cursorPos);
 
