@@ -2870,8 +2870,7 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
     return;
   }
 
-  _canvas.scale += sign * SCALE_SENSIVITY;
-  if (_canvas.scale < 1.0f) _canvas.scale = 1.0f;
+  _canvas.scale *= 1 + sign * SCALE_SENSIVITY;
 
   scalePixmapAt(GET_CURSOR_POS());
 

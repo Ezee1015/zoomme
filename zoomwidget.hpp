@@ -131,7 +131,7 @@
 
 /// This is the sensitivity of the mouse wheel for zooming in and out and
 /// adjusting the radius of the flashlight effect
-#define SCALE_SENSIVITY 0.2f // the higher the number, the more sensitive it is
+#define SCALE_SENSIVITY 0.1f // the higher the number, the more sensitive it is
 
 /// This is the maximum length for the lines of the arrow head
 #define MAX_ARROWHEAD_LENGTH 50 // pixels
