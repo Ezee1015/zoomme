@@ -81,15 +81,15 @@
 
 #define EXPORT_IMG_ICON       ""
 #define EXPORT_CLIP_ICON      ""
-#define EXPORT_TRIM_IMG_ICON  "" // 
-#define EXPORT_TRIM_CLIP_ICON "" // 
+#define EXPORT_TRIM_IMG_ICON  " 󰈔" // 
+#define EXPORT_TRIM_CLIP_ICON " " // 
 #define EXPORT_PROJECT_ICON   "" // 
 #define RECORD_ICON           ""
 
 /// Show a border around the tool bar buttons (I think its prettier without a
 /// border). You can:
 ///  - Draw always: you have to uncomment BUTTON_BORDER_ALWAYS and comment
-///      BUTTON_BORDER_ACTIVE
+///                 BUTTON_BORDER_ACTIVE
 ///  - Draw when active (default)
 ///  - Never draw it, by commenting both lines
 // #define BUTTON_BORDER_ALWAYS // Always draw the button's border
@@ -566,7 +566,7 @@ class ZoomWidget : public QWidget
     // isToolActive(ACTION_DELETE)), for example.
     ButtonStatus isButtonActive(Button button);
     bool isActionActive(ZoomWidgetAction action);
-    void adjustFontSize(QFont *font, const QString text, const int rectWidth, const int minPointSize);
+    bool adjustFontSize(QFont *font, const QString text, const int rectWidth, const int minPointSize);
 
     void updateAtMousePos(QPoint mousePos);
     void dragPixmap(QPoint delta);

@@ -1120,35 +1120,52 @@ void invertColorPainter(QPainter *painter)
   painter->setPen(pen);
 }
 
-void ZoomWidget::adjustFontSize(QFont *font, const QString text, const int rectWidth, const int minPointSize)
+bool ZoomWidget::adjustFontSize(QFont *font, const QString text, const int rectWidth, const int minPointSize)
 {
   int fontSize = font->pointSize();
   if (fontSize <= minPointSize) {
-    return;
+    return false;
   }
 
-  QFontMetrics fontMetric = fontMetrics();
-  int fontWidth = fontMetric.horizontalAdvance(text);
+  int fontWidth = QFontMetrics(*font).horizontalAdvance(text);
 
-  if (fontWidth > rectWidth) {
+  if (fontWidth >= rectWidth) {
     font->setPointSize(fontSize-1);
-    adjustFontSize(font, text, rectWidth, minPointSize);
-    return;
+    return adjustFontSize(font, text, rectWidth, minPointSize);
   }
 
-  // ONLY FOR DEBUG PURPOSE OF THE FONT WIDTH
-  // UserObjectData data;
-  // data.pen = QColor(Qt::green);
-  // data.startPoint = QPoint( rect.x()+rect.width()/2 - fontWidth/2, rect.y() );
-  // data.endPoint = QPoint( data.startPoint.x()+fontWidth, data.startpoint.y()+rect.height() );
-  // _tests.append(data);
-  ///////////////////////////////////
+  return true;
+
+  // ONLY FOR DEBUG PURPOSE OF THE FONT RECT
+  // QRect rectText = fontMetric.boundingRect(text);
+  //
+  // Form data;
+  // data.type = RECTANGLE;
+  // data.active = false;
+  // data.deleted = false;
+  //
+  // data.pen = QColor(QCOLOR_GREEN);
+  // data.points.append(rect.topLeft());
+  // data.points.append(rect.bottomRight());
+  // _forms.append(data);
+  //
+  // data.pen = QColor(QCOLOR_RED);
+  // data.points.clear();
+  // data.points.append(QPoint(
+  //       rect.x() + (rect.width() - rectText.width())/2,
+  //       rect.y() + (rect.height() - rectText.height())/2
+  //       ));
+  // data.points.append(QPoint(
+  //     data.points.at(0).x() + rectText.width(),
+  //     data.points.at(0).y() + rectText.height()));
+  // _forms.append(data);
+  /****************************/
 }
 
 void ZoomWidget::drawButton(QPainter *screenPainter, Button button)
 {
   const int maxFontSize = 4 * FONT_SCALE;
-  const int minFontSize = 3 * FONT_SCALE;
+  const int minFontSize = 2 * FONT_SCALE;
   const int textMargin  = 2; // Pixels
 
   // Background
@@ -1174,31 +1191,33 @@ void ZoomWidget::drawButton(QPainter *screenPainter, Button button)
     screenPainter->setPen(QCOLOR_TOOL_BAR_DISABLED);
   }
 
-  QString text;
-#ifdef ENABLE_TOOLBAR_ICONS
-  if (!button.icon.isEmpty()) {
-    text.append(button.icon + "\n");
-  }
-#endif // ENABLE_TOOLBAR_ICONS
-  text.append(button.name);
-
   // Border
-  changePenWidth(screenPainter, 1);
 #ifdef BUTTON_BORDER_ALWAYS
   screenPainter->drawRoundedRect(button.rect, POPUP_ROUNDNESS, POPUP_ROUNDNESS);
 #endif // BUTTON_BORDER_ALWAYS
 #ifdef BUTTON_BORDER_ACTIVE
-    if (isButtonActive(button) == BUTTON_ACTIVE) {
-      screenPainter->drawRoundedRect(button.rect, POPUP_ROUNDNESS, POPUP_ROUNDNESS);
-    }
+  if (isButtonActive(button) == BUTTON_ACTIVE) {
+    screenPainter->drawRoundedRect(button.rect, POPUP_ROUNDNESS, POPUP_ROUNDNESS);
+  }
 #endif // BUTTON_BORDER_ACTIVE
 
-  // Adjust the font size to the width
-  QFont font;
-  font.setPointSize(maxFontSize);
-  adjustFontSize(&font, text, button.rect.width()-textMargin*2, minFontSize);
-  screenPainter->setFont(font);
-  screenPainter->drawText(button.rect, Qt::AlignCenter | Qt::TextWrapAnywhere, text);
+  // Adjust the font size to the width.
+  // Separate icon and text font because Hack Nerd Font gives problems when
+  // calculating the width of a text.
+  QFont iconFont = QFont("Hack Nerd Font", maxFontSize);
+  screenPainter->setFont(iconFont);
+
+  QFont textFont = QApplication::font(); // Default system font
+  textFont.setPointSize(maxFontSize);
+  bool displayText = adjustFontSize(&textFont, button.name, button.rect.width()-textMargin*2, minFontSize);
+
+  if (displayText) {
+    screenPainter->drawText(button.rect, Qt::AlignCenter | Qt::TextWrapAnywhere, button.icon+"\n");
+    screenPainter->setFont(textFont);
+    screenPainter->drawText(button.rect, Qt::AlignCenter | Qt::TextWrapAnywhere, "\n" + button.name);
+  } else {
+    screenPainter->drawText(button.rect, Qt::AlignCenter | Qt::TextWrapAnywhere, button.icon);
+  }
 }
 
 void ZoomWidget::drawToolBar(QPainter *screenPainter)
