@@ -3413,17 +3413,26 @@ void ZoomWidget::scalePixmapAt(const QPointF pos)
   int new_h = _canvas.originalSize.height() * _canvas.scale;
   _canvas.size = QSize(new_w, new_h);
 
-  int dw = new_w - old_w;
-  int dh = new_h - old_h;
+  if (_windowSize.width()  < _canvas.size.width() ||
+      _windowSize.height() < _canvas.size.height())
+  {
+    int dw = new_w - old_w;
+    int dh = new_h - old_h;
 
-  float cur_x = pos.x() - _canvas.pos.x();
-  float cur_y = pos.y() - _canvas.pos.y();
+    float cur_x = pos.x() - _canvas.pos.x();
+    float cur_y = pos.y() - _canvas.pos.y();
 
-  float cur_px = -((float)cur_x / old_w);
-  float cur_py = -((float)cur_y / old_h);
+    float cur_px = -((float)cur_x / old_w);
+    float cur_py = -((float)cur_y / old_h);
 
-  _canvas.pos.setX(_canvas.pos.x() + dw*cur_px);
-  _canvas.pos.setY(_canvas.pos.y() + dh*cur_py);
+    _canvas.pos = QPoint(
+          _canvas.pos.x() + dw*cur_px,
+          _canvas.pos.y() + dh*cur_py
+        );
+  } else {
+    _canvas.pos = centerCanvas();
+  }
+
 }
 
 QPoint ZoomWidget::screenPointToPixmapPos(QPoint qpoint)
