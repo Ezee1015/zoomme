@@ -3276,9 +3276,20 @@ void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
   update();
 }
 
-void ZoomWidget::setLiveMode(const bool liveMode)
+void ZoomWidget::setLiveMode()
 {
-  _liveMode = liveMode;
+  _liveMode = true;
+
+  QPixmap desktop = _desktopScreen->grabWindow(0);
+
+  if (desktop.isNull()) {
+    _sourcePixmap = QPixmap(_windowSize);
+    _sourcePixmap.fill(Qt::transparent);
+    return;
+  }
+
+  _sourcePixmap = QPixmap(desktop.size());
+  _sourcePixmap.fill(Qt::transparent);
 }
 
 void ZoomWidget::grabFromClipboard()
@@ -3313,17 +3324,11 @@ void ZoomWidget::grabDesktop()
   // example, in Wayland, it will be null because Wayland doesn't support screen
   // grabbing
   if (desktop.isNull()) {
-    if (_liveMode) {
-      _sourcePixmap = QPixmap(_windowSize);
-      _sourcePixmap.fill(Qt::transparent);
-      return;
-    }
+    const char* message = (QGuiApplication::platformName() == QString("wayland"))
+                          ? "Couldn't grab the desktop. It seems you're using Wayland: try to use the '-l' flag (live mode)"
+                          : "Couldn't grab the desktop";
 
-    if (QGuiApplication::platformName() == QString("wayland")) {
-      logUser(LOG_ERROR_AND_EXIT, "", "Couldn't grab the desktop. It seems you're using Wayland: try to use the '-l' flag (live mode)");
-    } else {
-      logUser(LOG_ERROR_AND_EXIT, "", "Couldn't grab the desktop");
-    }
+    logUser(LOG_ERROR_AND_EXIT, "", message);
   }
 
   // Paint the desktop over _sourcePixmap

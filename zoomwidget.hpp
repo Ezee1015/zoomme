@@ -416,7 +416,7 @@ class ZoomWidget : public QWidget
     explicit ZoomWidget(QWidget *parent = 0);
     ~ZoomWidget();
 
-    void setLiveMode(const bool liveMode);
+    void setLiveMode();
 
     void restoreStateFromFile(const QString path);
 

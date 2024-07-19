@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <QFileInfo>
 
-void printHelp(const char *errorMsg)
+void help(const char *errorMsg)
 {
   FILE *output;
   int exitStatus;
@@ -39,7 +39,7 @@ void printHelp(const char *errorMsg)
   fprintf(output, "\nModes:\n");
   fprintf(output, "  -l                        Not use a background (transparent). In this mode zooming is disabled\n");
   fprintf(output, "  -i <image_path> [opts]    Specify the path to an image as the background, instead of the desktop.\n");
-  fprintf(output, "       --replace-on-save         This will replace the source image (autocompletes -p, -e and -n flags).\n");
+  fprintf(output, "       --copy                    This will copy the source image path (autocompletes -p, -e and -n flags) -it will NOT replace the original image-.\n");
   fprintf(output, "  -r [path/to/file]         Load/Restore the state of the program saved in that file. It should be a '.zoomme' file\n");
   fprintf(output, "  -c                        Load an image from the clipboard as the background, instead of the desktop.\n");
   fprintf(output, "  --empty [width] [height]  Create an empty blackboard with the given size\n");
@@ -49,50 +49,53 @@ void printHelp(const char *errorMsg)
   exit(exitStatus);
 }
 
-bool isDefined(const QString mode)
-{
-  return (!mode.isEmpty());
-}
-
-bool isDefined(const QSize mode)
-{
-  return (mode != QSize());
-}
-
-bool isDefinedFitSource(const QString img, const QString backupFile, const bool fromClipboard)
-{
-  return (isDefined(img) || isDefined(backupFile) || fromClipboard);
-}
-
 QString nextToken(const int argc, char *argv[], int *pos, const QString type)
 {
   (*pos)++;
 
   if (*pos == argc) {
     QString error(type + " not provided");
-    printHelp(QSTRING_TO_STRING(error));
+    help(QSTRING_TO_STRING(error));
   }
 
   return argv[*pos];
 }
 
-void modeAlreadySelected(const QString backupFile, const QString img, const bool liveMode, const bool fromClipboard, const QSize emptyPixmap)
+enum Mode {
+  DESKTOP,    // Grab the desktop (default)
+  LIVE_MODE,
+  IMAGE,      // Grab an image
+  CLIPBOARD,  // Grab an image from the clipboard
+  BACKUP,     // Recover from a backup file (.zoomme)
+  BLACKBOARD  // Empty pixmap
+};
+
+void setMode(Mode *mode, const Mode newMode)
 {
-  if (isDefined(backupFile)) {
-    printHelp("Mode already provided (Backup file provided)");
+  switch (*mode) {
+    case BACKUP:
+      help("Mode already provided (Backup file provided)");
+      break;
 
-  } else if (isDefined(img)) {
-    printHelp("Mode already provided (image provided)");
+    case IMAGE:
+      help("Mode already provided (image provided)");
+      break;
 
-  } else if (liveMode) {
-    printHelp("Mode already provided (live mode)");
+    case LIVE_MODE:
+      help("Mode already provided (live mode)");
+      break;
 
-  } else if (fromClipboard) {
-    printHelp("Mode already provided (load from clipboard)");
+    case CLIPBOARD:
+      help("Mode already provided (load from clipboard)");
+      break;
 
-  } else if (isDefined(emptyPixmap)) {
-    printHelp("Mode already provided (empty blackboard)");
+    case BLACKBOARD:
+      help("Mode already provided (empty blackboard)");
+      break;
 
+    case DESKTOP: // Default value
+      *mode = newMode;
+      break;
   }
 }
 
@@ -106,102 +109,98 @@ int main(int argc, char *argv[])
   // Configurations
   QString savePath;
   QString saveName;
-  QString saveImgExt;
-  QString saveVidExt;
+  QString saveImgExt; // Extension
+  QString saveVidExt; // Extension
 
   // Modes
-  QString img;
-  QString backupFile;
-  bool liveMode = false;
-  bool fromClipboard = false;
-  QSize emptyPixmap;
+  Mode mode = DESKTOP;
+  QString imgPath;
+  QString backupPath;
+  QSize blackboardSize;
 
   // Parsing arguments
   for (int i=1; i<argc ; ++i) {
     if (strcmp(argv[i], "--help") == 0) {
-      printHelp("");
+      help("");
 
     } else if (strcmp(argv[i], "-l") == 0) {
-      modeAlreadySelected(backupFile, img, liveMode, fromClipboard, emptyPixmap);
-      liveMode=true;
+      setMode(&mode, LIVE_MODE);
 
     } else if (strcmp(argv[i], "-i") == 0) {
-      modeAlreadySelected(backupFile, img, liveMode, fromClipboard, emptyPixmap);
-      img = nextToken(argc, argv, &i, "Image path");
+      setMode(&mode, IMAGE);
+      imgPath = nextToken(argc, argv, &i, "Image path");
 
-    } else if (strcmp(argv[i], "--replace-on-save") == 0) {
-      if (!isDefined(img)) {
-        printHelp("Override source image was indicated, but the source image is not provided");
+    } else if (strcmp(argv[i], "--copy") == 0) {
+      if (imgPath == "") {
+        help("Copy the image path was indicated, but the source image is not provided");
       }
-      if (isDefined(savePath))   printHelp("Saving path already provided");
-      if (isDefined(saveName))   printHelp("Saving name already provided");
-      if (isDefined(saveImgExt)) printHelp("Saving extension already provided");
+      if (savePath != "")   help("Saving path already provided");
+      if (saveName != "")   help("Saving name already provided");
+      if (saveImgExt != "") help("Saving extension already provided");
 
-      QFileInfo imgInfo = QFileInfo(img);
+      QFileInfo imgInfo = QFileInfo(imgPath);
       savePath      = imgInfo.path();
       saveName      = imgInfo.completeBaseName();
       saveImgExt    = imgInfo.suffix();
 
     } else if (strcmp(argv[i], "-p") == 0) {
-      if (isDefined(savePath)) {
-        printHelp("Saving path already provided");
+      if (savePath != "") {
+        help("Saving path already provided");
       }
 
       savePath = nextToken(argc, argv, &i, "Save path");
 
     } else if (strcmp(argv[i], "-n") == 0) {
-      if (isDefined(saveName)) {
-        printHelp("Saving name already provided");
+      if (saveName != "") {
+        help("Saving name already provided");
       }
 
       saveName = nextToken(argc, argv, &i, "Save name");
 
     } else if (strcmp(argv[i], "-e:i") == 0) {
-      if (isDefined(saveImgExt)) {
-        printHelp("Saving image extension already provided");
+      if (saveImgExt != "") {
+        help("Saving image extension already provided");
       }
 
       saveImgExt = nextToken(argc, argv, &i, "Image extension");
 
     } else if (strcmp(argv[i], "-e:v") == 0) {
-      if (isDefined(saveVidExt)) {
-        printHelp("Saving video extension already provided");
+      if (saveVidExt != "") {
+        help("Saving video extension already provided");
       }
 
       saveVidExt = nextToken(argc, argv, &i, "Video extension");
 
     } else if (strcmp(argv[i], "-r") == 0) {
-      modeAlreadySelected(backupFile, img, liveMode, fromClipboard, emptyPixmap);
+      setMode(&mode, BACKUP);
 
-      backupFile = nextToken(argc, argv, &i, "Backup file path");
-      if (QFileInfo(backupFile).suffix() != "zoomme") {
-        QString errorMsg("It's not a '.zoomme' file: " + backupFile);
-        printHelp(QSTRING_TO_STRING(errorMsg));
+      backupPath = nextToken(argc, argv, &i, "Backup file path");
+      if (QFileInfo(backupPath).suffix() != "zoomme") {
+        QString errorMsg("It's not a '.zoomme' file: " + backupPath);
+        help(QSTRING_TO_STRING(errorMsg));
       }
 
     } else if (strcmp(argv[i], "-c") == 0) {
-      modeAlreadySelected(backupFile, img, liveMode, fromClipboard, emptyPixmap);
-
-      fromClipboard = true;
+      setMode(&mode, CLIPBOARD);
 
     } else if (strcmp(argv[i], "--empty") == 0) {
-      modeAlreadySelected(backupFile, img, liveMode, fromClipboard, emptyPixmap);
+      setMode(&mode, BLACKBOARD);
 
       bool widthCorrect = false, heightCorrect=false;
-      emptyPixmap.setWidth(nextToken(argc, argv, &i, "Width for the blackboard").toInt(&widthCorrect));
-      emptyPixmap.setHeight(nextToken(argc, argv, &i, "Height for the blackboard").toInt(&heightCorrect));
+      blackboardSize.setWidth(nextToken(argc, argv, &i, "Width for the blackboard").toInt(&widthCorrect));
+      blackboardSize.setHeight(nextToken(argc, argv, &i, "Height for the blackboard").toInt(&heightCorrect));
 
-      if (!widthCorrect)  printHelp("The given width is not a number");
-      if (!heightCorrect) printHelp("The given height is not a number");
+      if (!widthCorrect)  help("The given width is not a number");
+      if (!heightCorrect) help("The given height is not a number");
 
-      if (emptyPixmap.width() < 1)  printHelp("The given width is not a positive number");
-      if (emptyPixmap.height() < 1) printHelp("The given height is not a positive number");
+      if (blackboardSize.width() < 1)  help("The given width is not a positive number");
+      if (blackboardSize.height() < 1) help("The given height is not a positive number");
     }
 
     else {
       QString textError("Unknown flag: ");
       textError.append(argv[i]);
-      printHelp(QSTRING_TO_STRING(textError));
+      help(QSTRING_TO_STRING(textError));
     }
   }
 
@@ -210,28 +209,32 @@ int main(int argc, char *argv[])
   w.resize(QApplication::screenAt(QCursor::pos())->geometry().size());
   w.move(QApplication::screenAt(QCursor::pos())->geometry().topLeft());
   w.setCursor(QCursor(Qt::CrossCursor));
-  // Set transparency
-  w.setAttribute(Qt::WA_TranslucentBackground, true);
 
   // Set the path, name and extension for saving the file
   w.initFileConfig(savePath, saveName, saveImgExt, saveVidExt);
 
   // Configure the app mode
-  if (isDefined(backupFile)) {
-    w.restoreStateFromFile(backupFile);
-
-  } else if (isDefined(img)) {
-    w.grabImage(QPixmap(img));
-
-  } else if (isDefined(emptyPixmap)) {
-    w.createBlackboard(emptyPixmap);
-
-  } else if (fromClipboard) {
-    w.grabFromClipboard();
-
-  } else {
-    w.setLiveMode(liveMode);
-    w.grabDesktop();
+  switch (mode) {
+    case BACKUP:
+      w.restoreStateFromFile(backupPath);
+      break;
+    case IMAGE:
+      w.grabImage(QPixmap(imgPath));
+      break;
+    case BLACKBOARD:
+      w.createBlackboard(blackboardSize);
+      break;
+    case CLIPBOARD:
+      w.grabFromClipboard();
+      break;
+    case LIVE_MODE:
+      // Set transparency for the window
+      w.setAttribute(Qt::WA_TranslucentBackground, true);
+      w.setLiveMode();
+      break;
+    case DESKTOP:
+      w.grabDesktop();
+      break;
   }
 
   QApplication::beep();
