@@ -31,8 +31,9 @@
 
 #define QCOLOR_BLACKBOARD        QColor( 33,  37,  41)
 #define QCOLOR_TOOL_BAR          QCOLOR_BLUE
-#define QCOLOR_TOOL_BAR_DISABLED QColor( 70, 70, 70)
+#define QCOLOR_TOOL_BAR_DISABLED QColor( 70,  70,  70)
 #define QCOLOR_NODE              QCOLOR_BLUE
+#define QCOLOR_BACKGROUND        QColor( 52,  58,  64)
 
 /// This is the scale factor for the font.
 #define FONT_SCALE 3

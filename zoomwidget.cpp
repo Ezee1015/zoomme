@@ -30,6 +30,10 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _activePen.setColor(QCOLOR_RED);
   _activePen.setWidth(4*LINE_WIDTH_SCALE);
 
+  // Change the background color of the app
+  setPalette(QCOLOR_BACKGROUND);
+  setAutoFillBackground(true);
+
   // Fonts
   QFontDatabase::addApplicationFont(":/resources/Hack Nerd Font/HackNerdFont-Regular.ttf");
   QFontDatabase::addApplicationFont(":/resources/Hack Nerd Font/HackNerdFont-Bold.ttf");
