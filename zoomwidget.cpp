@@ -110,7 +110,7 @@ bool ZoomWidget::isToolBarVisible()
          && visibleStates;
 }
 
-void ZoomWidget::toggleAction(const ZoomWidgetAction action)
+void ZoomWidget::toggleAction(const Action action)
 {
   if (!isActionActive(action)) return;
 
@@ -442,7 +442,7 @@ void ZoomWidget::loadButtons()
   _toolBar.buttons.append(Button{ACTION_RECORDING,                 RECORD_ICON,           "Record",                      3, nullRect});
 }
 
-bool ZoomWidget::isActionActive(const ZoomWidgetAction action)
+bool ZoomWidget::isActionActive(const Action action)
 {
   switch (action) {
     case ACTION_WIDTH_1:
@@ -839,7 +839,7 @@ void ZoomWidget::saveStateToFile()
   QDataStream out(&file);
   // There should be the same arguments that the restoreStateToFile()
   out << _windowSize
-      << _sourcePixmap
+      << _canvas.source
       << _canvas.originalSize
 
       << _fileConfig.name
@@ -892,7 +892,7 @@ void ZoomWidget::restoreStateFromFile(const QString path)
       >> formListSize;
 
   resize(_windowSize);
-  _sourcePixmap = savedPixmap;
+  _canvas.source = savedPixmap;
   _canvas.size = savedPixmapSize;
   _canvas.originalSize = savedPixmapSize;
   _canvas.pos = centerCanvas();
@@ -2227,8 +2227,8 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 {
   (void) event;
 
-  // Exit if the _sourcePixmap is not initialized (not ready)
-  if (_sourcePixmap.isNull()) {
+  // Exit if the _canvas.source is not initialized (not ready)
+  if (_canvas.source.isNull()) {
     logUser(LOG_ERROR_AND_EXIT, "", "The desktop pixmap is null. Can't paint over a null pixmap");
   }
 
@@ -2239,7 +2239,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     if (!isDisabledMouseTracking()) _canvas.pos = centerCanvas();
   }
 
-  _canvas.pixmap = _sourcePixmap;
+  _canvas.pixmap = _canvas.source;
 
   if (_liveMode) {
     _canvas.pixmap.fill(Qt::transparent);
@@ -3181,7 +3181,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
     return;
   }
 
-  ZoomWidgetAction action = ACTION_SPACER;
+  Action action = ACTION_SPACER;
   switch (key) {
     case Qt::Key_G: action = ACTION_COLOR_GREEN;   break;
     case Qt::Key_B: action = ACTION_COLOR_BLUE;    break;
@@ -3283,13 +3283,13 @@ void ZoomWidget::setLiveMode()
   QPixmap desktop = _desktopScreen->grabWindow(0);
 
   if (desktop.isNull()) {
-    _sourcePixmap = QPixmap(_windowSize);
-    _sourcePixmap.fill(Qt::transparent);
+    _canvas.source = QPixmap(_windowSize);
+    _canvas.source.fill(Qt::transparent);
     return;
   }
 
-  _sourcePixmap = QPixmap(desktop.size());
-  _sourcePixmap.fill(Qt::transparent);
+  _canvas.source = QPixmap(desktop.size());
+  _canvas.source.fill(Qt::transparent);
 }
 
 void ZoomWidget::grabFromClipboard()
@@ -3308,8 +3308,8 @@ void ZoomWidget::grabFromClipboard()
 
 void ZoomWidget::createBlackboard(const QSize size)
 {
-  _sourcePixmap = QPixmap(size);
-  _sourcePixmap.fill(QCOLOR_BLACKBOARD);
+  _canvas.source = QPixmap(size);
+  _canvas.source.fill(QCOLOR_BLACKBOARD);
   _canvas.size = size;
   _canvas.originalSize = size;
 
@@ -3331,11 +3331,11 @@ void ZoomWidget::grabDesktop()
     logUser(LOG_ERROR_AND_EXIT, "", message);
   }
 
-  // Paint the desktop over _sourcePixmap
+  // Paint the desktop over _canvas.source
   // Fixes the issue with hdpi scaling (now the size of the image is the real
   // resolution of the screen)
-  _sourcePixmap = QPixmap(desktop.size());
-  QPainter painter(&_sourcePixmap);
+  _canvas.source = QPixmap(desktop.size());
+  QPainter painter(&_canvas.source);
   painter.drawPixmap(0, 0, desktop.width(), desktop.height(), desktop);
   painter.end();
 
@@ -3348,8 +3348,8 @@ void ZoomWidget::grabImage(const QPixmap img)
     logUser(LOG_ERROR_AND_EXIT, "", "Couldn't open the image");
   }
 
-  _sourcePixmap = img;
-  _canvas.size = _sourcePixmap.size();
+  _canvas.source = img;
+  _canvas.size = _canvas.source.size();
   _canvas.originalSize = _canvas.size;
   _canvas.pos = centerCanvas();
 
@@ -3489,7 +3489,7 @@ bool ZoomWidget::isTextEditable(const QPoint cursorPos)
 
 // Function taken from https://github.com/tsoding/musializer/blob/master/src/nob.h
 // inside the nob_log function
-void ZoomWidget::logUser(const Log_Urgency type, QString popupMsg, const char *fmt, ...)
+void ZoomWidget::logUser(const LogUrgency type, QString popupMsg, const char *fmt, ...)
 {
   FILE *output;
   bool exitApp = false;

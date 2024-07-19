@@ -175,13 +175,13 @@
 // scaledScreenResolution -------- mousePos
 // realScreenResolution   --------    x
 //
-// So 'x' = mousePos * (_sourcePixmap.size()/_canvas.originalSize)
-#define FIX_X_FOR_HDPI_SCALING(point) ((point) * ((float)_sourcePixmap.width()  / (float)_canvas.originalSize.width() ))
-#define FIX_Y_FOR_HDPI_SCALING(point) ((point) * ((float)_sourcePixmap.height() / (float)_canvas.originalSize.height()))
+// So 'x' = mousePos * (_canvas.source.size()/_canvas.originalSize)
+#define FIX_X_FOR_HDPI_SCALING(point) ((point) * ((float)_canvas.source.width()  / (float)_canvas.originalSize.width() ))
+#define FIX_Y_FOR_HDPI_SCALING(point) ((point) * ((float)_canvas.source.height() / (float)_canvas.originalSize.height()))
 // These macros revert the conversion that does FIX_Y_FOR_HDPI_SCALING and
 // FIX_X_FOR_HDPI_SCALING.
-#define GET_X_FROM_HDPI_SCALING(point) ((point) * ((float)_canvas.originalSize.width()  / (float)_sourcePixmap.width() ))
-#define GET_Y_FROM_HDPI_SCALING(point) ((point) * ((float)_canvas.originalSize.height() / (float)_sourcePixmap.height()))
+#define GET_X_FROM_HDPI_SCALING(point) ((point) * ((float)_canvas.originalSize.width()  / (float)_canvas.source.width() ))
+#define GET_Y_FROM_HDPI_SCALING(point) ((point) * ((float)_canvas.originalSize.height() / (float)_canvas.source.height()))
 
 #define IS_RECORDING (_recordTimer->isActive())
 #define IS_FFMPEG_RUNNING (_ffmpeg.state() != QProcess::NotRunning)
@@ -233,10 +233,15 @@ enum FreezeCanvas {
   FREEZE_FALSE,
 };
 
-struct UserCanvas {
-  // Pixmap shown on the screen. This can either be _sourcePixmap, the
+struct Canvas {
+  // Pixmap shown on the screen. This can either be _canvas.source, the
   // blackboard or a transparent background, with the drawings on top.
   QPixmap pixmap;
+  // The size of the pixmap should be the REAL size of the monitor when
+  // capturing the desktop image (instead of taking the size of the scaled
+  // monitor).
+  QPixmap source; // This can be the desktop or an image
+
   // Zoom movement
   QPointF pos;
   FreezeCanvas freezePos;
@@ -249,7 +254,7 @@ struct UserCanvas {
   float scale;
 };
 
-struct UserFileConfig {
+struct ExportConfig {
   QDir folder;
   QString name;
   // Extensions
@@ -276,7 +281,7 @@ enum ButtonStatus {
   BUTTON_DISABLED,
 };
 
-enum ZoomWidgetState {
+enum State {
   STATE_MOVING,
   STATE_DRAWING,
   STATE_TYPING,
@@ -287,7 +292,7 @@ enum ZoomWidgetState {
   STATE_TRIMMING,
 };
 
-enum ZoomWidgetAction {
+enum Action {
   // DRAW MODES
   ACTION_LINE,
   ACTION_RECTANGLE,
@@ -345,7 +350,7 @@ enum ZoomWidgetAction {
 };
 
 struct Button {
-  ZoomWidgetAction action;
+  Action action;
   QString icon;
   QString name;
   int row; // Starting from 0
@@ -363,14 +368,14 @@ struct ToolBar {
 };
 
 // When modifying this enum, don't forget to modify the toggleAction function
-enum ZoomWidgetScreenOpts {
+enum ScreenOptions {
   SCREENOPTS_HIDE_ALL, // Only show the background. This disables some functions
                        // too (like the mouse actions and changing modes)
   SCREENOPTS_HIDE_FLOATING, // Hides the status and the popups
   SCREENOPTS_SHOW_ALL,
 };
 
-enum Log_Urgency {
+enum LogUrgency {
   // With popup
   LOG_INFO,
   LOG_SUCCESS,
@@ -384,7 +389,7 @@ struct Popup {
   qint64 timeCreated;
   int lifetime;
   QString message;
-  Log_Urgency urgency;
+  LogUrgency urgency;
 };
 
 struct PopupTray {
@@ -443,73 +448,62 @@ class ZoomWidget : public QWidget
   private:
     Ui::zoomwidget *ui;
 
+    // System variables
+    QScreen *_desktopScreen;
     QClipboard *_clipboard;
 
+
+    QList<Form> _forms;
+    ToolBar _toolBar;
+    PopupTray _popupTray;
     // Note: When scaling is enabled (such as HiDPI with Graphic Server scaling
-    // in X11 or Wayland), if you grab the desktop, _sourcePixmap works with the
+    // in X11 or Wayland), if you grab the desktop, _canvas.source works with the
     // REAL size of the screen, while other variables in the canvas work with
     // the SCALED size.
-
+    //
     // This program operates with the scaled size of the screen. However, if you
-    // grab the desktop with HiDPI scaling, the _sourcePixmap and
+    // grab the desktop with HiDPI scaling, the _canvas.source and
     // _canvas.pixmap, to maintain image quality, are saved with the original
     // resolution (REAL size of the screen) when painting _canvas.pixmap, it
     // overlays the REAL size image on the SCALED size monitor without losing
     // quality.
-    UserCanvas _canvas;
+    Canvas _canvas;
 
-    // The size of the pixmap should be the REAL size of the monitor when
-    // capturing the desktop image (instead of taking the size of the scaled
-    // monitor).
-    QPixmap _sourcePixmap; // This can be the desktop or an image
 
-    QScreen *_desktopScreen;
-    // Resolution of the scaled monitor
+    // STATE/CONFIG VARIABLES
     QSize _windowSize;
-
-    // For exporting files
-    UserFileConfig _fileConfig;
-
-    QList<Form> _forms;
-
-    ToolBar _toolBar;
-    PopupTray _popupTray;
-
+    ExportConfig _fileConfig; // For exporting files
     ResizeState _resize;
+    TrimOptions _trimDestination;
+    ScreenOptions _screenOpts;
+    State _state;
+    FormType _drawMode;
+    QPen _activePen;
+    QPoint _lastMousePos;
+    // These two following points should be fixed to hdpi scaling
+    QPoint _startDrawPoint;
+    QPoint _endDrawPoint;
+    // Color that was active before the 'pick a color' mode (so that the color
+    // can be reverted after exiting that mode)
+    QColor _colorBeforePickColorMode;
 
     // Modes
     bool _boardMode;
     bool _liveMode;
     bool _flashlightMode;
-    int _flashlightRadius;
+    int  _flashlightRadius;
     bool _highlight;
     bool _arrow;
-    TrimOptions _trimDestination;
     bool _dynamicWidth; // Dynamic pen's width for the free form
+
 
     // Timer that cancels the escape after some time
     QTimer *_exitTimer;
-
-    ZoomWidgetScreenOpts _screenOpts;
-
-    // Color that was active before the 'pick a color' mode (so that the color
-    // can be reverted after exiting that mode)
-    QColor _colorBeforePickColorMode;
 
     // Recording
     QProcess _ffmpeg;
     QTimer *_recordTimer;
     QFile *_recordTempFile;
-
-    ZoomWidgetState _state;
-    QPoint _lastMousePos;
-
-    // Drawing properties.
-    FormType _drawMode;
-    QPen _activePen;
-    // These two points should be fixed to hdpi scaling
-    QPoint _startDrawPoint;
-    QPoint _endDrawPoint;
 
     // Drawing functions
     void drawDrawnPixmap(QPainter *painter);
@@ -548,7 +542,7 @@ class ZoomWidget : public QWidget
     // Tool bar and buttons
     void loadButtons();
     void generateToolBar();
-    void toggleAction(const ZoomWidgetAction action);
+    void toggleAction(const Action action);
     bool isToolBarVisible();
     bool isCursorOverButton(const QPoint cursorPos);
     bool isCursorOverToolBar(const QPoint cursorPos);
@@ -560,7 +554,7 @@ class ZoomWidget : public QWidget
     // state is in delete mode. Use: _state == STATE_DELETING, NOT
     // isToolActive(ACTION_DELETE)), for example.
     ButtonStatus isButtonActive(const Button button);
-    bool isActionActive(const ZoomWidgetAction action);
+    bool isActionActive(const Action action);
     bool adjustFontSize(QFont *font, const QString text, const int rectWidth, const int minPointSize);
 
     // _canvas functions
@@ -622,7 +616,7 @@ class ZoomWidget : public QWidget
 
     // If the popupMsg is empty, the *fmt will be the popupMsg (if the type
     // accepts popups)
-    void logUser(const Log_Urgency type, QString popupMsg, const char *console_log_fmt, ...);
+    void logUser(const LogUrgency type, QString popupMsg, const char *console_log_fmt, ...);
 };
 
 #endif // ZOOMWIDGET_HPP
