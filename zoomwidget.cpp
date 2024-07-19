@@ -2237,6 +2237,11 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     _windowSize = event->rect().size();
     generateToolBar();
     if (!isDisabledMouseTracking()) _canvas.pos = centerCanvas();
+    if (_liveMode) {
+      _canvas.source = QPixmap(_windowSize);
+      _canvas.size = _windowSize;
+      _canvas.originalSize = _windowSize;
+    }
   }
 
   _canvas.pixmap = _canvas.source;
@@ -3282,13 +3287,7 @@ void ZoomWidget::setLiveMode()
 
   QPixmap desktop = _desktopScreen->grabWindow(0);
 
-  if (desktop.isNull()) {
-    _canvas.source = QPixmap(_windowSize);
-    _canvas.source.fill(Qt::transparent);
-    return;
-  }
-
-  _canvas.source = QPixmap(desktop.size());
+  _canvas.source = QPixmap(_windowSize);
   _canvas.source.fill(Qt::transparent);
 }
 
