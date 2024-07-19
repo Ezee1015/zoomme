@@ -3361,6 +3361,7 @@ void ZoomWidget::dragPixmap(const QPoint delta)
 }
 
 QPoint ZoomWidget::centerCanvas() {
+  // This is the maximum value for shifting the pixmap
   const QSize availableMargin = _windowSize - _canvas.size;
 
   return QPoint(
@@ -3374,20 +3375,21 @@ void ZoomWidget::shiftPixmap(const QPoint cursorPos)
   // This is the maximum value for shifting the pixmap
   const QSize availableMargin = _windowSize - _canvas.size;
 
-  // If the canvas is smaller than the screen size, adjust it to the center
-  if (availableMargin.width() > 0 || availableMargin.height() > 0) {
-    _canvas.pos = centerCanvas();
-    return;
-  }
-
   // The percentage of the cursor position relative to the screen size
   float percentageX = (float)cursorPos.x() / (float)_windowSize.width();
   float percentageY = (float)cursorPos.y() / (float)_windowSize.height();
 
-  _canvas.pos = QPoint(
-        availableMargin.width() * percentageX,
-        availableMargin.height() * percentageY
-      );
+  // If the canvas is smaller than the screen size, adjust it to the center of
+  // the screen.
+  const int x = (availableMargin.width() >= 0)
+                ? centerCanvas().x()
+                : availableMargin.width() * percentageX;
+
+  const int y = (availableMargin.height() >= 0)
+                ? centerCanvas().y()
+                : availableMargin.height() * percentageY;
+
+  _canvas.pos = QPoint(x, y);
 }
 
 void ZoomWidget::scalePixmapAt(const QPointF pos)
