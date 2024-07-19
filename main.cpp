@@ -49,22 +49,22 @@ void printHelp(const char *errorMsg)
   exit(exitStatus);
 }
 
-bool isDefined(QString mode)
+bool isDefined(const QString mode)
 {
   return (!mode.isEmpty());
 }
 
-bool isDefined(QSize mode)
+bool isDefined(const QSize mode)
 {
   return (mode != QSize());
 }
 
-bool isDefinedFitSource(QString img, QString backupFile, bool fromClipboard)
+bool isDefinedFitSource(const QString img, const QString backupFile, const bool fromClipboard)
 {
   return (isDefined(img) || isDefined(backupFile) || fromClipboard);
 }
 
-QString nextToken(int argc, char *argv[], int *pos, QString type)
+QString nextToken(const int argc, char *argv[], int *pos, const QString type)
 {
   (*pos)++;
 
@@ -76,7 +76,7 @@ QString nextToken(int argc, char *argv[], int *pos, QString type)
   return argv[*pos];
 }
 
-void modeAlreadySelected(QString backupFile, QString img, bool liveMode, bool fromClipboard, QSize emptyPixmap)
+void modeAlreadySelected(const QString backupFile, const QString img, const bool liveMode, const bool fromClipboard, const QSize emptyPixmap)
 {
   if (isDefined(backupFile)) {
     printHelp("Mode already provided (Backup file provided)");
@@ -218,7 +218,6 @@ int main(int argc, char *argv[])
 
   // Configure the app mode
   if (isDefined(backupFile)) {
-    // The backup file has it's own live mode
     w.restoreStateFromFile(backupFile);
 
   } else if (isDefined(img)) {

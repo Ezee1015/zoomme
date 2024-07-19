@@ -416,17 +416,17 @@ class ZoomWidget : public QWidget
     explicit ZoomWidget(QWidget *parent = 0);
     ~ZoomWidget();
 
-    void setLiveMode(bool liveMode);
+    void setLiveMode(const bool liveMode);
 
-    void restoreStateFromFile(QString path);
+    void restoreStateFromFile(const QString path);
 
     // By passing an empty QString, sets the argument to the default
-    void initFileConfig(QString path, QString name, QString imgExt, QString vidExt);
+    void initFileConfig(const QString path, const QString name, const QString imgExt, const QString vidExt);
 
     void grabFromClipboard();
     void grabDesktop();
-    void grabImage(QPixmap img);
-    void createBlackboard(QSize size);
+    void grabImage(const QPixmap img);
+    void createBlackboard(const QSize size);
 
   protected:
     virtual void paintEvent(QPaintEvent *event);
@@ -515,22 +515,24 @@ class ZoomWidget : public QWidget
     QPoint _startDrawPoint;
     QPoint _endDrawPoint;
 
+    // Drawing functions
     void drawDrawnPixmap(QPainter *painter);
     void drawSavedForms(QPainter *pixmapPainter);
+    void drawActiveForm(QPainter *painter, const bool drawToScreen);
     // Opaque the area outside the circle of the cursor
-    void drawFlashlightEffect(QPainter *screenPainter, bool drawToScreen);
-    void drawActiveForm(QPainter *painter, bool drawToScreen);
+    void drawFlashlightEffect(QPainter *screenPainter, const bool drawToScreen);
     // The status is design to remember you things that you can forget they are
     // on or selected, for example, that you have selected some drawing mode,
     // the size of the pen, etc.
     void drawStatus(QPainter *screenPainter);
     void drawToolBar(QPainter *screenPainter);
-    void drawButton(QPainter *screenPainter, Button button);
-    ArrowHead getArrowHead(int x, int y, int width, int height, int lineLength);
-    ArrowHead getFreeFormArrowHead(Form freeForm);
+    void drawButton(QPainter *screenPainter, const Button button);
+    ArrowHead getArrowHead(const int x, const int y, const int width, const int height, int lineLength);
+    ArrowHead getFreeFormArrowHead(const Form freeForm);
     void drawTrimmed(QPainter *pixmapPainter);
     void drawPopupTray(QPainter *screenPainter);
     void drawPopup(QPainter *screenPainter, const int listPos);
+    void drawNode(QPainter *painter, const QPoint point, NodeType type);
 
     // Pop-up
     void setPopupTrayPos();
@@ -539,37 +541,35 @@ class ZoomWidget : public QWidget
     void closePopupUnderCursor(const QPoint cursorPos);
     void updateForPopups(); // Timer function
 
-    void saveImage(QPixmap pixmap, bool toImage);
-
     // Resizing nodes
     void resizeForm(QPoint cursorPos);
-    void drawNode(QPainter *painter, const QPoint point, NodeType type);
     void drawAllNodes(QPainter *screenPainter);
     bool isCursorOverNode(const QPoint cursorPos, const QPoint point);
     // Moves the form behind the cursor to the top of the list and populates the
     // _resize variable
     bool selectNodeToResize(const QPoint cursorPos);
 
-    // Tool bar
+    // Tool bar and buttons
     void loadButtons();
     void generateToolBar();
-    void toggleAction(ZoomWidgetAction action);
+    void toggleAction(const ZoomWidgetAction action);
     bool isToolBarVisible();
-    bool isCursorOverButton(QPoint cursorPos);
-    bool isCursorOverToolBar(QPoint cursorPos);
+    bool isCursorOverButton(const QPoint cursorPos);
+    bool isCursorOverToolBar(const QPoint cursorPos);
     // Returns the position in the vector of the buttons (_toolBar) that is behind
     // the cursor position. Returns -1 if there's no button under the cursor
-    int buttonBehindCursor(QPoint cursor);
+    int buttonBehindCursor(const QPoint cursorPos);
     // This function checks if the tool/action of the button is active. Don't
     // use it to check the state of a variable in the app (like checking if the
     // state is in delete mode. Use: _state == STATE_DELETING, NOT
     // isToolActive(ACTION_DELETE)), for example.
-    ButtonStatus isButtonActive(Button button);
-    bool isActionActive(ZoomWidgetAction action);
+    ButtonStatus isButtonActive(const Button button);
+    bool isActionActive(const ZoomWidgetAction action);
     bool adjustFontSize(QFont *font, const QString text, const int rectWidth, const int minPointSize);
 
-    void updateAtMousePos(QPoint mousePos);
-    void dragPixmap(QPoint delta);
+    // _canvas functions
+    void updateAtMousePos(const QPoint mousePos);
+    void dragPixmap(const QPoint delta);
     void shiftPixmap(const QPoint cursorPos);
     void scalePixmapAt(const QPointF pos);
     QPoint centerCanvas();
@@ -579,55 +579,54 @@ class ZoomWidget : public QWidget
     // pixmap (which can be zoomed in and moved).
     // The point should NOT be fixed to HDPI scaling.
     // Returns the pixmap point that IS fixed to HDPI scaling.
-    QPoint screenPointToPixmapPos(QPoint qpoint);
+    QPoint screenPointToPixmapPos(const QPoint qpoint);
     // From a point in the pixmap (like the position of the drawings), it
     // returns the position relative to the screen.
     // The point should be fixed to HDPI scaling.
     // Returns the screen point that is NOT fixed to HDPI scaling.
-    QPoint pixmapPointToScreenPos(QPoint qpoint);
+    QPoint pixmapPointToScreenPos(const QPoint qpoint);
     // From the width and height of a form in the pixmap, it returns the correct
     // width and height for the form in the screen applying the scale factor to
     // them.
     // The size should be fixed to HDPI scaling
     // Returns the size that is NOT fixed to HDPI scaling
-    QSize pixmapSizeToScreenSize(QSize qsize);
+    QSize pixmapSizeToScreenSize(const QSize qsize);
 
+    // Form Functions
+    QList<int> getFreeFormWidth(const Form form);
+    Form smoothFreeForm(Form form);
+    void removeFormBehindCursor(const QPoint cursorPos);
+    bool isDrawingHovered(const int i);
+    bool isTextEditable(const QPoint cursorPos);
     // Returns the position in the vector of the form (from the current draw
     // mode) that is behind the cursor position. Returns -1 if there's no form
     // under the cursor
-    int cursorOverForm(QPoint cursorPos);
-
-    QString getFilePath(FileType type);
-
-    void removeFormBehindCursor(QPoint cursorPos);
-    void updateCursorShape();
-    bool isDrawingHovered(int i);
-    bool isDisabledMouseTracking();
-    bool isTextEditable(QPoint cursorPos);
-
-    QList<int> getFreeFormWidth(Form form);
-    Form smoothFreeForm(Form form);
-
+    int cursorOverForm(const QPoint cursorPos);
     // The X, Y, W and H arguments must be a point in the SCREEN, not in the pixmap
     // If floating is enabled, the form (the width and height) is not affected by zoom/scaling
-    bool isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos, bool isFloating);
-    bool isCursorOverLine(int x, int y, int w, int h, QPoint cursorPos);
-    bool isCursorOverArrowHead(ArrowHead head, QPoint cursorPos);
-
-    // Recording
-    void saveFrameToFile(); // Timer function
-    void createVideoFFmpeg();
-
+    bool isCursorInsideHitBox(int x, int y, int w, int h, const QPoint cursorPos, const bool isFloating);
+    bool isCursorOverLine(int x, int y, int w, int h, const QPoint cursorPos);
+    bool isCursorOverArrowHead(ArrowHead head, const QPoint cursorPos);
     // If posRelativeToScreen is true, it will return the positon be relative to
     // the screen, if it's false, it will return the position relative to the
     // pixmap
-    void getSimpleFormPosition(const Form &userObj, int *x, int *y, int *w, int *h, bool posRelativeToScreen);
+    void getSimpleFormPosition(const Form &userObj, int *x, int *y, int *w, int *h, const bool posRelativeToScreen);
 
+    // Exporting
+    QString getFilePath(const FileType type);
+    // If toImage is false, the functions saves it to the clipboard
+    void saveImage(const QPixmap pixmap, const bool toImage);
+    void saveFrameToFile(); // Timer function for recording
+    void createVideoFFmpeg();
     void saveStateToFile(); // Create a .zoomme file
+
+    // Cursor
+    void updateCursorShape();
+    bool isDisabledMouseTracking();
 
     // If the popupMsg is empty, the *fmt will be the popupMsg (if the type
     // accepts popups)
-    void logUser(Log_Urgency type, QString popupMsg, const char *fmt, ...);
+    void logUser(const Log_Urgency type, QString popupMsg, const char *console_log_fmt, ...);
 };
 
 #endif // ZOOMWIDGET_HPP

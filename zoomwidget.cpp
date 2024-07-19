@@ -110,7 +110,7 @@ bool ZoomWidget::isToolBarVisible()
          && visibleStates;
 }
 
-void ZoomWidget::toggleAction(ZoomWidgetAction action)
+void ZoomWidget::toggleAction(const ZoomWidgetAction action)
 {
   if (!isActionActive(action)) return;
 
@@ -442,7 +442,7 @@ void ZoomWidget::loadButtons()
   _toolBar.buttons.append(Button{ACTION_RECORDING,                 RECORD_ICON,           "Record",                      3, nullRect});
 }
 
-bool ZoomWidget::isActionActive(ZoomWidgetAction action)
+bool ZoomWidget::isActionActive(const ZoomWidgetAction action)
 {
   switch (action) {
     case ACTION_WIDTH_1:
@@ -605,7 +605,7 @@ bool ZoomWidget::isActionActive(ZoomWidgetAction action)
   return false;
 }
 
-ButtonStatus ZoomWidget::isButtonActive(Button button)
+ButtonStatus ZoomWidget::isButtonActive(const Button button)
 {
   if (!isActionActive(button.action)) {
     return BUTTON_DISABLED;
@@ -752,7 +752,7 @@ void ZoomWidget::generateToolBar()
 }
 
 // Returns -1 if there's no button behind the cursor
-int ZoomWidget::buttonBehindCursor(QPoint cursor)
+int ZoomWidget::buttonBehindCursor(const QPoint cursor)
 {
   if (!_toolBar.show) {
     logUser(LOG_ERROR, "Source code error", "cursorOverButton() was called, but the tool box is not visible");
@@ -766,7 +766,7 @@ int ZoomWidget::buttonBehindCursor(QPoint cursor)
 }
 
 // The mouse pos shouldn't be fixed to the hdpi scaling
-bool ZoomWidget::isCursorOverToolBar(QPoint cursorPos)
+bool ZoomWidget::isCursorOverToolBar(const QPoint cursorPos)
 {
   if (!isToolBarVisible()) {
     return false;
@@ -783,7 +783,7 @@ bool ZoomWidget::isCursorOverToolBar(QPoint cursorPos)
 }
 
 // It doesn't make any distinction between disabled and not disabled buttons
-bool ZoomWidget::isCursorOverButton(QPoint cursorPos)
+bool ZoomWidget::isCursorOverButton(const QPoint cursorPos)
 {
   if (!isToolBarVisible()) {
     return false;
@@ -862,7 +862,7 @@ void ZoomWidget::saveStateToFile()
   logUser(LOG_SUCCESS, "Project file saved correctly!", "Project saved correctly: %s", QSTRING_TO_STRING(filePath));
 }
 
-void ZoomWidget::restoreStateFromFile(QString path)
+void ZoomWidget::restoreStateFromFile(const QString path)
 {
   QFile file(path);
   if (!file.open(QIODevice::ReadOnly)) {
@@ -1016,7 +1016,7 @@ void changePenWidth(QPainter *painter, int width)
 }
 
 // If the lineLength is 0, it will be calculated with the hypotenuse (the line)
-ArrowHead ZoomWidget::getArrowHead(int x, int y, int width, int height, int lineLength)
+ArrowHead ZoomWidget::getArrowHead(const int x, const int y, const int width, const int height, int lineLength)
 {
   const float opposite=-1 * height;
   const float adjacent=width;
@@ -1086,7 +1086,7 @@ ArrowHead ZoomWidget::getArrowHead(int x, int y, int width, int height, int line
   };
 }
 
-bool ZoomWidget::isDrawingHovered(int vectorPos)
+bool ZoomWidget::isDrawingHovered(const int vectorPos)
 {
   const QPoint cursorPos = GET_CURSOR_POS();
 
@@ -1163,7 +1163,7 @@ bool ZoomWidget::adjustFontSize(QFont *font, const QString text, const int rectW
   /****************************/
 }
 
-void ZoomWidget::drawButton(QPainter *screenPainter, Button button)
+void ZoomWidget::drawButton(QPainter *screenPainter, const Button button)
 {
   const int maxFontSize = 4 * FONT_SCALE;
   const int minFontSize = 2 * FONT_SCALE;
@@ -1646,7 +1646,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
   screenPainter->drawText(textRect, Qt::AlignCenter | Qt::TextWordWrap, text);
 }
 
-ArrowHead ZoomWidget::getFreeFormArrowHead(Form freeForm)
+ArrowHead ZoomWidget::getFreeFormArrowHead(const Form freeForm)
 {
   const int pointsCount = 8; // Number of points to take the average for the arrow head start
   const int minPointDistance = 5; // Minimal pixel of the distance between the points for the average
@@ -1692,7 +1692,7 @@ ArrowHead ZoomWidget::getFreeFormArrowHead(Form freeForm)
       );
 }
 
-QList<int> ZoomWidget::getFreeFormWidth(Form form)
+QList<int> ZoomWidget::getFreeFormWidth(const Form form)
 {
   const int minWidth  = 1 * LINE_WIDTH_SCALE;
   const int maxWidth  = 9 * LINE_WIDTH_SCALE;
@@ -1902,7 +1902,7 @@ void ZoomWidget::drawSavedForms(QPainter *pixmapPainter)
   }
 }
 
-void ZoomWidget::drawFlashlightEffect(QPainter *painter, bool drawToScreen)
+void ZoomWidget::drawFlashlightEffect(QPainter *painter, const bool drawToScreen)
 {
   if (_state == STATE_TRIMMING) {
     return;
@@ -2304,7 +2304,7 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
 }
 
 // The cursor pos shouln't be fixed to hdpi scaling
-void ZoomWidget::removeFormBehindCursor(QPoint cursorPos)
+void ZoomWidget::removeFormBehindCursor(const QPoint cursorPos)
 {
   // This is the position of the form (in the current draw mode) in the vector,
   // that is behind the cursor.
@@ -2526,7 +2526,7 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
 
 // If toImage it's true, then it's saved in a image file, otherwise, it gets
 // saved in the clipboard
-void ZoomWidget::saveImage(QPixmap pixmap, bool toImage)
+void ZoomWidget::saveImage(const QPixmap pixmap, const bool toImage)
 {
   if (toImage) {
      QString path = getFilePath(FILE_IMAGE);
@@ -2847,7 +2847,7 @@ exit:
 }
 
 // The mouse pos shouldn't be fixed to the hdpi scaling
-void ZoomWidget::updateAtMousePos(QPoint mousePos)
+void ZoomWidget::updateAtMousePos(const QPoint mousePos)
 {
   if (_canvas.freezePos == FREEZE_BY_TEXT && _state != STATE_TYPING) {
     _canvas.freezePos = FREEZE_FALSE;
@@ -2897,7 +2897,7 @@ void ZoomWidget::wheelEvent(QWheelEvent *event)
   update();
 }
 
-QString ZoomWidget::getFilePath(FileType type)
+QString ZoomWidget::getFilePath(const FileType type)
 {
   int fileIndex = 0;
   QString filePath;
@@ -2928,7 +2928,7 @@ QString ZoomWidget::getFilePath(FileType type)
   return filePath;
 }
 
-void ZoomWidget::initFileConfig(QString path, QString name, QString imgExt, QString vidExt)
+void ZoomWidget::initFileConfig(const QString path, const QString name, const QString imgExt, const QString vidExt)
 {
   // Path
   if (path.isEmpty()) {
@@ -2963,7 +2963,7 @@ void ZoomWidget::initFileConfig(QString path, QString name, QString imgExt, QStr
 // height is relative to the REAL screen size, the hdpi one (for example, if
 // it's from the pixmap). Otherwise, it should'nt be fixed to the hdpi scaling
 // (for exmaple, if it's from the status bar, that is drawn onto the screen).
-bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorPos, bool isFloating)
+bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, const QPoint cursorPos, const bool isFloating)
 {
   // Minimum size of the hit box
   int minimumSize = 25;
@@ -2992,7 +2992,7 @@ bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, QPoint cursorP
   return hitBox.contains(cursorPos);
 }
 
-bool ZoomWidget::isCursorOverLine(int x, int y, int w, int h, QPoint cursorPos)
+bool ZoomWidget::isCursorOverLine(int x, int y, int w, int h, const QPoint cursorPos)
 {
   const int segmentSize = 25; // Segment size for the hypotenuse
 
@@ -3020,7 +3020,7 @@ bool ZoomWidget::isCursorOverLine(int x, int y, int w, int h, QPoint cursorPos)
   return false;
 }
 
-bool ZoomWidget::isCursorOverArrowHead(ArrowHead head, QPoint cursorPos)
+bool ZoomWidget::isCursorOverArrowHead(ArrowHead head, const QPoint cursorPos)
 {
   // Convert the pixmap points of the arrow to screen points
   head.startPoint   = pixmapPointToScreenPos(head.startPoint);
@@ -3054,7 +3054,7 @@ bool ZoomWidget::isCursorOverArrowHead(ArrowHead head, QPoint cursorPos)
 // getRealUserObjectPos() they are scaled to the screen 'scaled' (no hdpi)
 // resolution (and the cursor has to be relative to the same resolution that the
 // drawings)
-int ZoomWidget::cursorOverForm(QPoint cursorPos)
+int ZoomWidget::cursorOverForm(const QPoint cursorPos)
 {
   int x, y, w, h;
   for (int i=0; i<_forms.size(); i++) {
@@ -3295,7 +3295,7 @@ void ZoomWidget::keyReleaseEvent(QKeyEvent *event)
   update();
 }
 
-void ZoomWidget::setLiveMode(bool liveMode)
+void ZoomWidget::setLiveMode(const bool liveMode)
 {
   _liveMode = liveMode;
 }
@@ -3314,7 +3314,7 @@ void ZoomWidget::grabFromClipboard()
   grabImage(QPixmap::fromImage(image));
 }
 
-void ZoomWidget::createBlackboard(QSize size)
+void ZoomWidget::createBlackboard(const QSize size)
 {
   _sourcePixmap = QPixmap(size);
   _sourcePixmap.fill(QCOLOR_BLACKBOARD);
@@ -3356,7 +3356,7 @@ void ZoomWidget::grabDesktop()
   if (!_liveMode) showFullScreen();
 }
 
-void ZoomWidget::grabImage(QPixmap img)
+void ZoomWidget::grabImage(const QPixmap img)
 {
   if (img.isNull()) {
     logUser(LOG_ERROR_AND_EXIT, "", "Couldn't open the image");
@@ -3370,7 +3370,7 @@ void ZoomWidget::grabImage(QPixmap img)
   if (!_liveMode) showFullScreen();
 }
 
-void ZoomWidget::dragPixmap(QPoint delta)
+void ZoomWidget::dragPixmap(const QPoint delta)
 {
   _canvas.pos += delta;
 }
@@ -3437,7 +3437,7 @@ void ZoomWidget::scalePixmapAt(const QPointF pos)
 
 }
 
-QPoint ZoomWidget::screenPointToPixmapPos(QPoint qpoint)
+QPoint ZoomWidget::screenPointToPixmapPos(const QPoint qpoint)
 {
   QPoint returnPoint = (qpoint - _canvas.pos.toPoint())/_canvas.scale;
 
@@ -3447,22 +3447,20 @@ QPoint ZoomWidget::screenPointToPixmapPos(QPoint qpoint)
   return returnPoint;
 }
 
-QPoint ZoomWidget::pixmapPointToScreenPos(QPoint qpoint)
+QPoint ZoomWidget::pixmapPointToScreenPos(const QPoint qpoint)
 {
-  qpoint.setX( GET_X_FROM_HDPI_SCALING(qpoint.x()) );
-  qpoint.setY( GET_Y_FROM_HDPI_SCALING(qpoint.y()) );
-
-  QPoint point = _canvas.pos.toPoint() + qpoint * _canvas.scale;
-
-  return point;
+  return QPoint(
+        _canvas.pos.toPoint().x() + (GET_X_FROM_HDPI_SCALING(qpoint.x())) * _canvas.scale,
+        _canvas.pos.toPoint().y() + (GET_Y_FROM_HDPI_SCALING(qpoint.y())) * _canvas.scale
+      );
 }
 
-QSize ZoomWidget::pixmapSizeToScreenSize(QSize qsize)
+QSize ZoomWidget::pixmapSizeToScreenSize(const QSize qsize)
 {
-  qsize.setWidth(  GET_X_FROM_HDPI_SCALING(qsize.width() ) );
-  qsize.setHeight( GET_Y_FROM_HDPI_SCALING(qsize.height()) );
-
-  return qsize * _canvas.scale;
+  return QSize(
+        GET_X_FROM_HDPI_SCALING(qsize.width() ) * _canvas.scale,
+        GET_Y_FROM_HDPI_SCALING(qsize.height()) * _canvas.scale
+      );
 }
 
 void ZoomWidget::drawDrawnPixmap(QPainter *painter)
@@ -3488,7 +3486,7 @@ bool ZoomWidget::isDisabledMouseTracking()
 }
 
 // The cursor pos shouldn't be fixed to HDPI scaling
-bool ZoomWidget::isTextEditable(QPoint cursorPos)
+bool ZoomWidget::isTextEditable(const QPoint cursorPos)
 {
   const bool isInEditTextMode = _state == STATE_MOVING
                                 && _drawMode == TEXT
@@ -3505,7 +3503,7 @@ bool ZoomWidget::isTextEditable(QPoint cursorPos)
 
 // Function taken from https://github.com/tsoding/musializer/blob/master/src/nob.h
 // inside the nob_log function
-void ZoomWidget::logUser(Log_Urgency type, QString popupMsg, const char *fmt, ...)
+void ZoomWidget::logUser(const Log_Urgency type, QString popupMsg, const char *fmt, ...)
 {
   FILE *output;
   bool exitApp = false;
@@ -3593,7 +3591,7 @@ void ZoomWidget::updateForPopups()
   update();
 }
 
-void ZoomWidget::getSimpleFormPosition(const Form &userObj, int *x, int *y, int *w, int *h, bool posRelativeToScreen)
+void ZoomWidget::getSimpleFormPosition(const Form &userObj, int *x, int *y, int *w, int *h, const bool posRelativeToScreen)
 {
   if (userObj.points.size() != 2) {
     logUser(LOG_ERROR_AND_EXIT, "", "Can't get the position of a complex form. getSimpleFormPosition() is only for simple forms");
