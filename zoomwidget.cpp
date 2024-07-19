@@ -2288,17 +2288,6 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     drawToolBar(&screen);
   }
 
-  // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
-  // int x, y, w, h;
-  // for (int i = 0; i < _tests.size(); ++i) {
-  //   screen.setPen(_tests.at(i).pen);
-  //   getRealUserObjectPos(_tests.at(i), &x, &y, &w, &h, false);
-  //
-  //   screen.drawRect(x, y, w, h);
-  // }
-  // _tests.clear();
-  ///////////////////////////////////
-
   screen.end();
   pixmapPainter.end();
 }
@@ -2979,14 +2968,6 @@ bool ZoomWidget::isCursorInsideHitBox(int x, int y, int w, int h, const QPoint c
     y -= (minimumSize*direction-h)/2;
     h = minimumSize * direction;
   }
-
-  // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
-  // UserObjectData data;
-  // data.pen = QColor(Qt::blue);
-  // data.startPoint = QPoint(x,y);
-  // data.endPoint = QPoint(w+x,h+y);
-  // _tests.append(data);
-  ///////////////////////////////////
 
   QRect hitBox = QRect(x, y, w, h);
   return hitBox.contains(cursorPos);

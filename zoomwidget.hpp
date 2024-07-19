@@ -472,10 +472,6 @@ class ZoomWidget : public QWidget
 
     QList<Form> _forms;
 
-    // ONLY FOR DEBUG PURPOSE OF THE HIT BOX
-    // QList<UserObjectData>    _tests;
-    /////////////////////////
-
     ToolBar _toolBar;
     PopupTray _popupTray;
 
