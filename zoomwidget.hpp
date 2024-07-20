@@ -455,6 +455,7 @@ class ZoomWidget : public QWidget
 
 
     QList<Form> _forms;
+    QList<int> _deletedHistory; // Saves the position of the deleted Form in _forms
     ToolBar _toolBar;
     PopupTray _popupTray;
     // Note: When scaling is enabled (such as HiDPI with Graphic Server scaling

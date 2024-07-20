@@ -167,6 +167,7 @@ void ZoomWidget::toggleAction(const Action action)
          Form f = _forms.takeAt(i);
          f.deleted = true;
          _forms.insert(i, f);
+         _deletedHistory.append(i);
        }
        _state = STATE_MOVING;
        break;
@@ -182,22 +183,18 @@ void ZoomWidget::toggleAction(const Action action)
            Form f = _forms.takeAt(i);
            f.deleted = true;
            _forms.insert(i, f);
+           _deletedHistory.append(i);
          }
          break;
        }
 
     case ACTION_UNDO_DELETE: {
-         int i=0;
+         int pos=_deletedHistory.takeLast();
 
-         while (i<_forms.size() && !_forms.at(i).deleted) {
-           i++;
-         }
+         Form f = _forms.takeAt(pos);
+         f.deleted = false;
+         _forms.insert(pos, f);
 
-         if (i!=_forms.size()) {
-           Form f = _forms.takeAt(i);
-           f.deleted = false;
-           _forms.insert(i, f);
-         }
          break;
        }
 
@@ -544,10 +541,7 @@ bool ZoomWidget::isActionActive(const Action action)
         const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
         const bool enabledModes = (_state == STATE_MOVING);
 
-        bool isDeletedListEmpty = true;
-        int i = 0;
-        while (i<_forms.size() && !_forms.at(i).deleted) i++;
-        if (i!=_forms.size()) isDeletedListEmpty = false;
+        bool isDeletedListEmpty = _deletedHistory.isEmpty();
 
         return (!hideAll) && (enabledModes) && (!isDeletedListEmpty);
       }
@@ -855,6 +849,7 @@ void ZoomWidget::saveStateToFile()
       << _activePen
       << _highlight
 
+      << _deletedHistory
       << _forms.size();
 
   // Save the drawings
@@ -893,6 +888,7 @@ void ZoomWidget::restoreStateFromFile(const QString path)
       >> _activePen
       >> _highlight
 
+      >> _deletedHistory
       >> formListSize;
 
   resize(_windowSize);
@@ -2315,6 +2311,7 @@ void ZoomWidget::removeFormBehindCursor(const QPoint cursorPos)
   Form f = _forms.takeAt(formPosBehindCursor);
   f.deleted = true;
   _forms.insert(formPosBehindCursor, f);
+  _deletedHistory.append(formPosBehindCursor);
 
   _state = STATE_MOVING;
   updateCursorShape();
