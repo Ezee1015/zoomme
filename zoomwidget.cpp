@@ -1456,7 +1456,7 @@ void ZoomWidget::drawPopup(QPainter *screenPainter, const int listPos)
   screenPainter->drawEllipse(endDividerProgress, progressCircleRadius, progressCircleRadius);
   screenPainter->setBrush(QBrush()); // No fill
     // Static divider Line
-  changePenWidth(screenPainter, borderWidth/LINE_WIDTH_SCALE);
+  changePenWidth(screenPainter, borderWidth/LINE_WIDTH_SCALE/3);
   screenPainter->drawLine(endDividerProgress, endDivider);
 }
 
