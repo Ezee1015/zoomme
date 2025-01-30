@@ -67,6 +67,7 @@
 #define COLOR_ICON            "" //  󰉦
 
 #define FLASHLIGHT_ICON       "󰉄"
+#define TRACKING_ICON         ""
 #define BLACKBOARD_ICON       "󰃥"
 #define PICK_COLOR_ICON       ""
 #define SCREEN_OPTS_ICON      ""
@@ -139,13 +140,6 @@
 
 /// This is the number of iterations of the smoothing function over the free form
 #define FREEFORM_SMOOTHING 2 // 0 --> No smoothing
-
-/// By uncommenting the DISABLE_MOUSE_TRACKING, you can disable the mouse
-/// tracking function, that moves the desktop/background when zoomed in by
-/// following the mouse. If disabled, you can move the background with the mouse
-/// button specified in DRAG_MOUSE_BUTTON (just like you can with the mouse
-/// tracking enabled and by pressing shift)
-// #define DISABLE_MOUSE_TRACKING
 
 /// Pop-ups settings
 #define POPUP_WIDTH     (_windowSize.width() / 4.0) // pixels
@@ -309,6 +303,7 @@ enum Action {
   ACTION_PICK_COLOR,
   ACTION_DELETE_LAST,
   ACTION_UNDO_DELETE,
+  ACTION_MOUSE_TRACKING,
   ACTION_DELETE,
   ACTION_RESIZE,
   ACTION_CLEAR,
@@ -475,6 +470,7 @@ class ZoomWidget : public QWidget
     // STATE/CONFIG VARIABLES
     QSize _windowSize;
     ExportConfig _fileConfig; // For exporting files
+    bool _forceMouseTracking;
     ResizeState _resize;
     TrimOptions _trimDestination;
     ScreenOptions _screenOpts;

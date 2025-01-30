@@ -53,6 +53,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _state                 = STATE_MOVING;
   _drawMode              = LINE;
   _screenOpts            = SCREENOPTS_SHOW_ALL;
+  _forceMouseTracking    = true;
   _boardMode             = false;
   _highlight             = false;
   _arrow                 = false;
@@ -136,11 +137,12 @@ void ZoomWidget::toggleAction(const Action action)
        _arrow = false;
        break;
 
-    case ACTION_HIGHLIGHT:     _highlight = !_highlight;           break;
-    case ACTION_FLASHLIGHT:    _flashlightMode = !_flashlightMode; break;
-    case ACTION_BLACKBOARD:    _boardMode = !_boardMode;           break;
-    case ACTION_ARROW:         _arrow = !_arrow;                   break;
-    case ACTION_DYNAMIC_WIDTH: _dynamicWidth = !_dynamicWidth;     break;
+    case ACTION_HIGHLIGHT:      _highlight = !_highlight;                     break;
+    case ACTION_FLASHLIGHT:     _flashlightMode = !_flashlightMode;           break;
+    case ACTION_BLACKBOARD:     _boardMode = !_boardMode;                     break;
+    case ACTION_ARROW:          _arrow = !_arrow;                             break;
+    case ACTION_DYNAMIC_WIDTH:  _dynamicWidth = !_dynamicWidth;               break;
+    case ACTION_MOUSE_TRACKING: _forceMouseTracking = !_forceMouseTracking;   break;
 
     case ACTION_RESIZE:
        // Disable this modes to enable to select all the drawings
@@ -417,6 +419,7 @@ void ZoomWidget::loadButtons()
 
 
   _toolBar.buttons.append(Button{ACTION_FLASHLIGHT,        FLASHLIGHT_ICON,  "Flashlight",    2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_MOUSE_TRACKING,    TRACKING_ICON,    "Mouse Tracking",2, nullRect});
   _toolBar.buttons.append(Button{ACTION_BLACKBOARD,        BLACKBOARD_ICON,  "Blackboard",    2, nullRect});
   _toolBar.buttons.append(Button{ACTION_PICK_COLOR,        PICK_COLOR_ICON,  "Pick color",    2, nullRect});
   _toolBar.buttons.append(Button{ACTION_RESIZE,            RESIZE_ICON,      "Resize",        2, nullRect});
@@ -470,6 +473,7 @@ bool ZoomWidget::isActionActive(const Action action)
 
     case ACTION_FLASHLIGHT:
     case ACTION_BLACKBOARD:
+    case ACTION_MOUSE_TRACKING:
 
     case ACTION_SAVE_TO_FILE:
     case ACTION_SAVE_TO_CLIPBOARD:
@@ -641,6 +645,7 @@ ButtonStatus ZoomWidget::isButtonActive(const Button button)
 
     case ACTION_FLASHLIGHT:        actionStatus = (_flashlightMode);                      break;
     case ACTION_BLACKBOARD:        actionStatus = (_boardMode);                           break;
+    case ACTION_MOUSE_TRACKING:    actionStatus = (_forceMouseTracking);                  break;
     case ACTION_ARROW:             actionStatus = (_arrow);                               break;
     case ACTION_PICK_COLOR:        actionStatus = (_state == STATE_COLOR_PICKER);         break;
     case ACTION_DELETE:            actionStatus = (_state == STATE_DELETING);             break;
@@ -3463,14 +3468,11 @@ void ZoomWidget::drawDrawnPixmap(QPainter *painter)
 
 bool ZoomWidget::isDisabledMouseTracking()
 {
-#ifdef DISABLE_MOUSE_TRACKING
-  return true;
-#else
-  return _canvas.freezePos == FREEZE_BY_TEXT
+  return !_forceMouseTracking
+         || _canvas.freezePos == FREEZE_BY_TEXT
          || _canvas.freezePos == FREEZE_BY_SHIFT
          || _toolBar.show
          || _canvas.dragging;
-#endif // DISABLE_MOUSE_TRACKING
 }
 
 // The cursor pos shouldn't be fixed to HDPI scaling
