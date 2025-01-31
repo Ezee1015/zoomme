@@ -54,6 +54,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _drawMode              = LINE;
   _screenOpts            = SCREENOPTS_SHOW_ALL;
   _forceMouseTracking    = true;
+  _grid                  = false;
   _boardMode             = false;
   _highlight             = false;
   _arrow                 = false;
@@ -143,6 +144,7 @@ void ZoomWidget::toggleAction(const Action action)
     case ACTION_ARROW:          _arrow = !_arrow;                             break;
     case ACTION_DYNAMIC_WIDTH:  _dynamicWidth = !_dynamicWidth;               break;
     case ACTION_MOUSE_TRACKING: _forceMouseTracking = !_forceMouseTracking;   break;
+    case ACTION_GRID:           _grid = !_grid;                               break;
 
     case ACTION_RESIZE:
        // Disable this modes to enable to select all the drawings
@@ -421,6 +423,7 @@ void ZoomWidget::loadButtons()
   _toolBar.buttons.append(Button{ACTION_FLASHLIGHT,        FLASHLIGHT_ICON,  "Flashlight",    2, nullRect});
   _toolBar.buttons.append(Button{ACTION_MOUSE_TRACKING,    TRACKING_ICON,    "Mouse Tracking",2, nullRect});
   _toolBar.buttons.append(Button{ACTION_BLACKBOARD,        BLACKBOARD_ICON,  "Blackboard",    2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_GRID,              GRID_ICON,        "Grid",          2, nullRect});
   _toolBar.buttons.append(Button{ACTION_PICK_COLOR,        PICK_COLOR_ICON,  "Pick color",    2, nullRect});
   _toolBar.buttons.append(Button{ACTION_RESIZE,            RESIZE_ICON,      "Resize",        2, nullRect});
   _toolBar.buttons.append(Button{ACTION_SCREEN_OPTS,       SCREEN_OPTS_ICON, "Hide elements", 2, nullRect});
@@ -473,6 +476,7 @@ bool ZoomWidget::isActionActive(const Action action)
 
     case ACTION_FLASHLIGHT:
     case ACTION_BLACKBOARD:
+    case ACTION_GRID:
     case ACTION_MOUSE_TRACKING:
 
     case ACTION_SAVE_TO_FILE:
@@ -645,6 +649,7 @@ ButtonStatus ZoomWidget::isButtonActive(const Button button)
 
     case ACTION_FLASHLIGHT:        actionStatus = (_flashlightMode);                      break;
     case ACTION_BLACKBOARD:        actionStatus = (_boardMode);                           break;
+    case ACTION_GRID:              actionStatus = (_grid);                                break;
     case ACTION_MOUSE_TRACKING:    actionStatus = (_forceMouseTracking);                  break;
     case ACTION_ARROW:             actionStatus = (_arrow);                               break;
     case ACTION_PICK_COLOR:        actionStatus = (_state == STATE_COLOR_PICKER);         break;
@@ -2286,6 +2291,25 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     }
     drawActiveForm(&pixmapPainter, false);
     drawDrawnPixmap(&screen);
+  }
+
+  if (_grid) {
+    QPen pen;
+    pen.setColor(QCOLOR_GRID);
+    pen.setWidth(GRID_WIDTH * LINE_WIDTH_SCALE);
+    screen.setPen(pen);
+
+    for (int i=0; i<_canvas.originalSize.height(); i+=GRID_DISTANCE)
+      screen.drawLine(
+            pixmapPointToScreenPos(QPoint(0, i)),
+            pixmapPointToScreenPos(QPoint(_canvas.originalSize.width(), i))
+          );
+
+    for (int i=0; i<_canvas.originalSize.width(); i+=GRID_DISTANCE)
+      screen.drawLine(
+            pixmapPointToScreenPos(QPoint(i, 0)),
+            pixmapPointToScreenPos(QPoint(i, _canvas.originalSize.height()))
+          );
   }
 
   if (_state == STATE_RESIZE) {

@@ -34,6 +34,7 @@
 #define QCOLOR_TOOL_BAR_DISABLED QColor( 70,  70,  70)
 #define QCOLOR_NODE              QCOLOR_BLUE
 #define QCOLOR_BACKGROUND        QColor( 52,  58,  64)
+#define QCOLOR_GRID              QCOLOR_BACKGROUND
 
 /// This is the scale factor for the font.
 #define FONT_SCALE 3
@@ -69,6 +70,7 @@
 #define FLASHLIGHT_ICON       "󰉄"
 #define TRACKING_ICON         ""
 #define BLACKBOARD_ICON       "󰃥"
+#define GRID_ICON             "󰝘"
 #define PICK_COLOR_ICON       ""
 #define SCREEN_OPTS_ICON      ""
 #define RESIZE_ICON           "󰆾"
@@ -137,6 +139,11 @@
 
 /// This is the maximum length for the lines of the arrow head
 #define MAX_ARROWHEAD_LENGTH 50 // pixels
+
+/// This is the distance between the grid lines
+#define GRID_DISTANCE 50 // pixels
+/// This is the width of the grid lines
+#define GRID_WIDTH 2 // pixels
 
 /// This is the number of iterations of the smoothing function over the free form
 #define FREEFORM_SMOOTHING 2 // 0 --> No smoothing
@@ -300,6 +307,7 @@ enum Action {
   // FUNCTIONS
   ACTION_FLASHLIGHT,
   ACTION_BLACKBOARD,
+  ACTION_GRID,
   ACTION_PICK_COLOR,
   ACTION_DELETE_LAST,
   ACTION_UNDO_DELETE,
@@ -487,6 +495,7 @@ class ZoomWidget : public QWidget
 
     // Modes
     bool _boardMode;
+    bool _grid;
     bool _liveMode;
     bool _flashlightMode;
     int  _flashlightRadius;
