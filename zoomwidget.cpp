@@ -2299,13 +2299,13 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
     pen.setWidth(GRID_WIDTH * LINE_WIDTH_SCALE);
     screen.setPen(pen);
 
-    for (int i=0; i<_canvas.originalSize.height(); i+=GRID_DISTANCE)
+    for (int i=0; i<_canvas.originalSize.height(); i+=GRID_DISTANCE_Y)
       screen.drawLine(
             pixmapPointToScreenPos(QPoint(0, i)),
             pixmapPointToScreenPos(QPoint(_canvas.originalSize.width(), i))
           );
 
-    for (int i=0; i<_canvas.originalSize.width(); i+=GRID_DISTANCE)
+    for (int i=0; i<_canvas.originalSize.width(); i+=GRID_DISTANCE_X)
       screen.drawLine(
             pixmapPointToScreenPos(QPoint(i, 0)),
             pixmapPointToScreenPos(QPoint(i, _canvas.originalSize.height()))

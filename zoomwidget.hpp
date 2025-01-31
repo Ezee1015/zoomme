@@ -141,7 +141,8 @@
 #define MAX_ARROWHEAD_LENGTH 50 // pixels
 
 /// This is the distance between the grid lines
-#define GRID_DISTANCE 50 // pixels
+#define GRID_DISTANCE_X 50 // pixels (vertical grid)
+#define GRID_DISTANCE_Y 50 // pixels (horizontal grid)
 /// This is the width of the grid lines
 #define GRID_WIDTH 2 // pixels
 
