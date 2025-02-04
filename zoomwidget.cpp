@@ -64,8 +64,6 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _flashlightRadius      = 80;
   _popupTray.margin      = 20;
   _toolBar.show          = false;
-  _resize.active         = false;
-  _resize.type           = NODE;
 
   _lastMousePos          = GET_CURSOR_POS();
   _clipboard             = QApplication::clipboard();
@@ -107,7 +105,8 @@ bool ZoomWidget::isToolBarVisible()
         _state == STATE_TO_TRIM
         || _state == STATE_DELETING
         || _state == STATE_COLOR_PICKER
-        || (_state == STATE_RESIZE && !_resize.active)
+        || _state == STATE_RESIZE_FORM
+        || _state == STATE_MOVE_FORM
         || _state == STATE_MOVING // Normal state
       );
 
@@ -152,8 +151,20 @@ void ZoomWidget::toggleAction(const Action action)
        _highlight = false;
 
        if (_state == STATE_MOVING) {
-         _state = STATE_RESIZE;
-       } else if (_state == STATE_RESIZE) {
+         _state = STATE_RESIZE_FORM;
+       } else if (_state == STATE_RESIZE_FORM) {
+         _state = STATE_MOVING;
+       }
+       break;
+
+    case ACTION_MOVE:
+       // Disable this modes to enable to select all the drawings
+       _arrow = false;
+       _highlight = false;
+
+       if (_state == STATE_MOVING) {
+         _state = STATE_MOVE_FORM;
+       } else if (_state == STATE_MOVE_FORM) {
          _state = STATE_MOVING;
        }
        break;
@@ -320,8 +331,11 @@ void ZoomWidget::toggleAction(const Action action)
       if (_state == STATE_COLOR_PICKER) {
         toggleAction(ACTION_PICK_COLOR);
 
-      } else if (_state == STATE_RESIZE) {
+      } else if (_state == STATE_RESIZE_FORM) {
         toggleAction(ACTION_RESIZE);
+
+      } else if (_state == STATE_MOVE_FORM) {
+        toggleAction(ACTION_MOVE);
 
       } else if (_state == STATE_DELETING) {
         toggleAction(ACTION_DELETE);
@@ -426,6 +440,7 @@ void ZoomWidget::loadButtons()
   _toolBar.buttons.append(Button{ACTION_GRID,              GRID_ICON,        "Grid",          2, nullRect});
   _toolBar.buttons.append(Button{ACTION_PICK_COLOR,        PICK_COLOR_ICON,  "Pick color",    2, nullRect});
   _toolBar.buttons.append(Button{ACTION_RESIZE,            RESIZE_ICON,      "Resize",        2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_MOVE,              MOVE_ICON,        "Move Form",     2, nullRect});
   _toolBar.buttons.append(Button{ACTION_SCREEN_OPTS,       SCREEN_OPTS_ICON, "Hide elements", 2, nullRect});
   _toolBar.buttons.append(Button{ACTION_CLEAR,             CLEAR_ICON,       "Clear",         2, nullRect});
   _toolBar.buttons.append(Button{ACTION_DELETE,            DELETE_ICON,      "Delete",        2, nullRect});
@@ -525,14 +540,26 @@ bool ZoomWidget::isActionActive(const Action action)
 
     case ACTION_RESIZE: {
         const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
-        const bool enabledModes = (_state == STATE_MOVING || _state == STATE_RESIZE);
+        const bool enabledModes = (_state == STATE_MOVING || _state == STATE_RESIZE_FORM);
 
         bool isFormListEmpty = true;
         int i=0;
         while (i<_forms.size() && (_forms.at(i).deleted || _forms.at(i).type!=_drawMode)) i++;
         if (i!=_forms.size()) isFormListEmpty = false;
 
-        return (!hideAll) && (enabledModes) && (!isFormListEmpty || _state == STATE_RESIZE);
+        return (!hideAll) && (enabledModes) && (!isFormListEmpty || _state == STATE_RESIZE_FORM);
+      }
+
+    case ACTION_MOVE: {
+        const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
+        const bool enabledModes = (_state == STATE_MOVING || _state == STATE_MOVE_FORM);
+
+        bool isFormListEmpty = true;
+        int i=0;
+        while (i<_forms.size() && (_forms.at(i).deleted || _forms.at(i).type!=_drawMode)) i++;
+        if (i!=_forms.size()) isFormListEmpty = false;
+
+        return (!hideAll) && (enabledModes) && (!isFormListEmpty || _state == STATE_MOVE_FORM);
       }
 
     case ACTION_SCREEN_OPTS:
@@ -654,7 +681,8 @@ ButtonStatus ZoomWidget::isButtonActive(const Button button)
     case ACTION_ARROW:             actionStatus = (_arrow);                               break;
     case ACTION_PICK_COLOR:        actionStatus = (_state == STATE_COLOR_PICKER);         break;
     case ACTION_DELETE:            actionStatus = (_state == STATE_DELETING);             break;
-    case ACTION_RESIZE:            actionStatus = (_state == STATE_RESIZE);               break;
+    case ACTION_RESIZE:            actionStatus = (_state == STATE_RESIZE_FORM);          break;
+    case ACTION_MOVE:              actionStatus = (_state == STATE_MOVE_FORM);            break;
     case ACTION_SCREEN_OPTS:       actionStatus = (_screenOpts != SCREENOPTS_SHOW_ALL);   break;
     case ACTION_FULLSCREEN:        actionStatus = isFullScreen();                         break;
     case ACTION_DELETE_LAST:       return BUTTON_NO_STATUS;
@@ -1560,14 +1588,17 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
 
   // Line 2
   switch (_state) {
-    case STATE_MOVING:       break;
-    case STATE_DRAWING:      break;
-    case STATE_TYPING:       text.append("\n-- TYPING --");     break;
-    case STATE_DELETING:     text.append("\n-- DELETING --");   break;
-    case STATE_COLOR_PICKER: text.append("\n-- PICK COLOR --"); break;
-    case STATE_RESIZE:       text.append("\n-- RESIZING --");   break;
+    case STATE_MOVING:        break;
+    case STATE_DRAWING:       break;
+    case STATE_TYPING:        text.append("\n-- TYPING --");     break;
+    case STATE_DELETING:      text.append("\n-- DELETING --");   break;
+    case STATE_COLOR_PICKER:  text.append("\n-- PICK COLOR --"); break;
+    case STATE_RESIZE_FORM:
+    case STATE_RESIZING_FORM: text.append("\n-- RESIZING --");   break;
+    case STATE_MOVE_FORM:
+    case STATE_MOVING_FORM:   text.append("\n-- MOVING --");     break;
     case STATE_TO_TRIM:
-    case STATE_TRIMMING:     text.append("\n-- TRIMMING --");   break;
+    case STATE_TRIMMING:      text.append("\n-- TRIMMING --");   break;
   };
   if (isTextEditable(GET_CURSOR_POS())) {
     text += "\n-- SELECT --";
@@ -2166,7 +2197,7 @@ void ZoomWidget::drawActiveForm(QPainter *painter, bool drawToScreen)
   }
 }
 
-void ZoomWidget::drawNode(QPainter *painter, const QPoint point, NodeType type)
+void ZoomWidget::drawHandle(QPainter *painter, const QPoint point)
 {
   const int radius = NODE_RADIUS * _canvas.scale;
 
@@ -2177,43 +2208,64 @@ void ZoomWidget::drawNode(QPainter *painter, const QPoint point, NodeType type)
   }
   painter->setPen(pen);
 
-  switch (type) {
-    case NODE:
-      {
-        pen.setWidth(radius * LINE_WIDTH_SCALE);
-        painter->setPen(pen);
+  pen.setWidth(radius/2 * LINE_WIDTH_SCALE);
+  painter->setPen(pen);
 
-        QPainterPath node;
-        node.addEllipse(point, radius, radius);
-        painter->fillPath(node, pen.color());
-        break;
-      }
+  // Horizontal
+  painter->drawLine(
+        point.x() - radius + pen.width()/2,
+        point.y(),
+        point.x() + radius - pen.width()/2,
+        point.y()
+      );
+  // Vertical
+  painter->drawLine(
+        point.x(),
+        point.y() - radius + pen.width()/2,
+        point.x(),
+        point.y() + radius - pen.width()/2
+      );
+}
 
-    case HANDLE:
-      pen.setWidth(radius/2 * LINE_WIDTH_SCALE);
-      painter->setPen(pen);
+void ZoomWidget::drawNode(QPainter *painter, const QPoint point)
+{
+  const int radius = NODE_RADIUS * _canvas.scale;
 
-      // Horizontal
-      painter->drawLine(
-            point.x() - radius + pen.width()/2,
-            point.y(),
-            point.x() + radius - pen.width()/2,
-            point.y()
-          );
-      // Vertical
-      painter->drawLine(
-            point.x(),
-            point.y() - radius + pen.width()/2,
-            point.x(),
-            point.y() + radius - pen.width()/2
-          );
-      break;
+  // Pen configuration
+  QPen pen = QCOLOR_NODE;
+  if (isCursorOverNode(GET_CURSOR_POS(), point)) {
+    pen = invertColor(pen.color());
   }
+  painter->setPen(pen);
+
+  pen.setWidth(radius * LINE_WIDTH_SCALE);
+  painter->setPen(pen);
+
+  QPainterPath node;
+  node.addEllipse(point, radius, radius);
+  painter->fillPath(node, pen.color());
 }
 
 void ZoomWidget::drawAllNodes(QPainter *screenPainter)
 {
-  if (_resize.active) {
+  if (_state == STATE_RESIZING_FORM) {
+    return;
+  }
+
+  for (int i=0; i<_forms.size(); i++) {
+    if (!_forms.at(i).deleted && _forms.at(i).type==_drawMode && _forms.at(i).type != FREEFORM) {
+      QList<QPoint> p = _forms.at(i).points;
+
+      for (int x=0; x<p.size(); x++) {
+        drawNode(screenPainter, pixmapPointToScreenPos(p.at(x)));
+      }
+    }
+  }
+}
+
+void ZoomWidget::drawAllHandles(QPainter *screenPainter)
+{
+  if (_state == STATE_RESIZING_FORM) {
     return;
   }
 
@@ -2222,13 +2274,15 @@ void ZoomWidget::drawAllNodes(QPainter *screenPainter)
       QList<QPoint> p = _forms.at(i).points;
       QPoint handle;
 
-      for (int x=0; x<p.size(); x++) {
-        drawNode(screenPainter, pixmapPointToScreenPos(p.at(x)), NODE);
-        handle += p.at(x);
-      }
-      if (!p.isEmpty()) handle /= p.size();
+      if (!p.isEmpty()) {
+        for (int x=0; x<p.size(); x++) {
+          handle += p.at(x);
+        }
+        handle /= p.size();
 
-      drawNode(screenPainter, pixmapPointToScreenPos(handle), HANDLE);
+        drawHandle(screenPainter, pixmapPointToScreenPos(handle));
+      }
+
     }
   }
 }
@@ -2312,8 +2366,12 @@ void ZoomWidget::paintEvent(QPaintEvent *event)
           );
   }
 
-  if (_state == STATE_RESIZE) {
+  if (_state == STATE_RESIZE_FORM) {
     drawAllNodes(&screen);
+  }
+
+  if (_state == STATE_MOVE_FORM) {
+    drawAllHandles(&screen);
   }
 
   drawStatus(&screen);
@@ -2361,7 +2419,7 @@ bool ZoomWidget::isCursorOverNode(const QPoint cursorPos, const QPoint point)
       );
 }
 
-bool ZoomWidget::selectNodeToResize(const QPoint cursorPos)
+bool ZoomWidget::selectHandle(const QPoint cursorPos)
 {
   for (int i=0; i<_forms.size(); i++) {
     const Form f = _forms.at(i);
@@ -2371,24 +2429,6 @@ bool ZoomWidget::selectNodeToResize(const QPoint cursorPos)
       for (int x=0; x<f.points.size(); x++) {
         const QPoint p = pixmapPointToScreenPos(f.points.at(x));
         handle += p;
-
-        if (isCursorOverNode(cursorPos, p)) {
-          // TODO Implement resizing of the free forms
-          if (f.type == FREEFORM) {
-            logUser(LOG_ERROR, "", "You can't resize a free form. It is not implemented");
-            return false;
-          }
-          // Put the form at the top of the list
-          Form f = _forms.takeAt(i);
-          _forms.append(f);
-
-          // Enable resizing
-          _resize.active = true;
-          _resize.type = NODE;
-          _resize.nodePosition = x;
-
-          return true;
-        }
       }
 
       if (!f.points.isEmpty()) {
@@ -2400,9 +2440,34 @@ bool ZoomWidget::selectNodeToResize(const QPoint cursorPos)
           _forms.append(f);
 
           // Enable resizing
-          _resize.active = true;
-          _resize.type = HANDLE;
-          _resize.nodePosition = -1;
+          _state = STATE_MOVING_FORM;
+
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+bool ZoomWidget::selectNode(const QPoint cursorPos)
+{
+  for (int i=0; i<_forms.size(); i++) {
+    const Form f = _forms.at(i);
+
+    if (!f.deleted && f.type==_drawMode && f.type != FREEFORM) {
+      for (int x=0; x<f.points.size(); x++) {
+        const QPoint p = pixmapPointToScreenPos(f.points.at(x));
+
+        if (isCursorOverNode(cursorPos, p)) {
+          // Put the form at the top of the list
+          Form f = _forms.takeAt(i);
+          _forms.append(f);
+
+          // Enable resizing
+          _state = STATE_RESIZING_FORM;
+          _resizeNodePosition = x;
 
           return true;
         }
@@ -2417,29 +2482,33 @@ bool ZoomWidget::selectNodeToResize(const QPoint cursorPos)
 void ZoomWidget::resizeForm(QPoint cursorPos)
 {
   cursorPos = screenPointToPixmapPos(cursorPos);
-  if (!_resize.active) {
+  if (_state != STATE_RESIZING_FORM) { // If the form is not selected, exit
+    return;
+  }
+
+  Form f = _forms.takeLast();
+  f.points.replace(_resizeNodePosition, cursorPos);
+  _forms.append(f);
+}
+
+// The mouse pos shouldn't be fixed to the hdpi scaling
+void ZoomWidget::moveForm(QPoint cursorPos)
+{
+  cursorPos = screenPointToPixmapPos(cursorPos);
+  if (_state != STATE_MOVING_FORM) { // If the form is not selected, exit
     return;
   }
 
   Form f = _forms.takeLast();
 
-  switch (_resize.type) {
-    case HANDLE: {
-        QPoint handle;
-        for (int i=0; i<f.points.size(); i++) handle += f.points.at(i);
-        handle /= f.points.size();
+  QPoint handle;
+  for (int i=0; i<f.points.size(); i++) handle += f.points.at(i);
+  handle /= f.points.size();
 
-        for (int i=0; i<f.points.size(); i++) {
-          QPoint p = f.points.takeAt(i);
-          p = p - handle + cursorPos;
-          f.points.insert(i, p);
-        }
-        break;
-      }
-
-    case NODE:
-      f.points.replace(_resize.nodePosition, cursorPos);
-      break;
+  for (int i=0; i<f.points.size(); i++) {
+    QPoint p = f.points.takeAt(i);
+    p = p - handle + cursorPos;
+    f.points.insert(i, p);
   }
 
   _forms.append(f);
@@ -2480,8 +2549,16 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
   }
 
   // Mouse processing
-  if (_state == STATE_RESIZE) {
-    selectNodeToResize(cursorPos);
+  if (_state == STATE_RESIZE_FORM) {
+    selectNode(cursorPos);
+
+    updateCursorShape();
+    update();
+    return;
+  }
+
+  if (_state == STATE_MOVE_FORM) {
+    selectHandle(cursorPos);
 
     updateCursorShape();
     update();
@@ -2690,11 +2767,24 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
     return;
   }
 
-  if (_state == STATE_RESIZE) {
-    if (_resize.active) {
-      resizeForm(cursorPos);
-      _resize.active = false;
-    }
+  if (_state == STATE_MOVE_FORM || _state == STATE_RESIZE_FORM) {
+    updateCursorShape();
+    update();
+    return;
+  }
+
+  if (_state == STATE_MOVING_FORM) {
+    moveForm(cursorPos);
+    _state = STATE_MOVE_FORM;
+
+    updateCursorShape();
+    update();
+    return;
+  }
+
+  if (_state == STATE_RESIZING_FORM) {
+    resizeForm(cursorPos);
+    _state = STATE_RESIZE_FORM;
 
     updateCursorShape();
     update();
@@ -2793,7 +2883,7 @@ void ZoomWidget::updateCursorShape()
   } else if (_canvas.dragging) {
     setCursor(drag);
 
-  } else if (_resize.active) {
+  } else if (_state == STATE_RESIZING_FORM || _state == STATE_MOVING_FORM) {
     setCursor(blank);
 
   } else if (_state == STATE_COLOR_PICKER) {
@@ -2834,8 +2924,13 @@ void ZoomWidget::mouseMoveEvent(QMouseEvent *event)
     goto exit;
   }
 
-  if (_state == STATE_RESIZE && _resize.active) {
+  if (_state == STATE_RESIZING_FORM) {
     resizeForm(cursorPos);
+    goto exit;
+  }
+
+  if (_state == STATE_MOVING_FORM) {
+    moveForm(cursorPos);
     goto exit;
   }
 

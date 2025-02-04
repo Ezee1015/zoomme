@@ -73,7 +73,8 @@
 #define GRID_ICON             "󰝘"
 #define PICK_COLOR_ICON       ""
 #define SCREEN_OPTS_ICON      ""
-#define RESIZE_ICON           "󰆾"
+#define RESIZE_ICON           "󰩨" // 󰙕
+#define MOVE_ICON             "󰆾"
 #define CLEAR_ICON            "󱘕"
 #define DELETE_ICON           "󰷭" // 󰷮
 #define UNDO_ICON             "󰕍" // 
@@ -289,7 +290,10 @@ enum State {
   STATE_DRAWING,
   STATE_TYPING,
   STATE_DELETING,
-  STATE_RESIZE,
+  STATE_RESIZE_FORM,
+  STATE_RESIZING_FORM,
+  STATE_MOVE_FORM,
+  STATE_MOVING_FORM,
   STATE_COLOR_PICKER,
   STATE_TO_TRIM,  // State before trimming
   STATE_TRIMMING,
@@ -315,6 +319,7 @@ enum Action {
   ACTION_MOUSE_TRACKING,
   ACTION_DELETE,
   ACTION_RESIZE,
+  ACTION_MOVE,
   ACTION_CLEAR,
   ACTION_SAVE_TO_FILE,
   ACTION_SAVE_TRIMMED_TO_IMAGE,
@@ -404,20 +409,6 @@ struct PopupTray {
   QTimer *updateTimer;
 };
 
-enum NodeType {
-  NODE,
-  HANDLE  // The form itself (all the nodes)
-};
-
-struct ResizeState {
-  // If it's active:
-  //    - The vector is the current draw mode
-  //    - The form selected is the last one of the vector
-  bool active;   // If it's resizing
-  NodeType type;
-  int nodePosition; // The position of the selected node (point of the form)
-};
-
 class ZoomWidget : public QWidget
 {
   Q_OBJECT
@@ -480,7 +471,8 @@ class ZoomWidget : public QWidget
     QSize _windowSize;
     ExportConfig _fileConfig; // For exporting files
     bool _forceMouseTracking;
-    ResizeState _resize;
+    int _resizeNodePosition; // The position of the selected node (point of the form)
+                             // The form selected is the last one of the vector
     TrimOptions _trimDestination;
     ScreenOptions _screenOpts;
     State _state;
@@ -530,7 +522,8 @@ class ZoomWidget : public QWidget
     void drawTrimmed(QPainter *pixmapPainter);
     void drawPopupTray(QPainter *screenPainter);
     void drawPopup(QPainter *screenPainter, const int listPos);
-    void drawNode(QPainter *painter, const QPoint point, NodeType type);
+    void drawNode(QPainter *painter, const QPoint point);
+    void drawHandle(QPainter *painter, const QPoint point);
 
     // Pop-up
     void setPopupTrayPos();
@@ -541,11 +534,14 @@ class ZoomWidget : public QWidget
 
     // Resizing nodes
     void resizeForm(QPoint cursorPos);
+    void moveForm(QPoint cursorPos);
     void drawAllNodes(QPainter *screenPainter);
+    void drawAllHandles(QPainter *screenPainter);
     bool isCursorOverNode(const QPoint cursorPos, const QPoint point);
     // Moves the form behind the cursor to the top of the list and populates the
     // _resize variable
-    bool selectNodeToResize(const QPoint cursorPos);
+    bool selectNode(const QPoint cursorPos);
+    bool selectHandle(const QPoint cursorPos);
 
     // Tool bar and buttons
     void loadButtons();
