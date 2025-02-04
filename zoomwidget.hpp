@@ -286,7 +286,7 @@ enum ButtonStatus {
 };
 
 enum State {
-  STATE_MOVING,
+  STATE_NORMAL,
   STATE_DRAWING,
   STATE_TYPING,
   STATE_DELETING,

@@ -50,7 +50,7 @@ ZoomWidget::ZoomWidget(QWidget *parent) : QWidget(parent), ui(new Ui::zoomwidget
   _canvas.freezePos      = FREEZE_FALSE;
   _canvas.dragging       = false;
 
-  _state                 = STATE_MOVING;
+  _state                 = STATE_NORMAL;
   _drawMode              = LINE;
   _screenOpts            = SCREENOPTS_SHOW_ALL;
   _forceMouseTracking    = true;
@@ -107,7 +107,7 @@ bool ZoomWidget::isToolBarVisible()
         || _state == STATE_COLOR_PICKER
         || _state == STATE_RESIZE_FORM
         || _state == STATE_MOVE_FORM
-        || _state == STATE_MOVING // Normal state
+        || _state == STATE_NORMAL // Normal state
       );
 
   return _toolBar.show
@@ -150,10 +150,10 @@ void ZoomWidget::toggleAction(const Action action)
        _arrow = false;
        _highlight = false;
 
-       if (_state == STATE_MOVING) {
+       if (_state == STATE_NORMAL) {
          _state = STATE_RESIZE_FORM;
        } else if (_state == STATE_RESIZE_FORM) {
-         _state = STATE_MOVING;
+         _state = STATE_NORMAL;
        }
        break;
 
@@ -162,18 +162,18 @@ void ZoomWidget::toggleAction(const Action action)
        _arrow = false;
        _highlight = false;
 
-       if (_state == STATE_MOVING) {
+       if (_state == STATE_NORMAL) {
          _state = STATE_MOVE_FORM;
        } else if (_state == STATE_MOVE_FORM) {
-         _state = STATE_MOVING;
+         _state = STATE_NORMAL;
        }
        break;
 
     case ACTION_DELETE:
-       if (_state == STATE_MOVING) {
+       if (_state == STATE_NORMAL) {
          _state = STATE_DELETING;
        } else if (_state == STATE_DELETING) {
-         _state = STATE_MOVING;
+         _state = STATE_NORMAL;
        }
        break;
 
@@ -184,7 +184,7 @@ void ZoomWidget::toggleAction(const Action action)
          _forms.insert(i, f);
          _deletedHistory.append(i);
        }
-       _state = STATE_MOVING;
+       _state = STATE_NORMAL;
        break;
 
     case ACTION_DELETE_LAST: {
@@ -244,7 +244,7 @@ void ZoomWidget::toggleAction(const Action action)
 
     case ACTION_PICK_COLOR:
        if (_state == STATE_COLOR_PICKER) {
-         _state = STATE_MOVING;
+         _state = STATE_NORMAL;
          _activePen.setColor(_colorBeforePickColorMode);
          break;
        }
@@ -265,7 +265,7 @@ void ZoomWidget::toggleAction(const Action action)
     case ACTION_SAVE_TRIMMED_TO_IMAGE:
       // If the mode is active, disable it
       if (_state == STATE_TO_TRIM && _trimDestination == TRIM_SAVE_TO_IMAGE) {
-        _state = STATE_MOVING;
+        _state = STATE_NORMAL;
         break;
       }
 
@@ -278,7 +278,7 @@ void ZoomWidget::toggleAction(const Action action)
     case ACTION_SAVE_TRIMMED_TO_CLIPBOARD:
       // If the mode is active, disable it
       if (_state == STATE_TO_TRIM && _trimDestination == TRIM_SAVE_TO_CLIPBOARD) {
-        _state = STATE_MOVING;
+        _state = STATE_NORMAL;
         break;
       }
 
@@ -341,7 +341,7 @@ void ZoomWidget::toggleAction(const Action action)
         toggleAction(ACTION_DELETE);
 
       } else if (_state == STATE_TRIMMING || _state == STATE_TO_TRIM) {
-        _state = STATE_MOVING;
+        _state = STATE_NORMAL;
 
       } else if (_flashlightMode) {
         toggleAction(ACTION_FLASHLIGHT);
@@ -540,7 +540,7 @@ bool ZoomWidget::isActionActive(const Action action)
 
     case ACTION_RESIZE: {
         const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
-        const bool enabledModes = (_state == STATE_MOVING || _state == STATE_RESIZE_FORM);
+        const bool enabledModes = (_state == STATE_NORMAL || _state == STATE_RESIZE_FORM);
 
         bool isFormListEmpty = true;
         int i=0;
@@ -552,7 +552,7 @@ bool ZoomWidget::isActionActive(const Action action)
 
     case ACTION_MOVE: {
         const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
-        const bool enabledModes = (_state == STATE_MOVING || _state == STATE_MOVE_FORM);
+        const bool enabledModes = (_state == STATE_NORMAL || _state == STATE_MOVE_FORM);
 
         bool isFormListEmpty = true;
         int i=0;
@@ -563,18 +563,18 @@ bool ZoomWidget::isActionActive(const Action action)
       }
 
     case ACTION_SCREEN_OPTS:
-       return (_state == STATE_MOVING);
+       return (_state == STATE_NORMAL);
 
     case ACTION_PICK_COLOR: {
         const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
-        const bool enabledModes = (_state == STATE_MOVING || _state == STATE_COLOR_PICKER);
+        const bool enabledModes = (_state == STATE_NORMAL || _state == STATE_COLOR_PICKER);
 
         return (!hideAll) && (enabledModes);
       }
 
     case ACTION_UNDO_DELETE: {
         const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
-        const bool enabledModes = (_state == STATE_MOVING);
+        const bool enabledModes = (_state == STATE_NORMAL);
 
         bool isDeletedListEmpty = _deletedHistory.isEmpty();
 
@@ -583,7 +583,7 @@ bool ZoomWidget::isActionActive(const Action action)
 
     case ACTION_DELETE_LAST: {
         const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
-        const bool enabledModes = (_state == STATE_MOVING);
+        const bool enabledModes = (_state == STATE_NORMAL);
 
         bool isFormListEmpty = true;
         int i = 0;
@@ -595,7 +595,7 @@ bool ZoomWidget::isActionActive(const Action action)
 
     case ACTION_CLEAR: {
         const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
-        const bool enabledModes = (_state == STATE_MOVING);
+        const bool enabledModes = (_state == STATE_NORMAL);
 
         bool isFormListEmpty = true;
         int i=0;
@@ -607,7 +607,7 @@ bool ZoomWidget::isActionActive(const Action action)
 
     case ACTION_DELETE: {
         const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
-        const bool enabledModes = (_state == STATE_MOVING || _state == STATE_DELETING);
+        const bool enabledModes = (_state == STATE_NORMAL || _state == STATE_DELETING);
 
         bool isFormListEmpty = true;
         int i=0;
@@ -624,7 +624,7 @@ bool ZoomWidget::isActionActive(const Action action)
 
     case ACTION_SAVE_TRIMMED_TO_IMAGE: case ACTION_SAVE_TRIMMED_TO_CLIPBOARD: {
         const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
-        const bool enabledModes = (_state == STATE_MOVING || _state == STATE_TRIMMING || _state == STATE_TO_TRIM);
+        const bool enabledModes = (_state == STATE_NORMAL || _state == STATE_TRIMMING || _state == STATE_TO_TRIM);
 
         return (!hideAll) && (enabledModes);
       }
@@ -1588,7 +1588,7 @@ void ZoomWidget::drawStatus(QPainter *screenPainter)
 
   // Line 2
   switch (_state) {
-    case STATE_MOVING:        break;
+    case STATE_NORMAL:        break;
     case STATE_DRAWING:       break;
     case STATE_TYPING:        text.append("\n-- TYPING --");     break;
     case STATE_DELETING:      text.append("\n-- DELETING --");   break;
@@ -2400,7 +2400,7 @@ void ZoomWidget::removeFormBehindCursor(const QPoint cursorPos)
   _forms.insert(formPosBehindCursor, f);
   _deletedHistory.append(formPosBehindCursor);
 
-  _state = STATE_MOVING;
+  _state = STATE_NORMAL;
   updateCursorShape();
   update();
 }
@@ -2567,7 +2567,7 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
 
   if (_state == STATE_COLOR_PICKER) {
     _activePen.setColor(GET_COLOR_UNDER_CURSOR());
-    _state = STATE_MOVING;
+    _state = STATE_NORMAL;
     update();
     updateCursorShape();
     return;
@@ -2606,7 +2606,7 @@ void ZoomWidget::mousePressEvent(QMouseEvent *event)
   }
 
   // Save first point of the free form
-  if (_state == STATE_MOVING && _drawMode == FREEFORM) {
+  if (_state == STATE_NORMAL && _drawMode == FREEFORM) {
     Form data;
     data.type = FREEFORM;
     data.active = true;
@@ -2750,7 +2750,7 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
     QPixmap trimmed = _canvas.pixmap.copy(trimSize);
     saveImage(trimmed, (_trimDestination == TRIM_SAVE_TO_IMAGE) ? true : false);
 
-    _state = STATE_MOVING;
+    _state = STATE_NORMAL;
     updateCursorShape();
     update();
     return;
@@ -2831,7 +2831,7 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
 
     // If the free form is just a point
     if (data.points.size() == 1) {
-      _state = STATE_MOVING;
+      _state = STATE_NORMAL;
       update();
       return;
     }
@@ -2843,7 +2843,7 @@ void ZoomWidget::mouseReleaseEvent(QMouseEvent *event)
   }
 
   _forms.append(data);
-  _state = STATE_MOVING;
+  _state = STATE_NORMAL;
   update();
 }
 
@@ -3258,7 +3258,7 @@ void ZoomWidget::keyPressEvent(QKeyEvent *event)
         _forms.append(t);
       }
 
-      _state = STATE_MOVING;
+      _state = STATE_NORMAL;
       update();
       return;
     }
@@ -3597,7 +3597,7 @@ bool ZoomWidget::isDisabledMouseTracking()
 // The cursor pos shouldn't be fixed to HDPI scaling
 bool ZoomWidget::isTextEditable(const QPoint cursorPos)
 {
-  const bool isInEditTextMode = _state == STATE_MOVING
+  const bool isInEditTextMode = _state == STATE_NORMAL
                                 && _drawMode == TEXT
                                 && _screenOpts != SCREENOPTS_HIDE_ALL;
 
