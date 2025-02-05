@@ -533,7 +533,8 @@ bool ZoomWidget::isActionActive(const Action action)
                                     || _state==STATE_DRAWING
                                     || _state==STATE_COLOR_PICKER
                                     || _state==STATE_TO_TRIM
-                                    || _state==STATE_TRIMMING);
+                                    || _state==STATE_TRIMMING
+                                    || _state==STATE_RESIZE_FORM);
 
         return !disabledModes;
       }
@@ -541,13 +542,14 @@ bool ZoomWidget::isActionActive(const Action action)
     case ACTION_RESIZE: {
         const bool hideAll      = (_screenOpts == SCREENOPTS_HIDE_ALL);
         const bool enabledModes = (_state == STATE_NORMAL || _state == STATE_RESIZE_FORM);
+        const bool isFreeForm   = (_drawMode == FREEFORM);
 
         bool isFormListEmpty = true;
         int i=0;
         while (i<_forms.size() && (_forms.at(i).deleted || _forms.at(i).type!=_drawMode)) i++;
         if (i!=_forms.size()) isFormListEmpty = false;
 
-        return (!hideAll) && (enabledModes) && (!isFormListEmpty || _state == STATE_RESIZE_FORM);
+        return (!hideAll) && (enabledModes) && (!isFreeForm) && (!isFormListEmpty || _state == STATE_RESIZE_FORM);
       }
 
     case ACTION_MOVE: {
