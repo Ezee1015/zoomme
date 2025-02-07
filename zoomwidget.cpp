@@ -430,38 +430,38 @@ void ZoomWidget::loadButtons()
   _toolBar.buttons.append(Button{ACTION_SPACER,            "" ,              "",              1, nullRect});
   _toolBar.buttons.append(Button{ACTION_ARROW,             ARROW_ICON,       "Arrow",         1, nullRect});
   _toolBar.buttons.append(Button{ACTION_HIGHLIGHT,         HIGHLIGHT_ICON,   "Highlight",     1, nullRect});
-  _toolBar.buttons.append(Button{ACTION_SPACER,            " ",              "",              1, nullRect});
-  _toolBar.buttons.append(Button{ACTION_FULLSCREEN,        FULLSCREEN_ICON,  "Fullscreen",    1, nullRect});
 
 
-  _toolBar.buttons.append(Button{ACTION_FLASHLIGHT,        FLASHLIGHT_ICON,  "Flashlight",    2, nullRect});
-  _toolBar.buttons.append(Button{ACTION_MOUSE_TRACKING,    TRACKING_ICON,    "Mouse Tracking",2, nullRect});
-  _toolBar.buttons.append(Button{ACTION_BLACKBOARD,        BLACKBOARD_ICON,  "Blackboard",    2, nullRect});
-  _toolBar.buttons.append(Button{ACTION_GRID,              GRID_ICON,        "Grid",          2, nullRect});
-  _toolBar.buttons.append(Button{ACTION_PICK_COLOR,        PICK_COLOR_ICON,  "Pick color",    2, nullRect});
   _toolBar.buttons.append(Button{ACTION_RESIZE,            RESIZE_ICON,      "Resize",        2, nullRect});
   _toolBar.buttons.append(Button{ACTION_MOVE,              MOVE_ICON,        "Move Form",     2, nullRect});
-  _toolBar.buttons.append(Button{ACTION_SCREEN_OPTS,       SCREEN_OPTS_ICON, "Hide elements", 2, nullRect});
   _toolBar.buttons.append(Button{ACTION_CLEAR,             CLEAR_ICON,       "Clear",         2, nullRect});
   _toolBar.buttons.append(Button{ACTION_DELETE,            DELETE_ICON,      "Delete",        2, nullRect});
   _toolBar.buttons.append(Button{ACTION_DELETE_LAST,       UNDO_ICON,        "Delete last",   2, nullRect});
   _toolBar.buttons.append(Button{ACTION_UNDO_DELETE,       REDO_ICON,        "Undo delete",   2, nullRect});
-
   _toolBar.buttons.append(Button{ACTION_SPACER,            " ",              "",              2, nullRect});
+  _toolBar.buttons.append(Button{ACTION_FULLSCREEN,        FULLSCREEN_ICON,  "Fullscreen",    2, nullRect});
+
+  _toolBar.buttons.append(Button{ACTION_FLASHLIGHT,        FLASHLIGHT_ICON,  "Flashlight",    3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_MOUSE_TRACKING,    TRACKING_ICON,    "Mouse Tracking",3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_BLACKBOARD,        BLACKBOARD_ICON,  "Blackboard",    3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_GRID,              GRID_ICON,        "Grid",          3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_PICK_COLOR,        PICK_COLOR_ICON,  "Pick color",    3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SCREEN_OPTS,       SCREEN_OPTS_ICON, "Hide elements", 3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SPACER,            " ",              "",              3, nullRect});
 
   if (_exitTimer->isActive()) {
-    _toolBar.buttons.append(Button{ACTION_ESCAPE,            EXIT_ICON,        "Confirm Exit",  2, nullRect});
-    _toolBar.buttons.append(Button{ACTION_ESCAPE_CANCEL,     CANCEL_ICON,      "Cancel Exit",   2, nullRect});
+    _toolBar.buttons.append(Button{ACTION_ESCAPE,            EXIT_ICON,        "Confirm Exit",  3, nullRect});
+    _toolBar.buttons.append(Button{ACTION_ESCAPE_CANCEL,     CANCEL_ICON,      "Cancel Exit",   3, nullRect});
   } else {
-    _toolBar.buttons.append(Button{ACTION_ESCAPE,            ESCAPE_ICON,      "Escape",        2, nullRect});
+    _toolBar.buttons.append(Button{ACTION_ESCAPE,            ESCAPE_ICON,      "Escape",        3, nullRect});
   }
 
-  _toolBar.buttons.append(Button{ACTION_SAVE_TO_FILE,              EXPORT_IMG_ICON,       "Export image",                3, nullRect});
-  _toolBar.buttons.append(Button{ACTION_SAVE_TO_CLIPBOARD,         EXPORT_CLIP_ICON,      "Export to clipboard",         3, nullRect});
-  _toolBar.buttons.append(Button{ACTION_SAVE_TRIMMED_TO_IMAGE,     EXPORT_TRIM_IMG_ICON,  "Export trimmed image",        3, nullRect});
-  _toolBar.buttons.append(Button{ACTION_SAVE_TRIMMED_TO_CLIPBOARD, EXPORT_TRIM_CLIP_ICON, "Export trimmed to clipboard", 3, nullRect});
-  _toolBar.buttons.append(Button{ACTION_SAVE_PROJECT,              EXPORT_PROJECT_ICON,   "Save project",                3, nullRect});
-  _toolBar.buttons.append(Button{ACTION_RECORDING,                 RECORD_ICON,           "Record",                      3, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SAVE_TO_FILE,              EXPORT_IMG_ICON,       "Export image",                4, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SAVE_TO_CLIPBOARD,         EXPORT_CLIP_ICON,      "Export to clipboard",         4, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SAVE_TRIMMED_TO_IMAGE,     EXPORT_TRIM_IMG_ICON,  "Export trimmed image",        4, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SAVE_TRIMMED_TO_CLIPBOARD, EXPORT_TRIM_CLIP_ICON, "Export trimmed to clipboard", 4, nullRect});
+  _toolBar.buttons.append(Button{ACTION_SAVE_PROJECT,              EXPORT_PROJECT_ICON,   "Save project",                4, nullRect});
+  _toolBar.buttons.append(Button{ACTION_RECORDING,                 RECORD_ICON,           "Record",                      4, nullRect});
 }
 
 bool ZoomWidget::isActionActive(const Action action)
