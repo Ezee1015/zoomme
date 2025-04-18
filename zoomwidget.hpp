@@ -44,7 +44,7 @@
 /// Default folder where to export the different files
 #define DEFAULT_FOLDER QStandardPaths::DesktopLocation // QStandardPaths::PicturesLocation
 /// Default date format (used for the generic name when exporting files)
-#define DATE_FORMAT_FOR_FILE "dd-MM-yyyy hh.mm.ss"
+#define DATE_FORMAT_FOR_FILE "yyyy-MM-dd hh.mm.ss"
 
 /// Icons
 #define ENABLE_TOOLBAR_ICONS // Comment this line to disable toolbar icons
