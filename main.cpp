@@ -44,6 +44,9 @@ void help(const char *errorMsg)
   fprintf(output, "  -c                        Load an image from the clipboard as the background, instead of the desktop.\n");
   fprintf(output, "  --empty [width] [height]  Create an empty blackboard with the given size\n");
 
+  fprintf(output, "\nExperimental:\n");
+  fprintf(output, "  --floating                This option bypasses the window manager hint and creates its own window\n");
+
   fprintf(output, "\n  For more information, visit https://github.com/Ezee1015/zoomme\n");
 
   exit(exitStatus);
@@ -111,6 +114,7 @@ int main(int argc, char *argv[])
   QString saveName;
   QString saveImgExt; // Extension
   QString saveVidExt; // Extension
+  bool floating = false;
 
   // Modes
   Mode mode = DESKTOP;
@@ -122,6 +126,12 @@ int main(int argc, char *argv[])
   for (int i=1; i<argc ; ++i) {
     if (strcmp(argv[i], "--help") == 0) {
       help("");
+
+    } else if (strcmp(argv[i], "--floating") == 0) {
+      if (floating) {
+        help("Floating option already set");
+      }
+      floating = true;
 
     } else if (strcmp(argv[i], "-l") == 0) {
       setMode(&mode, LIVE_MODE);
@@ -205,7 +215,12 @@ int main(int argc, char *argv[])
   }
 
   ZoomWidget w;
-  w.setWindowFlags(Qt::WindowMinimizeButtonHint /* | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::BypassWindowManagerHint */);
+  if (floating) {
+    w.setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::BypassWindowManagerHint);
+    w.activateWindow();
+  } else {
+    w.setWindowFlags(Qt::WindowMinimizeButtonHint);
+  }
   w.resize(QApplication::screenAt(QCursor::pos())->geometry().size());
   w.move(QApplication::screenAt(QCursor::pos())->geometry().topLeft());
   w.setCursor(QCursor(Qt::CrossCursor));

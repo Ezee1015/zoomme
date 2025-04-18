@@ -310,6 +310,21 @@ This will override the [file name, video extension and image extension configura
 </p></details>
 <!-- End 11 -->
 
+<!-- Start 12 -->
+<details id="floating">
+<summary><b>[ <code>--floating</code> ] Make zoomme bypass the window manager hint</b></summary><p>
+
+This flag is experimental as it may lead to unexpected behavior
+
+You can make Zoomme bypass the window manager hint and create its own window. This can be useful when you're in fullscreen mode, as it prevents Zoomme from interfering with the fullscreen application. For example, in i3, if you're in fullscreen and open Zoomme, it replaces the current fullscreen app. However, with this flag enabled, that won't happen
+
+```bash
+./zoomme {configurations} {--empty [width] [height]}
+```
+
+</p></details>
+<!-- End 12 -->
+
 ### To do
 - [ ] Make ffmpeg processing in a separate thread
     - Notify the user that ffmpeg is running in the background
