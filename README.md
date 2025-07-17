@@ -3,6 +3,10 @@
   <h1>ZoomMe</h1>
 </div>
 
+The development of this project has been moved to a [new repository](https://www.github.com/Ezee1015/motaza)
+
+---
+
 Application for zooming/**magnifying** and **annotating** the desktop (like ZoomIt under windows).
 
 You can...
